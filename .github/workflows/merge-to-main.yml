@@ -1,0 +1,32 @@
+name: Merge dashboard to main
+
+on:
+  push:
+    branches:
+      - 'claude/fix-meta-api-proxy-2R1Ui'
+
+permissions:
+  contents: write
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+      - name: Merge into main
+        run: |
+          git checkout main
+          git pull origin main
+          git merge --no-ff origin/claude/fix-meta-api-proxy-2R1Ui \
+            -m "feat: dashboard Meta Ads 360 completo com Streamlit Cloud"
+          git push origin main
