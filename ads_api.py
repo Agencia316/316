@@ -1,4 +1,5 @@
 import os
+import proxy_fix  # noqa: F401 - deve vir antes de facebook_business
 from dotenv import load_dotenv
 from facebook_business.api import FacebookAdsApi
 from facebook_business.adobjects.adaccount import AdAccount
