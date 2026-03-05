@@ -6,11 +6,17 @@ from facebook_business.adobjects.user import User
 
 load_dotenv()
 
+APP_ID = os.getenv("FB_APP_ID")
+APP_SECRET = os.getenv("FB_APP_SECRET")
 ACCESS_TOKEN = os.getenv("FB_ACCESS_TOKEN")
 
 
 def init_api():
-    FacebookAdsApi.init(access_token=ACCESS_TOKEN)
+    FacebookAdsApi.init(
+        app_id=APP_ID,
+        app_secret=APP_SECRET,
+        access_token=ACCESS_TOKEN,
+    )
 
 
 def get_ad_accounts():
