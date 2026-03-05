@@ -7,7 +7,18 @@ from facebook_business.adobjects.user import User
 
 load_dotenv()
 
-ACCESS_TOKEN = os.getenv("FB_ACCESS_TOKEN")
+def _get_token():
+    """Carrega token do st.secrets (Streamlit Cloud) ou variável de ambiente."""
+    try:
+        import streamlit as st
+        token = st.secrets.get("FB_ACCESS_TOKEN")
+        if token:
+            return token
+    except Exception:
+        pass
+    return os.getenv("FB_ACCESS_TOKEN")
+
+ACCESS_TOKEN = _get_token()
 
 
 def init_api():
