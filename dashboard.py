@@ -72,11 +72,11 @@ PERIOD_LABELS = {
 def load_accounts():
     FacebookAdsApi.init(access_token=ACCESS_TOKEN)
     me = User(fbid="me")
-    return list(me.get_ad_accounts(fields=[
+    return [dict(a) for a in me.get_ad_accounts(fields=[
         "id", "name", "currency", "account_status",
         "amount_spent", "balance", "spend_cap",
         "timezone_name", "business_name",
-    ]))
+    ])]
 
 @st.cache_data(ttl=300, show_spinner="Buscando campanhas...")
 def load_campaigns(account_id, date_preset):
