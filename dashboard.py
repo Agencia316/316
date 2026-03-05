@@ -10,7 +10,17 @@ from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.adobjects.user import User
 
 load_dotenv()
-ACCESS_TOKEN = os.getenv("FB_ACCESS_TOKEN")
+
+def _get_token():
+    try:
+        token = st.secrets.get("FB_ACCESS_TOKEN")
+        if token:
+            return token
+    except Exception:
+        pass
+    return os.getenv("FB_ACCESS_TOKEN")
+
+ACCESS_TOKEN = _get_token()
 
 st.set_page_config(page_title="316 — Meta Ads", page_icon="⚡", layout="wide")
 
