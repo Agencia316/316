@@ -10,6 +10,10 @@ ACCESS_TOKEN = os.getenv("FB_ACCESS_TOKEN")
 
 
 def init_api():
+    for var in ("HTTPS_PROXY", "HTTP_PROXY", "https_proxy", "http_proxy"):
+        os.environ.pop(var, None)
+    os.environ["NO_PROXY"] = "*"
+    os.environ["no_proxy"] = "*"
     FacebookAdsApi.init(access_token=ACCESS_TOKEN)
 
 
