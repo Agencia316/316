@@ -192,6 +192,9 @@ def analyze(ad_account_id, currency="BRL"):
     print(f"\n{'='*60}\n")
 
 
+CONTA_ALVO = "zaccaro"
+
+
 if __name__ == "__main__":
     init_api()
     print("Conectando a API do Facebook...")
@@ -201,29 +204,38 @@ if __name__ == "__main__":
         print("Nenhuma conta de anuncio encontrada.")
         exit(1)
 
-    print("\nContas de anuncio disponiveis:")
-    print("-" * 50)
-    for i, acc in enumerate(accounts, 1):
-        status_map = {1: "ATIVA", 2: "DESATIVADA", 3: "SUSPENSA", 7: "PENDENTE", 9: "EM REVISAO"}
-        status = status_map.get(acc.get("account_status"), "DESCONHECIDO")
-        print(f"  [{i}] {acc.get('name', 'Sem nome')}")
-        print(f"      ID: {acc['id']}  |  Moeda: {acc.get('currency', '?')}  |  Status: {status}")
-    print("-" * 50)
+    # Busca automatica pela conta Zaccaro Ads
+    matches = [acc for acc in accounts if CONTA_ALVO in acc.get("name", "").lower()]
 
-    escolha = input("\nDigite o numero da conta que deseja analisar (ou 'todas'): ").strip()
-
-    if escolha.lower() == "todas":
-        for acc in accounts:
+    if matches:
+        print(f"\nConta encontrada automaticamente: {matches[0].get('name')}")
+        for acc in matches:
             analyze(acc["id"], acc.get("currency", "BRL"))
     else:
-        try:
-            idx = int(escolha) - 1
-            if 0 <= idx < len(accounts):
-                acc = accounts[idx]
+        # Fallback: lista todas as contas para escolha manual
+        print(f"\nConta '{CONTA_ALVO}' nao encontrada. Contas disponiveis:")
+        print("-" * 50)
+        for i, acc in enumerate(accounts, 1):
+            status_map = {1: "ATIVA", 2: "DESATIVADA", 3: "SUSPENSA", 7: "PENDENTE", 9: "EM REVISAO"}
+            status = status_map.get(acc.get("account_status"), "DESCONHECIDO")
+            print(f"  [{i}] {acc.get('name', 'Sem nome')}")
+            print(f"      ID: {acc['id']}  |  Moeda: {acc.get('currency', '?')}  |  Status: {status}")
+        print("-" * 50)
+
+        escolha = input("\nDigite o numero da conta que deseja analisar (ou 'todas'): ").strip()
+
+        if escolha.lower() == "todas":
+            for acc in accounts:
                 analyze(acc["id"], acc.get("currency", "BRL"))
-            else:
-                print("Numero invalido.")
+        else:
+            try:
+                idx = int(escolha) - 1
+                if 0 <= idx < len(accounts):
+                    acc = accounts[idx]
+                    analyze(acc["id"], acc.get("currency", "BRL"))
+                else:
+                    print("Numero invalido.")
+                    exit(1)
+            except ValueError:
+                print("Entrada invalida.")
                 exit(1)
-        except ValueError:
-            print("Entrada invalida.")
-            exit(1)
