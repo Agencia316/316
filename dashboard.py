@@ -72,6 +72,98 @@ st.markdown("""
   /* Tabs */
   .stTabs [data-baseweb="tab-list"] { gap: 6px; }
   .stTabs [data-baseweb="tab"] { border-radius: 8px 8px 0 0; padding: 10px 20px; font-weight: 500; }
+
+  /* Ad Cards */
+  .ad-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid #2d3748;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    transition: transform .2s, border-color .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .ad-card:hover { transform: translateY(-3px); border-color: #4a5568; }
+  .ad-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #636EFA, #EF553B);
+  }
+  .ad-card.green::before { background: linear-gradient(90deg, #48bb78, #38a169); }
+  .ad-card.orange::before { background: linear-gradient(90deg, #ed8936, #dd6b20); }
+  .ad-card.red::before { background: linear-gradient(90deg, #fc8181, #e53e3e); }
+  .ad-card-title {
+    color: #e2e8f0;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .ad-breadcrumb {
+    color: #718096;
+    font-size: .75rem;
+    margin-bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+  }
+  .ad-breadcrumb span { color: #4a5568; }
+  .ad-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .ad-metric {
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .ad-metric .m-label { color: #718096; font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; }
+  .ad-metric .m-value { color: #e2e8f0; font-size: .95rem; font-weight: 700; margin-top: 2px; }
+  .ad-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: .7rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .badge-green { background: rgba(72,187,120,.2); color: #48bb78; }
+  .badge-orange { background: rgba(237,137,54,.2); color: #ed8936; }
+  .badge-red { background: rgba(252,129,129,.2); color: #fc8181; }
+
+  /* Hierarchy */
+  .hierarchy-camp {
+    background: linear-gradient(135deg,#1a1a2e,#16213e);
+    border: 1px solid #3d4f6b;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+  }
+  .hierarchy-camp h4 { color: #90cdf4; margin: 0 0 4px; font-size: .95rem; }
+  .hierarchy-adset {
+    background: rgba(255,255,255,.04);
+    border-left: 3px solid #4a5568;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin: 8px 0 8px 16px;
+  }
+  .hierarchy-adset h5 { color: #a0aec0; margin: 0 0 4px; font-size: .85rem; }
+
+  /* Filter badge */
+  .filter-bar {
+    background: linear-gradient(135deg,#1a1a2e,#16213e);
+    border: 1px solid #2d3748;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+  }
 </style>
 """, unsafe_allow_html=True)
 
@@ -430,6 +522,25 @@ with st.sidebar:
         format_func=lambda x: PERIOD_LABELS[x],
     )
     st.divider()
+
+    # Filtro de campanhas (carregado com spinner desativado para não duplicar)
+    try:
+        _df_camp_filter = load_campaigns(selected_id, date_preset)
+        if not _df_camp_filter.empty:
+            camp_names = sorted(_df_camp_filter["Campanha"].unique().tolist())
+            selected_campaigns = st.multiselect(
+                "🎯 Filtrar Campanhas",
+                options=camp_names,
+                default=[],
+                placeholder="Todas as campanhas",
+                help="Selecione campanhas específicas para filtrar os dados em todas as abas",
+            )
+        else:
+            selected_campaigns = []
+    except Exception:
+        selected_campaigns = []
+
+    st.divider()
     if st.button("🔄 Atualizar dados", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
@@ -449,6 +560,12 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab_ins = st.tabs([
     "📅 Evolução Diária",
     "🧠 Insights",
 ])
+
+def apply_camp_filter(df, col="Campanha"):
+    """Aplica filtro de campanhas selecionadas na sidebar."""
+    if selected_campaigns and col in df.columns:
+        return df[df[col].isin(selected_campaigns)]
+    return df
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — CONTA
@@ -492,6 +609,11 @@ with tab2:
         df_camp = load_campaigns(selected_id, date_preset)
     except Exception as e:
         st.error(f"Erro: {e}"); st.stop()
+
+    df_camp = apply_camp_filter(df_camp)
+
+    if selected_campaigns:
+        st.info(f"🎯 Filtrando por: **{', '.join(selected_campaigns)}**")
 
     if df_camp.empty:
         st.warning("Nenhuma campanha no período.")
@@ -549,20 +671,20 @@ with tab2:
 
         col_c, col_d = st.columns(2)
         with col_c:
-            fig = go.Figure(template=CHART_THEME)
+            fig = go.Figure(layout=dict(template=CHART_THEME))
             fig.add_trace(go.Bar(name="Alcance", x=df_camp["Campanha"], y=df_camp["Alcance"], marker_color="#636EFA"))
             fig.add_trace(go.Bar(name="Impressões", x=df_camp["Campanha"], y=df_camp["Impressões"], marker_color="#EF553B"))
             fig.update_layout(barmode="group", height=380, xaxis_tickangle=-30, title="Alcance vs Impressões")
             st.plotly_chart(fig, use_container_width=True)
         with col_d:
-            fig = go.Figure(template=CHART_THEME)
+            fig = go.Figure(layout=dict(template=CHART_THEME))
             fig.add_trace(go.Bar(name="CPC", x=df_camp["Campanha"], y=df_camp["CPC"], marker_color="#00CC96"))
             fig.add_trace(go.Bar(name="CPM", x=df_camp["Campanha"], y=df_camp["CPM"], marker_color="#AB63FA"))
             fig.update_layout(barmode="group", height=380, xaxis_tickangle=-30, title="CPC vs CPM")
             st.plotly_chart(fig, use_container_width=True)
 
         if df_camp["Video Views"].sum() > 0:
-            fig = go.Figure(template=CHART_THEME)
+            fig = go.Figure(layout=dict(template=CHART_THEME))
             fig.add_trace(go.Bar(name="Video Views", x=df_camp["Campanha"], y=df_camp["Video Views"], marker_color="#FFA15A"))
             fig.add_trace(go.Bar(name="ThruPlays", x=df_camp["Campanha"], y=df_camp["ThruPlays"], marker_color="#19D3F3"))
             fig.update_layout(barmode="group", height=350, xaxis_tickangle=-30, title="Video Views vs ThruPlays")
@@ -613,6 +735,11 @@ with tab3:
     except Exception as e:
         st.error(f"Erro: {e}"); st.stop()
 
+    df_adset = apply_camp_filter(df_adset)
+
+    if selected_campaigns:
+        st.info(f"🎯 Filtrando por campanhas: **{', '.join(selected_campaigns)}**")
+
     if df_adset.empty:
         st.warning("Nenhum conjunto no período.")
     else:
@@ -656,7 +783,7 @@ with tab3:
         st.download_button("⬇️ Exportar Conjuntos CSV", csv, "conjuntos.csv", "text/csv")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 4 — ANÚNCIOS
+# TAB 4 — ANÚNCIOS (redesenhado)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tab4:
     try:
@@ -664,48 +791,233 @@ with tab4:
     except Exception as e:
         st.error(f"Erro: {e}"); st.stop()
 
+    df_ads = apply_camp_filter(df_ads)
+
     if df_ads.empty:
         st.warning("Nenhum anúncio no período.")
     else:
-        c1, c2, c3, c4 = st.columns(4)
-        with c1: kpi("Total Anúncios", str(len(df_ads)))
-        with c2: kpi("Total Gasto", fmt(df_ads["Gasto"].sum(), currency))
-        with c3: kpi("Melhor CTR", f"{df_ads['CTR (%)'].max():.2f}%")
-        with c4: kpi("Total Leads", f"{int(df_ads['Leads'].sum()):,}")
+        # ── Filtros inline ──────────────────────────────────────────────────
+        st.markdown('<div class="filter-bar">', unsafe_allow_html=True)
+        fcol1, fcol2 = st.columns(2)
+        with fcol1:
+            camp_opts = sorted(df_ads["Campanha"].unique().tolist())
+            sel_camp_ad = st.multiselect(
+                "📣 Campanha", camp_opts, key="ads_camp",
+                placeholder="Todas as campanhas",
+            )
+        with fcol2:
+            adset_opts_base = df_ads[df_ads["Campanha"].isin(sel_camp_ad)]["Conjunto"].unique() if sel_camp_ad else df_ads["Conjunto"].unique()
+            sel_adset_ad = st.multiselect(
+                "🗂️ Conjunto de Anúncios", sorted(adset_opts_base.tolist()), key="ads_adset",
+                placeholder="Todos os conjuntos",
+            )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        df_filtered = df_ads.copy()
+        if sel_camp_ad:
+            df_filtered = df_filtered[df_filtered["Campanha"].isin(sel_camp_ad)]
+        if sel_adset_ad:
+            df_filtered = df_filtered[df_filtered["Conjunto"].isin(sel_adset_ad)]
+
+        # ── KPIs ────────────────────────────────────────────────────────────
+        total_ads_spend = df_filtered["Gasto"].sum()
+        total_ads_leads = df_filtered["Leads"].sum()
+        best_ctr_ad = df_filtered["CTR (%)"].max() if len(df_filtered) > 0 else 0
+        avg_cpc_ad = df_filtered["CPC"].mean() if len(df_filtered) > 0 else 0
+
+        c1, c2, c3, c4, c5 = st.columns(5)
+        with c1: kpi("🎨 Anúncios", str(len(df_filtered)))
+        with c2: kpi("💰 Total Gasto", fmt(total_ads_spend, currency))
+        with c3: kpi("📈 Melhor CTR", f"{best_ctr_ad:.2f}%")
+        with c4: kpi("🖱️ CPC Médio", fmt(avg_cpc_ad, currency))
+        with c5: kpi("🎯 Total Leads", f"{int(total_ads_leads):,}")
 
         st.markdown("<br>", unsafe_allow_html=True)
-        fig = px.bar(df_ads.sort_values("Gasto").tail(20), x="Gasto", y="Anúncio",
-                     orientation="h", color="CTR (%)", color_continuous_scale="RdYlGn",
-                     hover_data=["Campanha", "Conjunto", "CPL"],
-                     title="Top 20 Anúncios por Gasto (cor = CTR)", template=CHART_THEME)
-        fig.update_layout(height=550)
-        st.plotly_chart(fig, use_container_width=True)
 
-        col_a, col_b = st.columns(2)
-        with col_a:
-            fig = px.scatter(df_ads, x="Gasto", y="CTR (%)", size="Impressões",
-                             color="CPC", hover_name="Anúncio",
-                             title="Gasto vs CTR por Anúncio", template=CHART_THEME)
+        # ── Modo de visualização ────────────────────────────────────────────
+        view_mode = st.radio(
+            "Visualização",
+            ["📊 Gráficos", "🃏 Cards", "🌳 Hierarquia", "📋 Tabela"],
+            horizontal=True,
+            label_visibility="collapsed",
+        )
+        st.markdown("---")
+
+        # ── GRÁFICOS ────────────────────────────────────────────────────────
+        if view_mode == "📊 Gráficos":
+            top20 = df_filtered.sort_values("Gasto").tail(20)
+            fig = px.bar(top20, x="Gasto", y="Anúncio",
+                         orientation="h", color="CTR (%)", color_continuous_scale="RdYlGn",
+                         hover_data=["Campanha", "Conjunto", "CPL"],
+                         title="Top 20 Anúncios por Gasto (cor = CTR)", template=CHART_THEME)
+            fig.update_layout(height=max(400, len(top20) * 28), yaxis_title="")
             st.plotly_chart(fig, use_container_width=True)
-        with col_b:
-            if df_ads["Video Views"].sum() > 0:
-                fig = px.bar(df_ads[df_ads["Video Views"] > 0].sort_values("Video Views").tail(15),
-                             x="Video Views", y="Anúncio", orientation="h",
-                             color="ThruPlays", title="Video Views por Anúncio",
-                             template=CHART_THEME)
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                fig = px.scatter(df_filtered, x="Gasto", y="CTR (%)", size="Impressões",
+                                 color="CPC", hover_name="Anúncio",
+                                 hover_data=["Campanha", "Conjunto"],
+                                 title="Gasto vs CTR (tamanho = Impressões)", template=CHART_THEME)
+                st.plotly_chart(fig, use_container_width=True)
+            with col_b:
+                fig = px.scatter(df_filtered, x="CPM", y="CTR (%)", size="Cliques",
+                                 color="Frequência", hover_name="Anúncio",
+                                 hover_data=["Campanha", "Conjunto"],
+                                 title="CPM vs CTR (tamanho = Cliques)", template=CHART_THEME)
                 st.plotly_chart(fig, use_container_width=True)
 
-        st.subheader("Tabela Completa — Anúncios")
-        st.dataframe(
-            df_ads.style.format({
-                "Gasto": "{:.2f}", "CPC": "{:.2f}", "CPM": "{:.2f}",
-                "CTR (%)": "{:.2f}", "Frequência": "{:.1f}", "CPL": "{:.2f}", "CPP": "{:.2f}",
-            }).background_gradient(subset=["Gasto"], cmap="Oranges")
-             .background_gradient(subset=["CTR (%)"], cmap="Greens"),
-            use_container_width=True, height=440,
-        )
-        csv = df_ads.to_csv(index=False).encode("utf-8")
-        st.download_button("⬇️ Exportar Anúncios CSV", csv, "anuncios.csv", "text/csv")
+            if df_filtered["Video Views"].sum() > 0:
+                df_vid = df_filtered[df_filtered["Video Views"] > 0].sort_values("Video Views").tail(15)
+                col_v1, col_v2 = st.columns(2)
+                with col_v1:
+                    fig = px.bar(df_vid, x="Video Views", y="Anúncio", orientation="h",
+                                 color="Video Views", color_continuous_scale="Oranges",
+                                 title="Video Views por Anúncio", template=CHART_THEME)
+                    fig.update_layout(coloraxis_showscale=False)
+                    st.plotly_chart(fig, use_container_width=True)
+                with col_v2:
+                    fig = px.bar(df_vid, x="ThruPlays", y="Anúncio", orientation="h",
+                                 color="ThruPlays", color_continuous_scale="Teals",
+                                 title="ThruPlays por Anúncio", template=CHART_THEME)
+                    fig.update_layout(coloraxis_showscale=False)
+                    st.plotly_chart(fig, use_container_width=True)
+
+            if df_filtered["Leads"].sum() > 0:
+                df_leads_ad = df_filtered[df_filtered["Leads"] > 0].sort_values("CPL")
+                fig = px.bar(df_leads_ad.head(15), x="Anúncio", y="CPL",
+                             color="Leads", color_continuous_scale="Purples",
+                             title="CPL por Anúncio (top 15)", template=CHART_THEME)
+                fig.update_layout(xaxis_tickangle=-30)
+                st.plotly_chart(fig, use_container_width=True)
+
+        # ── CARDS ───────────────────────────────────────────────────────────
+        elif view_mode == "🃏 Cards":
+            sort_by = st.selectbox(
+                "Ordenar por",
+                ["Gasto", "CTR (%)", "Leads", "Impressões", "CPC"],
+                key="cards_sort",
+            )
+            df_cards = df_filtered.sort_values(sort_by, ascending=False)
+            n_cols = 3
+            cols_cards = st.columns(n_cols)
+
+            for i, (_, ad) in enumerate(df_cards.iterrows()):
+                ctr = ad["CTR (%)"]
+                if ctr >= 2.0:
+                    card_cls = "green"; badge_cls = "badge-green"; badge_txt = "✅ CTR Excelente"
+                elif ctr >= 1.0:
+                    card_cls = ""; badge_cls = "badge-orange"; badge_txt = "📈 CTR Bom"
+                else:
+                    card_cls = "red"; badge_cls = "badge-red"; badge_txt = "⚠️ CTR Baixo"
+
+                name_short = (ad["Anúncio"][:50] + "…") if len(str(ad["Anúncio"])) > 50 else ad["Anúncio"]
+                camp_short = (ad["Campanha"][:35] + "…") if len(str(ad["Campanha"])) > 35 else ad["Campanha"]
+                conj_short = (ad["Conjunto"][:35] + "…") if len(str(ad["Conjunto"])) > 35 else ad["Conjunto"]
+                leads_txt = f"{int(ad['Leads'])}" if ad["Leads"] > 0 else "–"
+                cpl_txt = fmt(ad["CPL"], currency) if ad["CPL"] > 0 else "–"
+
+                with cols_cards[i % n_cols]:
+                    st.markdown(f"""
+<div class="ad-card {card_cls}">
+  <div class="ad-badge {badge_cls}">{badge_txt}</div>
+  <div class="ad-card-title">{name_short}</div>
+  <div class="ad-breadcrumb">
+    📣 {camp_short}<span>›</span>🗂️ {conj_short}
+  </div>
+  <div class="ad-metrics-grid">
+    <div class="ad-metric">
+      <div class="m-label">💰 Gasto</div>
+      <div class="m-value">{fmt(ad['Gasto'], currency)}</div>
+    </div>
+    <div class="ad-metric">
+      <div class="m-label">📈 CTR</div>
+      <div class="m-value">{ctr:.2f}%</div>
+    </div>
+    <div class="ad-metric">
+      <div class="m-label">👁️ Impressões</div>
+      <div class="m-value">{int(ad['Impressões']):,}</div>
+    </div>
+    <div class="ad-metric">
+      <div class="m-label">🖱️ CPC</div>
+      <div class="m-value">{fmt(ad['CPC'], currency)}</div>
+    </div>
+    <div class="ad-metric">
+      <div class="m-label">🎯 Leads</div>
+      <div class="m-value">{leads_txt}</div>
+    </div>
+    <div class="ad-metric">
+      <div class="m-label">💡 CPL</div>
+      <div class="m-value">{cpl_txt}</div>
+    </div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+        # ── HIERARQUIA ──────────────────────────────────────────────────────
+        elif view_mode == "🌳 Hierarquia":
+            st.markdown("**Campanha → Conjunto → Anúncio**")
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            for camp_name, camp_group in df_filtered.groupby("Campanha", sort=False):
+                camp_spend = camp_group["Gasto"].sum()
+                camp_leads = int(camp_group["Leads"].sum())
+                camp_ctr = (camp_group["Cliques"].sum() / camp_group["Impressões"].sum() * 100) if camp_group["Impressões"].sum() > 0 else 0
+
+                with st.expander(
+                    f"📣 **{camp_name}** — 💰 {fmt(camp_spend, currency)} | CTR {camp_ctr:.2f}% | 🎯 {camp_leads} leads | {len(camp_group)} anúncios"
+                ):
+                    for adset_name, adset_group in camp_group.groupby("Conjunto", sort=False):
+                        adset_spend = adset_group["Gasto"].sum()
+                        adset_leads = int(adset_group["Leads"].sum())
+
+                        st.markdown(f"""
+<div class="hierarchy-adset">
+  <h5>🗂️ {adset_name} &nbsp;·&nbsp; {fmt(adset_spend, currency)} &nbsp;·&nbsp; {adset_leads} leads &nbsp;·&nbsp; {len(adset_group)} anúncios</h5>
+</div>""", unsafe_allow_html=True)
+
+                        df_hier_show = adset_group[["Anúncio", "Gasto", "Impressões", "Cliques",
+                                                      "CTR (%)", "CPC", "CPM", "Frequência",
+                                                      "Leads", "CPL", "Video Views"]].copy()
+                        st.dataframe(
+                            df_hier_show.style.format({
+                                "Gasto": "{:.2f}", "CPC": "{:.2f}", "CPM": "{:.2f}",
+                                "CTR (%)": "{:.2f}", "Frequência": "{:.1f}", "CPL": "{:.2f}",
+                            }).background_gradient(subset=["CTR (%)"], cmap="RdYlGn"),
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+
+        # ── TABELA ──────────────────────────────────────────────────────────
+        else:
+            cols_show_ads = ["Campanha", "Conjunto", "Anúncio", "Gasto", "Impressões",
+                             "Alcance", "Cliques", "CTR (%)", "CPC", "CPM", "Frequência",
+                             "Leads", "CPL", "Compras", "Video Views", "ThruPlays"]
+            st.dataframe(
+                df_filtered[cols_show_ads].style.format({
+                    "Gasto": "{:.2f}", "CPC": "{:.2f}", "CPM": "{:.2f}",
+                    "CTR (%)": "{:.2f}", "Frequência": "{:.1f}", "CPL": "{:.2f}", "CPP": "{:.2f}",
+                }).background_gradient(subset=["Gasto"], cmap="Oranges")
+                 .background_gradient(subset=["CTR (%)"], cmap="RdYlGn"),
+                use_container_width=True, height=520,
+            )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_dl1, col_dl2 = st.columns(2)
+        with col_dl1:
+            csv = df_filtered.to_csv(index=False).encode("utf-8")
+            st.download_button("⬇️ Exportar Anúncios CSV", csv, "anuncios.csv", "text/csv", use_container_width=True)
+        with col_dl2:
+            # Resumo por campanha
+            df_camp_summary = df_filtered.groupby("Campanha").agg(
+                Anuncios=("Anúncio", "count"),
+                Gasto=("Gasto", "sum"),
+                Leads=("Leads", "sum"),
+                Impressoes=("Impressões", "sum"),
+                Cliques=("Cliques", "sum"),
+            ).reset_index()
+            df_camp_summary["CTR (%)"] = (df_camp_summary["Cliques"] / df_camp_summary["Impressoes"] * 100).round(2)
+            csv2 = df_camp_summary.to_csv(index=False).encode("utf-8")
+            st.download_button("⬇️ Resumo por Campanha CSV", csv2, "resumo_campanhas.csv", "text/csv", use_container_width=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TAB 5 — PÚBLICO
