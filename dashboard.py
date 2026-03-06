@@ -513,15 +513,148 @@ def load_daily(account_id, date_preset):
         df["Data"] = pd.to_datetime(df["Data"])
     return df
 
-if not ACCESS_TOKEN:
-    st.error("Token não encontrado. Verifique o arquivo .env.")
-    st.stop()
+DEMO_MODE = False
 
-try:
-    accounts = load_accounts()
-except Exception as e:
-    st.error(f"Erro ao conectar na API: {e}")
-    st.stop()
+if not ACCESS_TOKEN:
+    DEMO_MODE = True
+else:
+    try:
+        accounts = load_accounts()
+    except Exception:
+        DEMO_MODE = True
+
+if DEMO_MODE:
+    import random, datetime as _dt
+    random.seed(42)
+    _today = _dt.date.today()
+    accounts = [{"id": "act_demo316", "name": "Agência 316 — Demo", "currency": "BRL",
+                 "account_status": 1, "amount_spent": "18450.00", "balance": "5000",
+                 "spend_cap": "30000", "timezone_name": "America/Sao_Paulo", "business_name": "316"}]
+
+    def _demo_campaigns(account_id, date_preset):
+        camps = [
+            ("Campanha | Leads | Imóveis Premium", "LEAD_GENERATION", 6800, 320000, 290000, 4100, 3.9, 1.66, 21.25, 1.34, 312, 21.79, 0, 0, 18200, 4200),
+            ("Campanha | Tráfego | Blog 316", "LINK_CLICKS", 3200, 195000, 180000, 6800, 3.49, 0.47, 16.41, 1.28, 0, 0, 0, 0, 0, 0),
+            ("Campanha | Conversões | Landing Page", "CONVERSIONS", 4100, 240000, 215000, 3600, 1.5, 1.14, 17.08, 1.12, 89, 46.07, 23, 178.26, 0, 0),
+            ("Campanha | Remarketing | Visitantes", "CONVERSIONS", 2350, 98000, 92000, 1900, 1.94, 1.24, 23.98, 1.07, 45, 52.22, 12, 195.83, 0, 0),
+            ("Campanha | Awareness | Branding 316", "REACH", 2000, 410000, 398000, 2100, 0.51, 0.95, 4.88, 1.03, 0, 0, 0, 0, 32000, 18000),
+        ]
+        rows = []
+        for camp, obj, spend, imp, reach, clicks, ctr, cpc, cpm, freq, leads, cpl, purchases, cpp, vid, thru in camps:
+            rows.append({
+                "ID": f"camp_{camp[:6].replace(' ','_')}",
+                "Campanha": camp, "Objetivo": obj,
+                "Gasto": spend, "Impressões": imp, "Alcance": reach, "Cliques": clicks,
+                "Cliques Únicos": int(clicks*0.85), "CTR (%)": ctr, "CTR Único (%)": round(ctr*0.85,2),
+                "CPC": cpc, "CPM": cpm, "CPP": round(spend/reach*1000,2) if reach else 0,
+                "Frequência": freq, "Cliques no Link": int(clicks*0.7), "Cliques Externos": int(clicks*0.6),
+                "Leads": leads, "CPL": cpl, "Compras": purchases, "CPP Compra": cpp,
+                "Video Views": vid, "ThruPlays": thru, "Todas Ações": f"leads:{leads}, purchases:{purchases}",
+            })
+        return pd.DataFrame(rows)
+
+    def _demo_adsets(account_id, date_preset):
+        sets = [
+            ("Conj | Imóveis | 30-45 anos", "Campanha | Leads | Imóveis Premium", 3200, 155000, 142000, 1950, 1.26, 1.64, 20.65, 1.22, 148, 21.62, 0),
+            ("Conj | Imóveis | 45-60 anos", "Campanha | Leads | Imóveis Premium", 3600, 165000, 148000, 2150, 1.30, 1.67, 21.82, 1.46, 164, 21.95, 0),
+            ("Conj | Blog | Mobile", "Campanha | Tráfego | Blog 316", 1600, 98000, 90000, 3400, 3.47, 0.47, 16.33, 1.3, 0, 0, 0),
+            ("Conj | Blog | Desktop", "Campanha | Tráfego | Blog 316", 1600, 97000, 90000, 3400, 3.51, 0.47, 16.49, 1.26, 0, 0, 0),
+            ("Conj | Conversão | Leads Quentes", "Campanha | Conversões | Landing Page", 4100, 240000, 215000, 3600, 1.5, 1.14, 17.08, 1.12, 89, 46.07, 23),
+        ]
+        rows = []
+        for name, camp, spend, imp, reach, clicks, ctr, cpc, cpm, freq, leads, cpl, purchases in sets:
+            rows.append({
+                "ID": f"adset_{name[:6].replace(' ','_')}",
+                "Conjunto": name, "Campanha": camp,
+                "Gasto": spend, "Impressões": imp, "Alcance": reach, "Cliques": clicks,
+                "CTR (%)": ctr, "CPC": cpc, "CPM": cpm, "Frequência": freq,
+                "Leads": leads, "CPL": cpl, "Compras": purchases,
+                "CPP": round(spend/purchases,2) if purchases else 0,
+            })
+        return pd.DataFrame(rows)
+
+    def _demo_ads(account_id, date_preset):
+        ads = [
+            ("Anúncio | Vídeo 15s | Imóveis", "Conj | Imóveis | 30-45 anos", "Campanha | Leads | Imóveis Premium", 1800, 85000, 78000, 1050, 1.24, 1.71, 21.18, 1.21, 78, 23.08, 0, 12000, 5000),
+            ("Anúncio | Carrossel | Depoimentos", "Conj | Imóveis | 30-45 anos", "Campanha | Leads | Imóveis Premium", 1400, 70000, 64000, 900, 1.29, 1.56, 20.0, 1.23, 70, 20.0, 0, 0, 0),
+            ("Anúncio | Imagem | CTA Forte", "Conj | Imóveis | 45-60 anos", "Campanha | Leads | Imóveis Premium", 1900, 88000, 80000, 1200, 1.36, 1.58, 21.59, 1.48, 90, 21.11, 0, 0, 0),
+            ("Anúncio | Vídeo 30s | Branding", "Conj | Imóveis | 45-60 anos", "Campanha | Leads | Imóveis Premium", 1700, 77000, 68000, 950, 1.23, 1.79, 22.08, 1.44, 74, 22.97, 0, 8200, 3000),
+            ("Anúncio | Blog | Mobile Feed", "Conj | Blog | Mobile", "Campanha | Tráfego | Blog 316", 1600, 98000, 90000, 3400, 3.47, 0.47, 16.33, 1.3, 0, 0, 0, 0, 0),
+        ]
+        rows = []
+        for name, adset, camp, spend, imp, reach, clicks, ctr, cpc, cpm, freq, leads, cpl, purchases, vid, thru in ads:
+            rows.append({
+                "ID": f"ad_{name[:6].replace(' ','_')}",
+                "Anúncio": name, "Conjunto": adset, "Campanha": camp,
+                "Gasto": spend, "Impressões": imp, "Alcance": reach, "Cliques": clicks,
+                "Cliques Únicos": int(clicks*0.85), "CTR (%)": ctr, "CPC": cpc, "CPM": cpm, "Frequência": freq,
+                "Leads": leads, "CPL": cpl, "Compras": purchases,
+                "CPP": round(spend/purchases,2) if purchases else 0,
+                "Video Views": vid, "ThruPlays": thru,
+            })
+        return pd.DataFrame(rows)
+
+    def _demo_demographics(account_id, date_preset):
+        age_data = [
+            {"age": "18-24", "Impressões": 58000, "Alcance": 52000, "Cliques": 980, "Gasto": 1200.0, "CTR (%)": 1.69, "Leads": 28},
+            {"age": "25-34", "Impressões": 145000, "Alcance": 130000, "Cliques": 2800, "Gasto": 4100.0, "CTR (%)": 1.93, "Leads": 112},
+            {"age": "35-44", "Impressões": 198000, "Alcance": 178000, "Cliques": 3600, "Gasto": 5800.0, "CTR (%)": 1.82, "Leads": 168},
+            {"age": "45-54", "Impressões": 160000, "Alcance": 144000, "Cliques": 2400, "Gasto": 4200.0, "CTR (%)": 1.5, "Leads": 98},
+            {"age": "55-64", "Impressões": 88000, "Alcance": 79000, "Cliques": 1100, "Gasto": 2100.0, "CTR (%)": 1.25, "Leads": 32},
+            {"age": "65+", "Impressões": 28000, "Alcance": 25000, "Cliques": 340, "Gasto": 800.0, "CTR (%)": 1.21, "Leads": 8},
+        ]
+        gender_data = [
+            {"gender": "male", "Impressões": 352000, "Alcance": 316000, "Cliques": 5900, "Gasto": 10200.0, "CTR (%)": 1.68, "Leads": 218},
+            {"gender": "female", "Impressões": 310000, "Alcance": 278000, "Cliques": 5300, "Gasto": 8050.0, "CTR (%)": 1.71, "Leads": 228},
+            {"gender": "unknown", "Impressões": 15000, "Alcance": 14000, "Cliques": 220, "Gasto": 200.0, "CTR (%)": 1.47, "Leads": 0},
+        ]
+        ag_raw = []
+        for a in age_data:
+            for g in ["male", "female"]:
+                ag_raw.append({"age": a["age"], "gender": g,
+                               "Impressões": int(a["Impressões"]*0.5), "Gasto": round(a["Gasto"]*0.5,2)})
+        return pd.DataFrame(age_data), pd.DataFrame(gender_data), pd.DataFrame(ag_raw)
+
+    def _demo_placement(account_id, date_preset):
+        rows = [
+            {"Plataforma": "facebook", "Posição": "feed", "Impressões": 280000, "Alcance": 252000, "Cliques": 4800, "Gasto": 8200.0, "CTR (%)": 1.71, "CPC": 1.71, "CPM": 29.29, "Leads": 198},
+            {"Plataforma": "instagram", "Posição": "feed", "Impressões": 185000, "Alcance": 166000, "Cliques": 3200, "Gasto": 5400.0, "CTR (%)": 1.73, "CPC": 1.69, "CPM": 29.19, "Leads": 132},
+            {"Plataforma": "instagram", "Posição": "story", "Impressões": 130000, "Alcance": 118000, "Cliques": 1900, "Gasto": 2800.0, "CTR (%)": 1.46, "CPC": 1.47, "CPM": 21.54, "Leads": 62},
+            {"Plataforma": "facebook", "Posição": "right_hand_column", "Impressões": 52000, "Alcance": 48000, "Cliques": 520, "Gasto": 600.0, "CTR (%)": 1.0, "CPC": 1.15, "CPM": 11.54, "Leads": 18},
+            {"Plataforma": "audience_network", "Posição": "classic", "Impressões": 30000, "Alcance": 28000, "Cliques": 800, "Gasto": 450.0, "CTR (%)": 2.67, "CPC": 0.56, "CPM": 15.0, "Leads": 36},
+        ]
+        return pd.DataFrame(rows)
+
+    def _demo_daily(account_id, date_preset):
+        presets = {"last_7d": 7, "last_14d": 14, "last_30d": 30, "last_90d": 90, "this_month": 30, "last_month": 30}
+        days = presets.get(date_preset, 30)
+        base_spend = 600
+        rows = []
+        for i in range(days):
+            day = _today - _dt.timedelta(days=days-1-i)
+            mult = 1 + 0.3*random.gauss(0,1)
+            spend = max(200, base_spend*mult)
+            imp = int(spend * 22 * (1+0.1*random.gauss(0,1)))
+            reach = int(imp * 0.88)
+            clicks = int(imp * 0.017 * (1+0.15*random.gauss(0,1)))
+            leads = int(spend / 22 * (1+0.2*random.gauss(0,1)))
+            rows.append({
+                "Data": pd.Timestamp(day),
+                "Gasto": round(spend, 2),
+                "Impressões": imp, "Alcance": reach, "Cliques": clicks,
+                "CTR (%)": round(clicks/imp*100, 2) if imp else 0,
+                "CPM": round(spend/imp*1000, 2) if imp else 0,
+                "Leads": max(0, leads), "Compras": max(0, int(leads*0.07)),
+            })
+        return pd.DataFrame(rows)
+
+    # Patch das funções de carregamento para usar dados demo
+    load_campaigns = _demo_campaigns
+    load_adsets = _demo_adsets
+    load_ads = _demo_ads
+    load_demographics = _demo_demographics
+    load_placement = _demo_placement
+    load_daily = _demo_daily
 
 account_labels = {
     acc["id"]: f"{acc.get('name', 'Sem nome')} ({STATUS_MAP.get(acc.get('account_status'), '?')})"
@@ -541,6 +674,8 @@ with st.sidebar:
       </div>
     </div>
     """, unsafe_allow_html=True)
+    if DEMO_MODE:
+        st.warning("⚠️ **Modo Demo** — dados simulados. API Meta indisponível neste ambiente.")
     st.divider()
     selected_id = st.selectbox(
         "Conta de anúncio",
