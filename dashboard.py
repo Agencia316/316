@@ -24,146 +24,142 @@ ACCESS_TOKEN = _get_token()
 
 st.set_page_config(page_title="316 — Meta Ads", page_icon="⚡", layout="wide")
 
-# ── CSS moderno ────────────────────────────────────────────────────────────────
+# ── CSS ────────────────────────────────────────────────────────────────────────
 st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* ── BASE ── */
+html, body, [class*="css"] { font-family: 'Outfit', sans-serif !important; }
+.stApp { background-color: #020617 !important; }
+.block-container { padding-top: 16px !important; padding-bottom: 60px !important; }
+h1,h2,h3,h4,h5,h6,p,span,div,label { color: #F8FAFC; }
 
-  html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+/* ── SIDEBAR ── */
+[data-testid="stSidebar"] {
+  background: rgba(2,6,23,.98) !important;
+  border-right: 1px solid rgba(255,255,255,.06) !important;
+}
+[data-testid="stSidebar"] * { color: #94A3B8 !important; }
+[data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 { color: #F8FAFC !important; }
 
-  /* Header */
-  .dash-header {
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    border-radius: 16px;
-    padding: 28px 36px;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  .dash-header h1 { color: #fff; font-size: 2rem; font-weight: 700; margin: 0; }
-  .dash-header p  { color: #a0aec0; font-size: .9rem; margin: 4px 0 0; }
+/* ── TABS ── */
+.stTabs [data-baseweb="tab-list"] {
+  background: rgba(255,255,255,.03) !important;
+  border-radius: 12px !important;
+  padding: 4px !important;
+  border: 1px solid rgba(255,255,255,.05) !important;
+  gap: 2px !important;
+}
+.stTabs [data-baseweb="tab"] {
+  background: transparent !important;
+  color: #475569 !important;
+  border-radius: 8px !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 8px 18px !important;
+  border: none !important;
+  transition: all .2s !important;
+}
+.stTabs [aria-selected="true"] {
+  background: rgba(56,189,248,.12) !important;
+  color: #38BDF8 !important;
+}
+.stTabs [data-baseweb="tab-highlight"],
+.stTabs [data-baseweb="tab-border"] { display: none !important; }
 
-  /* KPI card */
-  .kpi-card {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    border: 1px solid #2d3748;
-    border-radius: 12px;
-    padding: 20px 24px;
-    text-align: center;
-    transition: transform .2s;
-  }
-  .kpi-card:hover { transform: translateY(-2px); }
-  .kpi-card .label { color: #718096; font-size: .75rem; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
-  .kpi-card .value { color: #e2e8f0; font-size: 1.6rem; font-weight: 700; margin: 6px 0 2px; }
-  .kpi-card .delta { color: #68d391; font-size: .8rem; }
+/* ── MISC ── */
+hr { border-color: rgba(255,255,255,.06) !important; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+[data-testid="stDataFrame"] {
+  border: 1px solid rgba(255,255,255,.07) !important;
+  border-radius: 12px !important;
+}
 
-  /* Insight cards */
-  .insight-good  { background: linear-gradient(135deg,#1a3a2e,#1e4d3a); border-left: 4px solid #48bb78; border-radius: 10px; padding: 14px 18px; margin: 8px 0; }
-  .insight-warn  { background: linear-gradient(135deg,#3a2e1a,#4d3e1e); border-left: 4px solid #ed8936; border-radius: 10px; padding: 14px 18px; margin: 8px 0; }
-  .insight-bad   { background: linear-gradient(135deg,#3a1a1a,#4d1e1e); border-left: 4px solid #fc8181; border-radius: 10px; padding: 14px 18px; margin: 8px 0; }
-  .insight-info  { background: linear-gradient(135deg,#1a2a3a,#1e3a4d); border-left: 4px solid #63b3ed; border-radius: 10px; padding: 14px 18px; margin: 8px 0; }
-  .insight-good p, .insight-warn p, .insight-bad p, .insight-info p { color: #e2e8f0; margin: 0; font-size: .9rem; }
-  .insight-good strong, .insight-warn strong, .insight-bad strong, .insight-info strong { font-size: 1rem; }
+/* ── KPI CARD ── */
+.kpi-card {
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 20px; padding: 22px 24px;
+  position: relative; overflow: hidden;
+  transition: transform .25s cubic-bezier(.2,0,0,1), box-shadow .25s;
+  margin-bottom: 4px;
+}
+.kpi-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.12); }
+.kpi-top { position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.kpi-glow { position: absolute; top:-40px; right:-40px; width:120px; height:120px; border-radius:50%; opacity:.05; filter:blur(30px); }
+.kpi-row { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+.kpi-label { font-size:10px; letter-spacing:3px; color:#475569; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
+.kpi-icon-box { width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+.kpi-value { font-size:28px; font-weight:800; color:#F8FAFC; font-family:'Outfit',sans-serif; line-height:1; margin-bottom:10px; }
+.kpi-delta-row { display:flex; align-items:center; gap:8px; }
+.kpi-badge { font-size:11px; padding:2px 8px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:600; }
+.kpi-sub { font-size:11px; color:#475569; }
 
-  /* Score */
-  .score-circle { font-size: 3.5rem; font-weight: 800; text-align: center; padding: 16px; }
+/* ── SECTION LABEL ── */
+.slabel { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+.slabel-bar { width:2px; height:18px; background:linear-gradient(180deg,#38BDF8,#818CF8); border-radius:4px; flex-shrink:0; }
+.slabel-text { font-size:12px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:#94A3B8; font-family:'JetBrains Mono',monospace; margin:0; }
 
-  /* Tabs */
-  .stTabs [data-baseweb="tab-list"] { gap: 6px; }
-  .stTabs [data-baseweb="tab"] { border-radius: 8px 8px 0 0; padding: 10px 20px; font-weight: 500; }
+/* ── INSIGHTS ── */
+.insight-good, .insight-warn, .insight-bad, .insight-info {
+  border-radius: 12px; padding: 14px 18px; margin: 8px 0;
+}
+.insight-good { background:rgba(52,211,153,.06); border:1px solid rgba(52,211,153,.2); border-left:3px solid #34D399; }
+.insight-warn { background:rgba(251,191,36,.06); border:1px solid rgba(251,191,36,.2); border-left:3px solid #FBBF24; }
+.insight-bad  { background:rgba(248,113,113,.06); border:1px solid rgba(248,113,113,.2); border-left:3px solid #F87171; }
+.insight-info { background:rgba(56,189,248,.06);  border:1px solid rgba(56,189,248,.2);  border-left:3px solid #38BDF8; }
+.insight-good p, .insight-warn p, .insight-bad p, .insight-info p { color:#CBD5E1; margin:0; font-size:.88rem; }
+.insight-good strong, .insight-warn strong, .insight-bad strong, .insight-info strong { color:#F8FAFC; }
 
-  /* Ad Cards */
-  .ad-card {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    border: 1px solid #2d3748;
-    border-radius: 14px;
-    padding: 18px 20px;
-    margin-bottom: 14px;
-    transition: transform .2s, border-color .2s;
-    position: relative;
-    overflow: hidden;
-  }
-  .ad-card:hover { transform: translateY(-3px); border-color: #4a5568; }
-  .ad-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #636EFA, #EF553B);
-  }
-  .ad-card.green::before { background: linear-gradient(90deg, #48bb78, #38a169); }
-  .ad-card.orange::before { background: linear-gradient(90deg, #ed8936, #dd6b20); }
-  .ad-card.red::before { background: linear-gradient(90deg, #fc8181, #e53e3e); }
-  .ad-card-title {
-    color: #e2e8f0;
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 8px;
-    line-height: 1.3;
-  }
-  .ad-breadcrumb {
-    color: #718096;
-    font-size: .75rem;
-    margin-bottom: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    align-items: center;
-  }
-  .ad-breadcrumb span { color: #4a5568; }
-  .ad-metrics-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 10px;
-  }
-  .ad-metric {
-    background: rgba(255,255,255,0.04);
-    border-radius: 8px;
-    padding: 8px 10px;
-    text-align: center;
-  }
-  .ad-metric .m-label { color: #718096; font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; }
-  .ad-metric .m-value { color: #e2e8f0; font-size: .95rem; font-weight: 700; margin-top: 2px; }
-  .ad-badge {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 20px;
-    font-size: .7rem;
-    font-weight: 600;
-    margin-bottom: 10px;
-  }
-  .badge-green { background: rgba(72,187,120,.2); color: #48bb78; }
-  .badge-orange { background: rgba(237,137,54,.2); color: #ed8936; }
-  .badge-red { background: rgba(252,129,129,.2); color: #fc8181; }
+/* ── AD CARDS ── */
+.ad-card {
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 16px; padding: 18px 20px; margin-bottom: 14px;
+  transition: transform .25s; position: relative; overflow: hidden;
+}
+.ad-card:hover { transform: translateY(-3px); }
+.ad-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,#38BDF8,#818CF8); }
+.ad-card.green::before  { background:linear-gradient(90deg,#34D399,#10B981); }
+.ad-card.orange::before { background:linear-gradient(90deg,#FBBF24,#F59E0B); }
+.ad-card.red::before    { background:linear-gradient(90deg,#F87171,#EF4444); }
+.ad-card-title { color:#E2E8F0; font-size:1rem; font-weight:600; margin-bottom:8px; }
+.ad-breadcrumb { color:#475569; font-size:.75rem; margin-bottom:12px; }
+.ad-metrics-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+.ad-metric { background:rgba(255,255,255,.04); border-radius:8px; padding:8px 10px; text-align:center; }
+.ad-metric .m-label { color:#475569; font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; font-family:'JetBrains Mono',monospace; }
+.ad-metric .m-value { color:#E2E8F0; font-size:.95rem; font-weight:700; margin-top:2px; font-family:'JetBrains Mono',monospace; }
+.ad-badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:.7rem; font-weight:600; margin-bottom:10px; font-family:'JetBrains Mono',monospace; }
+.badge-green  { background:rgba(52,211,153,.15); color:#34D399; }
+.badge-orange { background:rgba(251,191,36,.15);  color:#FBBF24; }
+.badge-red    { background:rgba(248,113,113,.15); color:#F87171; }
 
-  /* Hierarchy */
-  .hierarchy-camp {
-    background: linear-gradient(135deg,#1a1a2e,#16213e);
-    border: 1px solid #3d4f6b;
-    border-radius: 12px;
-    padding: 14px 18px;
-    margin-bottom: 12px;
-  }
-  .hierarchy-camp h4 { color: #90cdf4; margin: 0 0 4px; font-size: .95rem; }
-  .hierarchy-adset {
-    background: rgba(255,255,255,.04);
-    border-left: 3px solid #4a5568;
-    border-radius: 0 8px 8px 0;
-    padding: 10px 14px;
-    margin: 8px 0 8px 16px;
-  }
-  .hierarchy-adset h5 { color: #a0aec0; margin: 0 0 4px; font-size: .85rem; }
+/* ── HIERARCHY ── */
+.hierarchy-adset {
+  background:rgba(255,255,255,.03); border-left:2px solid rgba(56,189,248,.3);
+  border-radius:0 10px 10px 0; padding:10px 14px; margin:8px 0 8px 16px;
+}
+.hierarchy-adset h5 { color:#94A3B8; margin:0 0 4px; font-size:.85rem; }
 
-  /* Filter badge */
-  .filter-bar {
-    background: linear-gradient(135deg,#1a1a2e,#16213e);
-    border: 1px solid #2d3748;
-    border-radius: 10px;
-    padding: 14px 18px;
-    margin-bottom: 18px;
-  }
+/* ── FILTER BAR ── */
+.filter-bar {
+  background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.07);
+  border-radius:14px; padding:16px 20px; margin-bottom:18px;
+}
+
+/* ── SCORE ── */
+.score-wrap {
+  background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.07);
+  border-radius:20px; padding:32px; text-align:center;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes pulse-ring { 0%{transform:scale(1);opacity:.6} 100%{transform:scale(1.5);opacity:0} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 </style>
 """, unsafe_allow_html=True)
 
@@ -203,14 +199,50 @@ def extract_all_actions(actions):
     if not actions: return {}
     return {a["action_type"]: safe_int(a.get("value", 0)) for a in actions}
 
-def kpi(label, value, delta=None):
-    delta_html = f'<div class="delta">▲ {delta}</div>' if delta else ""
+def dark_fig(fig):
+    """Aplica estilo dark consistente em figuras plotly."""
+    fig.update_layout(
+        paper_bgcolor="rgba(255,255,255,.02)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font_color="#94A3B8",
+        title_font_color="#E2E8F0",
+        title_font_family="Outfit",
+        title_font_size=14,
+        legend=dict(bgcolor="transparent", font=dict(color="#94A3B8")),
+        margin=dict(l=0, r=10, t=44, b=10),
+    )
+    fig.update_xaxes(gridcolor="rgba(255,255,255,.05)", linecolor="transparent", tickcolor="transparent")
+    fig.update_yaxes(gridcolor="rgba(255,255,255,.05)", linecolor="transparent", tickcolor="transparent")
+    return fig
+
+def kpi(label, value, delta=None, icon="", color="#818CF8"):
+    icon_html = f'<div class="kpi-icon-box" style="background:{color}18">{icon}</div>' if icon else ""
+    delta_html = ""
+    if delta is not None:
+        try:
+            num = float(str(delta).replace(",", ".").replace("%", "").replace("R$", "").replace(" ", ""))
+            pos = num >= 0
+        except Exception:
+            pos = True
+        c = "#34D399" if pos else "#F87171"
+        bg = "rgba(52,211,153,.1)" if pos else "rgba(248,113,113,.1)"
+        arr = "↑" if pos else "↓"
+        delta_html = f'<div class="kpi-delta-row"><span class="kpi-badge" style="color:{c};background:{bg}">{arr} {delta}</span></div>'
     st.markdown(f"""
     <div class="kpi-card">
-      <div class="label">{label}</div>
-      <div class="value">{value}</div>
+      <div class="kpi-top" style="background:linear-gradient(90deg,{color},transparent)"></div>
+      <div class="kpi-glow" style="background:{color}"></div>
+      <div class="kpi-row">
+        <span class="kpi-label">{label}</span>
+        {icon_html}
+      </div>
+      <div class="kpi-value">{value}</div>
       {delta_html}
     </div>""", unsafe_allow_html=True)
+
+def slabel(text):
+    st.markdown(f"""<div class="slabel"><div class="slabel-bar"></div><p class="slabel-text">{text}</p></div>""",
+                unsafe_allow_html=True)
 
 def insight(tipo, icon, title, text):
     cls = {"good": "insight-good", "warn": "insight-warn", "bad": "insight-bad", "info": "insight-info"}[tipo]
@@ -481,16 +513,6 @@ def load_daily(account_id, date_preset):
         df["Data"] = pd.to_datetime(df["Data"])
     return df
 
-# ── header ─────────────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="dash-header">
-  <div>
-    <h1>⚡ 316 — Meta Ads Intelligence</h1>
-    <p>Dashboard completo com insights automáticos de performance</p>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
 if not ACCESS_TOKEN:
     st.error("Token não encontrado. Verifique o arquivo .env.")
     st.stop()
@@ -508,7 +530,17 @@ account_labels = {
 account_map = {acc["id"]: acc for acc in accounts}
 
 with st.sidebar:
-    st.markdown("### ⚡ 316 Meta Ads")
+    st.markdown("""
+    <div style="padding:4px 0 12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1877F2,#42B0FF);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:white;box-shadow:0 0 14px rgba(24,119,242,.4)">M</div>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:#F8FAFC;font-family:'Outfit',sans-serif">316</div>
+          <div style="font-size:9px;color:#475569;font-family:'JetBrains Mono',monospace;letter-spacing:2px">META ADS</div>
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
     st.divider()
     selected_id = st.selectbox(
         "Conta de anúncio",
@@ -549,6 +581,26 @@ with st.sidebar:
 acc_info = account_map[selected_id]
 currency = acc_info.get("currency", "BRL")
 
+# ── header ─────────────────────────────────────────────────────────────────────
+st.markdown(f"""
+<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 24px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:28px">
+  <div style="display:flex;align-items:center;gap:14px">
+    <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#1877F2 0%,#42B0FF 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(24,119,242,.4);font-size:20px;font-weight:900;color:white">M</div>
+    <div>
+      <h1 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-.5px;color:#F8FAFC;font-family:'Outfit',sans-serif">Meta Ads <span style="color:#38BDF8">Analytics</span></h1>
+      <p style="margin:0;font-size:11px;color:#475569;font-family:'JetBrains Mono',monospace">{acc_info.get('name','–')} &nbsp;·&nbsp; {PERIOD_LABELS.get(date_preset,'')}</p>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px">
+      <div style="width:7px;height:7px;border-radius:50%;background:#34D399;box-shadow:0 0 8px #34D399;animation:pulse-ring 1.5s ease-out infinite"></div>
+      <span style="font-size:11px;color:#34D399;font-family:'JetBrains Mono',monospace;letter-spacing:1px">LIVE</span>
+    </div>
+    <div style="font-size:11px;color:#334155;font-family:'JetBrains Mono',monospace;padding:6px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px">{currency}</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
 # ── tabs ───────────────────────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab_ins = st.tabs([
     "🏦 Conta",
@@ -571,26 +623,26 @@ def apply_camp_filter(df, col="Campanha"):
 # TAB 1 — CONTA
 # ═══════════════════════════════════════════════════════════════════════════════
 with tab1:
-    st.subheader("Informações da Conta")
+    slabel("Informações da Conta")
     spent = safe_float(acc_info.get("amount_spent", 0)) / 100
     balance = safe_float(acc_info.get("balance", 0)) / 100
     spend_cap = safe_float(acc_info.get("spend_cap", 0)) / 100
 
     c1, c2, c3, c4 = st.columns(4)
-    with c1: kpi("Nome", acc_info.get("name", "–"))
-    with c2: kpi("Status", STATUS_MAP.get(acc_info.get("account_status"), "?"))
-    with c3: kpi("Moeda", currency)
-    with c4: kpi("Fuso Horário", acc_info.get("timezone_name", "–"))
+    with c1: kpi("Nome", acc_info.get("name", "–"), icon="🏢", color="#818CF8")
+    with c2: kpi("Status", STATUS_MAP.get(acc_info.get("account_status"), "?"), icon="🔵", color="#34D399")
+    with c3: kpi("Moeda", currency, icon="💱", color="#38BDF8")
+    with c4: kpi("Fuso Horário", acc_info.get("timezone_name", "–"), icon="🕐", color="#A78BFA")
 
     st.markdown("<br>", unsafe_allow_html=True)
     c5, c6, c7, c8 = st.columns(4)
-    with c5: kpi("Total Gasto (histórico)", fmt(spent, currency))
-    with c6: kpi("Saldo Disponível", fmt(balance, currency))
-    with c7: kpi("Limite de Gasto", fmt(spend_cap, currency) if spend_cap else "Sem limite")
-    with c8: kpi("Business", acc_info.get("business_name", "–"))
+    with c5: kpi("Total Gasto (histórico)", fmt(spent, currency), icon="💸", color="#818CF8")
+    with c6: kpi("Saldo Disponível", fmt(balance, currency), icon="🏦", color="#34D399")
+    with c7: kpi("Limite de Gasto", fmt(spend_cap, currency) if spend_cap else "Sem limite", icon="⚡", color="#FB923C")
+    with c8: kpi("Business", acc_info.get("business_name", "–"), icon="🏢", color="#F472B6")
 
     st.divider()
-    st.subheader("Todas as Contas Disponíveis")
+    slabel("Todas as Contas Disponíveis")
     df_accs = pd.DataFrame([{
         "Nome": a.get("name", ""),
         "ID": a["id"],
@@ -628,29 +680,29 @@ with tab2:
         avg_cpm = (total_spend / total_imp * 1000) if total_imp else 0
         avg_freq = df_camp["Frequência"].mean()
 
-        st.subheader("KPIs Gerais")
+        slabel("KPIs Gerais")
         c1, c2, c3, c4, c5, c6 = st.columns(6)
-        with c1: kpi("💰 Total Gasto", fmt(total_spend, currency))
-        with c2: kpi("👥 Alcance", f"{int(total_reach):,}")
-        with c3: kpi("👁️ Impressões", f"{int(total_imp):,}")
-        with c4: kpi("🖱️ Cliques", f"{int(total_clicks):,}")
-        with c5: kpi("📈 CTR Médio", f"{avg_ctr:.2f}%")
-        with c6: kpi("📢 CPM Médio", fmt(avg_cpm, currency))
+        with c1: kpi("Total Gasto", fmt(total_spend, currency), icon="💸", color="#818CF8")
+        with c2: kpi("Alcance", f"{int(total_reach):,}", icon="👥", color="#A78BFA")
+        with c3: kpi("Impressões", f"{int(total_imp):,}", icon="👁️", color="#38BDF8")
+        with c4: kpi("Cliques", f"{int(total_clicks):,}", icon="🖱️", color="#34D399")
+        with c5: kpi("CTR Médio", f"{avg_ctr:.2f}%", icon="📈", color="#34D399")
+        with c6: kpi("CPM Médio", fmt(avg_cpm, currency), icon="📢", color="#FBBF24")
 
         st.markdown("<br>", unsafe_allow_html=True)
         c7, c8, c9, c10 = st.columns(4)
-        with c7: kpi("🔁 Frequência Média", f"{avg_freq:.1f}x")
+        with c7: kpi("Frequência Média", f"{avg_freq:.1f}x", icon="🔁", color="#FB923C")
         with c8:
             if total_leads:
-                kpi("🎯 Total Leads", f"{int(total_leads):,}")
+                kpi("Total Leads", f"{int(total_leads):,}", icon="🎯", color="#F472B6")
             elif total_purchases:
-                kpi("🛒 Total Compras", f"{int(total_purchases):,}")
+                kpi("Total Compras", f"{int(total_purchases):,}", icon="🛒", color="#F472B6")
         with c9:
             if total_leads:
-                kpi("🎯 CPL Médio", fmt(total_spend / total_leads, currency))
+                kpi("CPL Médio", fmt(total_spend / total_leads, currency), icon="💡", color="#FB923C")
             elif total_purchases:
-                kpi("🛒 CPP Médio", fmt(total_spend / total_purchases, currency))
-        with c10: kpi("📊 Campanhas Ativas", str(len(df_camp)))
+                kpi("CPP Médio", fmt(total_spend / total_purchases, currency), icon="💡", color="#FB923C")
+        with c10: kpi("Campanhas Ativas", str(len(df_camp)), icon="📣", color="#38BDF8")
 
         st.divider()
         col_a, col_b = st.columns(2)
@@ -660,35 +712,35 @@ with tab2:
                          color_continuous_scale="Blues", text_auto=".2f",
                          title="Gasto por Campanha", template=CHART_THEME)
             fig.update_layout(coloraxis_showscale=False, height=420)
-            st.plotly_chart(fig, use_container_width=True)
+            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_b:
             fig = px.bar(df_camp.sort_values("CTR (%)"), x="CTR (%)", y="Campanha",
                          orientation="h", color="CTR (%)",
                          color_continuous_scale="Greens", text_auto=".2f",
                          title="CTR por Campanha", template=CHART_THEME)
             fig.update_layout(coloraxis_showscale=False, height=420)
-            st.plotly_chart(fig, use_container_width=True)
+            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         col_c, col_d = st.columns(2)
         with col_c:
             fig = go.Figure(layout=dict(template=CHART_THEME))
-            fig.add_trace(go.Bar(name="Alcance", x=df_camp["Campanha"], y=df_camp["Alcance"], marker_color="#636EFA"))
-            fig.add_trace(go.Bar(name="Impressões", x=df_camp["Campanha"], y=df_camp["Impressões"], marker_color="#EF553B"))
+            fig.add_trace(go.Bar(name="Alcance", x=df_camp["Campanha"], y=df_camp["Alcance"], marker_color="#818CF8"))
+            fig.add_trace(go.Bar(name="Impressões", x=df_camp["Campanha"], y=df_camp["Impressões"], marker_color="#38BDF8"))
             fig.update_layout(barmode="group", height=380, xaxis_tickangle=-30, title="Alcance vs Impressões")
-            st.plotly_chart(fig, use_container_width=True)
+            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_d:
             fig = go.Figure(layout=dict(template=CHART_THEME))
-            fig.add_trace(go.Bar(name="CPC", x=df_camp["Campanha"], y=df_camp["CPC"], marker_color="#00CC96"))
-            fig.add_trace(go.Bar(name="CPM", x=df_camp["Campanha"], y=df_camp["CPM"], marker_color="#AB63FA"))
+            fig.add_trace(go.Bar(name="CPC", x=df_camp["Campanha"], y=df_camp["CPC"], marker_color="#34D399"))
+            fig.add_trace(go.Bar(name="CPM", x=df_camp["Campanha"], y=df_camp["CPM"], marker_color="#A78BFA"))
             fig.update_layout(barmode="group", height=380, xaxis_tickangle=-30, title="CPC vs CPM")
-            st.plotly_chart(fig, use_container_width=True)
+            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         if df_camp["Video Views"].sum() > 0:
             fig = go.Figure(layout=dict(template=CHART_THEME))
-            fig.add_trace(go.Bar(name="Video Views", x=df_camp["Campanha"], y=df_camp["Video Views"], marker_color="#FFA15A"))
-            fig.add_trace(go.Bar(name="ThruPlays", x=df_camp["Campanha"], y=df_camp["ThruPlays"], marker_color="#19D3F3"))
+            fig.add_trace(go.Bar(name="Video Views", x=df_camp["Campanha"], y=df_camp["Video Views"], marker_color="#FB923C"))
+            fig.add_trace(go.Bar(name="ThruPlays", x=df_camp["Campanha"], y=df_camp["ThruPlays"], marker_color="#38BDF8"))
             fig.update_layout(barmode="group", height=350, xaxis_tickangle=-30, title="Video Views vs ThruPlays")
-            st.plotly_chart(fig, use_container_width=True)
+            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         if total_leads > 0:
             df_l = df_camp[df_camp["Leads"] > 0]
@@ -696,22 +748,22 @@ with tab2:
             with col_e:
                 fig = px.pie(df_l, values="Leads", names="Campanha",
                              title="Distribuição de Leads", template=CHART_THEME, hole=0.4)
-                st.plotly_chart(fig, use_container_width=True)
+                dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
             with col_f:
                 fig = px.bar(df_l.sort_values("CPL"), x="Campanha", y="CPL",
                              color="CPL", color_continuous_scale="Reds",
                              text_auto=".2f", title="CPL por Campanha", template=CHART_THEME)
                 fig.update_layout(coloraxis_showscale=False)
-                st.plotly_chart(fig, use_container_width=True)
+                dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         if df_camp["Objetivo"].nunique() > 1:
             df_obj = df_camp.groupby("Objetivo")["Gasto"].sum().reset_index()
             fig = px.pie(df_obj, values="Gasto", names="Objetivo",
                          title="Gasto por Objetivo", template=CHART_THEME, hole=0.4)
-            st.plotly_chart(fig, use_container_width=True)
+            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         st.divider()
-        st.subheader("Tabela Completa — Campanhas")
+        slabel("Tabela Completa — Campanhas")
         cols_show = ["Campanha", "Objetivo", "Gasto", "Alcance", "Impressões", "Cliques",
                      "CTR (%)", "CPC", "CPM", "Frequência", "Leads", "CPL", "Compras", "CPP Compra",
                      "Video Views", "ThruPlays"]
@@ -744,10 +796,10 @@ with tab3:
         st.warning("Nenhum conjunto no período.")
     else:
         c1, c2, c3, c4 = st.columns(4)
-        with c1: kpi("Total Conjuntos", str(len(df_adset)))
-        with c2: kpi("Total Gasto", fmt(df_adset["Gasto"].sum(), currency))
-        with c3: kpi("Total Leads", f"{int(df_adset['Leads'].sum()):,}")
-        with c4: kpi("CTR Médio", f"{df_adset['CTR (%)'].mean():.2f}%")
+        with c1: kpi("Total Conjuntos", str(len(df_adset)), icon="🗂️", color="#38BDF8")
+        with c2: kpi("Total Gasto", fmt(df_adset["Gasto"].sum(), currency), icon="💸", color="#818CF8")
+        with c3: kpi("Total Leads", f"{int(df_adset['Leads'].sum()):,}", icon="🎯", color="#F472B6")
+        with c4: kpi("CTR Médio", f"{df_adset['CTR (%)'].mean():.2f}%", icon="📈", color="#34D399")
 
         st.markdown("<br>", unsafe_allow_html=True)
         fig = px.bar(df_adset.sort_values("Gasto").head(20), x="Gasto", y="Conjunto",
@@ -755,7 +807,7 @@ with tab3:
                      hover_data=["Campanha", "CTR (%)", "CPL"],
                      title="Top 20 Conjuntos por Gasto", template=CHART_THEME)
         fig.update_layout(coloraxis_showscale=False, height=500)
-        st.plotly_chart(fig, use_container_width=True)
+        dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         col_a, col_b = st.columns(2)
         with col_a:
@@ -763,15 +815,15 @@ with tab3:
                              color="CPM", hover_name="Conjunto",
                              title="Gasto vs CTR (tamanho = Impressões)",
                              template=CHART_THEME)
-            st.plotly_chart(fig, use_container_width=True)
+            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_b:
             fig = px.scatter(df_adset, x="CPC", y="CTR (%)", size="Cliques",
                              color="Frequência", hover_name="Conjunto",
                              title="CPC vs CTR (tamanho = Cliques)",
                              template=CHART_THEME)
-            st.plotly_chart(fig, use_container_width=True)
+            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
-        st.subheader("Tabela Completa — Conjuntos")
+        slabel("Tabela Completa — Conjuntos")
         st.dataframe(
             df_adset.style.format({
                 "Gasto": "{:.2f}", "CPC": "{:.2f}", "CPM": "{:.2f}",
