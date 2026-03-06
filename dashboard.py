@@ -878,7 +878,7 @@ with tab4:
                     st.plotly_chart(fig, use_container_width=True)
                 with col_v2:
                     fig = px.bar(df_vid, x="ThruPlays", y="Anúncio", orientation="h",
-                                 color="ThruPlays", color_continuous_scale="Teals",
+                                 color="ThruPlays", color_continuous_scale="Teal",
                                  title="ThruPlays por Anúncio", template=CHART_THEME)
                     fig.update_layout(coloraxis_showscale=False)
                     st.plotly_chart(fig, use_container_width=True)
