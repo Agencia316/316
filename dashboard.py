@@ -202,17 +202,15 @@ def extract_all_actions(actions):
 def dark_fig(fig):
     """Aplica estilo dark consistente em figuras plotly."""
     fig.update_layout(
-        paper_bgcolor="rgba(255,255,255,.02)",
+        paper_bgcolor="rgba(255,255,255,0.02)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="#94A3B8",
-        title_font_color="#E2E8F0",
-        title_font_family="Outfit",
-        title_font_size=14,
-        legend=dict(bgcolor="transparent", font=dict(color="#94A3B8")),
+        title_font=dict(color="#E2E8F0", family="Outfit", size=14),
+        legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(color="#94A3B8")),
         margin=dict(l=0, r=10, t=44, b=10),
     )
-    fig.update_xaxes(gridcolor="rgba(255,255,255,.05)", linecolor="transparent", tickcolor="transparent")
-    fig.update_yaxes(gridcolor="rgba(255,255,255,.05)", linecolor="transparent", tickcolor="transparent")
+    fig.update_xaxes(gridcolor="rgba(255,255,255,0.05)", linecolor="rgba(0,0,0,0)", tickcolor="rgba(0,0,0,0)")
+    fig.update_yaxes(gridcolor="rgba(255,255,255,0.05)", linecolor="rgba(0,0,0,0)", tickcolor="rgba(0,0,0,0)")
     return fig
 
 def kpi(label, value, delta=None, icon="", color="#818CF8"):
