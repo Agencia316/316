@@ -527,9 +527,10 @@ if DEMO_MODE:
     import random, datetime as _dt
     random.seed(42)
     _today = _dt.date.today()
+    # Meta API retorna amount_spent/balance/spend_cap em centavos (divididos por 100 no Tab1)
     accounts = [{"id": "act_demo316", "name": "Agência 316 — Demo", "currency": "BRL",
-                 "account_status": 1, "amount_spent": "18450.00", "balance": "5000",
-                 "spend_cap": "30000", "timezone_name": "America/Sao_Paulo", "business_name": "316"}]
+                 "account_status": 1, "amount_spent": "1845000", "balance": "500000",
+                 "spend_cap": "3000000", "timezone_name": "America/Sao_Paulo", "business_name": "316"}]
 
     def _demo_campaigns(account_id, date_preset):
         camps = [

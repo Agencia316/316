@@ -1,37 +1,35 @@
 """
 Corrige o problema de proxy bloqueando conexoes com a API da Meta (graph.facebook.com).
 
-O ambiente de execucao tem HTTPS_PROXY configurado com uma lista de hosts permitidos
-que nao inclui graph.facebook.com. Este modulo forca o SDK facebook-business a
-conectar diretamente, ignorando o proxy do sistema.
-
-Uso: importe este modulo ANTES de qualquer import do facebook_business.
+Aplica o patch APENAS quando o ambiente tiver um proxy configurado (GLOBAL_AGENT_HTTP_PROXY
+ou HTTPS_PROXY). No Streamlit Cloud e outros ambientes sem proxy, este modulo e inofensivo.
 """
 
 import os
-import requests
 
-# --- Belt-and-suspenders: configura NO_PROXY para hosts da Meta ---
-_META_HOSTS = [
-    "graph.facebook.com",
-    "graph.instagram.com",
-    "api.facebook.com",
-    "www.facebook.com",
-]
+_proxy = os.environ.get("GLOBAL_AGENT_HTTP_PROXY") or os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
 
-_existing_no_proxy = os.environ.get("NO_PROXY", os.environ.get("no_proxy", ""))
-_combined = ",".join(filter(None, [_existing_no_proxy] + _META_HOSTS))
-os.environ["NO_PROXY"] = _combined
-os.environ["no_proxy"] = _combined
+if _proxy:
+    import requests
 
-# --- Patch principal: novas requests.Session nao usam proxy ---
-_original_session_init = requests.Session.__init__
+    # Adiciona hosts da Meta ao NO_PROXY para que nao passem pelo proxy
+    _META_HOSTS = [
+        "graph.facebook.com",
+        "graph.instagram.com",
+        "api.facebook.com",
+        "www.facebook.com",
+    ]
+    _existing_no_proxy = os.environ.get("NO_PROXY", os.environ.get("no_proxy", ""))
+    _combined = ",".join(filter(None, [_existing_no_proxy] + _META_HOSTS))
+    os.environ["NO_PROXY"] = _combined
+    os.environ["no_proxy"] = _combined
 
+    # Patch apenas quando proxy estiver ativo: novas sessions da facebook_business nao usam proxy
+    _original_session_init = requests.Session.__init__
 
-def _no_proxy_session_init(self, *args, **kwargs):
-    _original_session_init(self, *args, **kwargs)
-    self.trust_env = False  # Nao le proxy das variaveis de ambiente
-    self.proxies = {}       # Sem proxy configurado
+    def _no_proxy_session_init(self, *args, **kwargs):
+        _original_session_init(self, *args, **kwargs)
+        self.trust_env = False
+        self.proxies = {}
 
-
-requests.Session.__init__ = _no_proxy_session_init
+    requests.Session.__init__ = _no_proxy_session_init
