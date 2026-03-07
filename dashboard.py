@@ -809,7 +809,8 @@ with tab2:
     try:
         df_camp = load_campaigns(selected_id, date_preset)
     except Exception as e:
-        st.error(f"Erro: {e}"); st.stop()
+        st.error(f"Erro ao carregar campanhas: {e}")
+        df_camp = pd.DataFrame()
 
     df_camp = apply_camp_filter(df_camp)
 
@@ -875,20 +876,20 @@ with tab2:
             fig = go.Figure(layout=dict(template=CHART_THEME))
             fig.add_trace(go.Bar(name="Alcance", x=df_camp["Campanha"], y=df_camp["Alcance"], marker_color="#818CF8"))
             fig.add_trace(go.Bar(name="Impressões", x=df_camp["Campanha"], y=df_camp["Impressões"], marker_color="#38BDF8"))
-            fig.update_layout(barmode="group", height=380, xaxis_tickangle=-30, title="Alcance vs Impressões")
+            fig.update_layout(barmode="group", height=380, xaxis=dict(tickangle=-30), title="Alcance vs Impressões")
             dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_d:
             fig = go.Figure(layout=dict(template=CHART_THEME))
             fig.add_trace(go.Bar(name="CPC", x=df_camp["Campanha"], y=df_camp["CPC"], marker_color="#34D399"))
             fig.add_trace(go.Bar(name="CPM", x=df_camp["Campanha"], y=df_camp["CPM"], marker_color="#A78BFA"))
-            fig.update_layout(barmode="group", height=380, xaxis_tickangle=-30, title="CPC vs CPM")
+            fig.update_layout(barmode="group", height=380, xaxis=dict(tickangle=-30), title="CPC vs CPM")
             dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         if df_camp["Video Views"].sum() > 0:
             fig = go.Figure(layout=dict(template=CHART_THEME))
             fig.add_trace(go.Bar(name="Video Views", x=df_camp["Campanha"], y=df_camp["Video Views"], marker_color="#FB923C"))
             fig.add_trace(go.Bar(name="ThruPlays", x=df_camp["Campanha"], y=df_camp["ThruPlays"], marker_color="#38BDF8"))
-            fig.update_layout(barmode="group", height=350, xaxis_tickangle=-30, title="Video Views vs ThruPlays")
+            fig.update_layout(barmode="group", height=350, xaxis=dict(tickangle=-30), title="Video Views vs ThruPlays")
             dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         if total_leads > 0:
@@ -916,14 +917,13 @@ with tab2:
         cols_show = ["Campanha", "Objetivo", "Gasto", "Alcance", "Impressões", "Cliques",
                      "CTR (%)", "CPC", "CPM", "Frequência", "Leads", "CPL", "Compras", "CPP Compra",
                      "Video Views", "ThruPlays"]
-        st.dataframe(
-            df_camp[cols_show].style.format({
-                "Gasto": "{:.2f}", "CPC": "{:.2f}", "CPM": "{:.2f}",
-                "CTR (%)": "{:.2f}", "Frequência": "{:.1f}", "CPL": "{:.2f}", "CPP Compra": "{:.2f}",
-            }).background_gradient(subset=["Gasto"], cmap="Blues")
-             .background_gradient(subset=["CTR (%)"], cmap="Greens"),
-            use_container_width=True, height=400,
-        )
+        _styled_camp = df_camp[cols_show].style.format({
+            "Gasto": "{:.2f}", "CPC": "{:.2f}", "CPM": "{:.2f}",
+            "CTR (%)": "{:.2f}", "Frequência": "{:.1f}", "CPL": "{:.2f}", "CPP Compra": "{:.2f}",
+        })
+        _styled_camp = _styled_camp.background_gradient(subset=["Gasto"], cmap="Blues")
+        _styled_camp = _styled_camp.background_gradient(subset=["CTR (%)"], cmap="Greens")
+        st.dataframe(_styled_camp, use_container_width=True, height=400)
         csv = df_camp.drop(columns=["Todas Ações"]).to_csv(index=False).encode("utf-8")
         st.download_button("⬇️ Exportar Campanhas CSV", csv, "campanhas.csv", "text/csv")
 
@@ -934,7 +934,8 @@ with tab3:
     try:
         df_adset = load_adsets(selected_id, date_preset)
     except Exception as e:
-        st.error(f"Erro: {e}"); st.stop()
+        st.error(f"Erro ao carregar conjuntos: {e}")
+        df_adset = pd.DataFrame()
 
     df_adset = apply_camp_filter(df_adset)
 
@@ -990,7 +991,8 @@ with tab4:
     try:
         df_ads = load_ads(selected_id, date_preset)
     except Exception as e:
-        st.error(f"Erro: {e}"); st.stop()
+        st.error(f"Erro ao carregar anúncios: {e}")
+        df_ads = pd.DataFrame()
 
     df_ads = apply_camp_filter(df_ads)
 
@@ -1051,7 +1053,7 @@ with tab4:
                          orientation="h", color="CTR (%)", color_continuous_scale="RdYlGn",
                          hover_data=["Campanha", "Conjunto", "CPL"],
                          title="Top 20 Anúncios por Gasto (cor = CTR)", template=CHART_THEME)
-            fig.update_layout(height=max(400, len(top20) * 28), yaxis_title="")
+            fig.update_layout(height=max(400, len(top20) * 28), yaxis=dict(title=""))
             st.plotly_chart(fig, use_container_width=True)
 
             col_a, col_b = st.columns(2)
@@ -1089,7 +1091,7 @@ with tab4:
                 fig = px.bar(df_leads_ad.head(15), x="Anúncio", y="CPL",
                              color="Leads", color_continuous_scale="Purples",
                              title="CPL por Anúncio (top 15)", template=CHART_THEME)
-                fig.update_layout(xaxis_tickangle=-30)
+                fig.update_layout(xaxis=dict(tickangle=-30))
                 st.plotly_chart(fig, use_container_width=True)
 
         # ── CARDS ───────────────────────────────────────────────────────────
@@ -1193,14 +1195,13 @@ with tab4:
             cols_show_ads = ["Campanha", "Conjunto", "Anúncio", "Gasto", "Impressões",
                              "Alcance", "Cliques", "CTR (%)", "CPC", "CPM", "Frequência",
                              "Leads", "CPL", "Compras", "Video Views", "ThruPlays"]
-            st.dataframe(
-                df_filtered[cols_show_ads].style.format({
-                    "Gasto": "{:.2f}", "CPC": "{:.2f}", "CPM": "{:.2f}",
-                    "CTR (%)": "{:.2f}", "Frequência": "{:.1f}", "CPL": "{:.2f}", "CPP": "{:.2f}",
-                }).background_gradient(subset=["Gasto"], cmap="Oranges")
-                 .background_gradient(subset=["CTR (%)"], cmap="RdYlGn"),
-                use_container_width=True, height=520,
-            )
+            _styled_ads = df_filtered[cols_show_ads].style.format({
+                "Gasto": "{:.2f}", "CPC": "{:.2f}", "CPM": "{:.2f}",
+                "CTR (%)": "{:.2f}", "Frequência": "{:.1f}", "CPL": "{:.2f}", "CPP": "{:.2f}",
+            })
+            _styled_ads = _styled_ads.background_gradient(subset=["Gasto"], cmap="Oranges")
+            _styled_ads = _styled_ads.background_gradient(subset=["CTR (%)"], cmap="RdYlGn")
+            st.dataframe(_styled_ads, use_container_width=True, height=520)
 
         st.markdown("<br>", unsafe_allow_html=True)
         col_dl1, col_dl2 = st.columns(2)
@@ -1227,7 +1228,8 @@ with tab5:
     try:
         df_age, df_gender, df_ag = load_demographics(selected_id, date_preset)
     except Exception as e:
-        st.error(f"Erro: {e}"); st.stop()
+        st.error(f"Erro ao carregar dados demográficos: {e}")
+        df_age, df_gender, df_ag = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
     st.subheader("Por Faixa Etária")
     if not df_age.empty:
@@ -1298,7 +1300,8 @@ with tab6:
     try:
         df_place = load_placement(selected_id, date_preset)
     except Exception as e:
-        st.error(f"Erro: {e}"); st.stop()
+        st.error(f"Erro ao carregar posicionamentos: {e}")
+        df_place = pd.DataFrame()
 
     if df_place.empty:
         st.warning("Nenhum dado de posicionamento.")
@@ -1347,7 +1350,8 @@ with tab7:
     try:
         df_daily = load_daily(selected_id, date_preset)
     except Exception as e:
-        st.error(f"Erro: {e}"); st.stop()
+        st.error(f"Erro ao carregar dados diários: {e}")
+        df_daily = pd.DataFrame()
 
     if df_daily.empty:
         st.warning("Nenhum dado diário.")
@@ -1412,7 +1416,13 @@ with tab_ins:
     st.markdown("## 🧠 Insights & Recomendações")
     st.caption(f"Análise automática baseada no período: **{PERIOD_LABELS[date_preset]}**")
 
-    # Carrega dados necessários
+    # Carrega dados necessários (pré-inicializa para evitar NameError)
+    df_camp_i = pd.DataFrame()
+    df_adset_i = pd.DataFrame()
+    df_ads_i = pd.DataFrame()
+    df_daily_i = pd.DataFrame()
+    df_age_i, df_gender_i = pd.DataFrame(), pd.DataFrame()
+    df_place_i = pd.DataFrame()
     try:
         df_camp_i = load_campaigns(selected_id, date_preset)
         df_adset_i = load_adsets(selected_id, date_preset)
@@ -1421,18 +1431,17 @@ with tab_ins:
         try:
             df_age_i, df_gender_i, _ = load_demographics(selected_id, date_preset)
         except Exception:
-            df_age_i, df_gender_i = pd.DataFrame(), pd.DataFrame()
+            pass
         try:
             df_place_i = load_placement(selected_id, date_preset)
         except Exception:
-            df_place_i = pd.DataFrame()
+            pass
     except Exception as e:
-        st.error(f"Erro ao carregar dados: {e}")
-        st.stop()
+        st.error(f"Erro ao carregar dados para insights: {e}")
 
     if df_camp_i.empty:
         st.warning("Sem dados suficientes para gerar insights no período selecionado.")
-        st.stop()
+        st.stop()  # último tab — seguro parar aqui
 
     # ── Score de saúde ─────────────────────────────────────────────────────────
     score = 100
