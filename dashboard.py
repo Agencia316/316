@@ -676,7 +676,12 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     if DEMO_MODE:
-        st.warning("⚠️ **Modo Demo** — dados simulados. API Meta indisponível neste ambiente.")
+        st.markdown("""
+        <div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:10px 14px;margin:4px 0 8px">
+          <div style="color:#FBBF24;font-size:11px;font-weight:700;letter-spacing:1px;font-family:'JetBrains Mono',monospace">⚠ MODO DEMO</div>
+          <div style="color:#94A3B8;font-size:11px;margin-top:2px">Dados simulados — token Meta não configurado ou expirado.</div>
+        </div>
+        """, unsafe_allow_html=True)
     st.divider()
     selected_id = st.selectbox(
         "Conta de anúncio",
@@ -728,14 +733,22 @@ st.markdown(f"""
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px">
-      <div style="width:7px;height:7px;border-radius:50%;background:#34D399;box-shadow:0 0 8px #34D399;animation:pulse-ring 1.5s ease-out infinite"></div>
-      <span style="font-size:11px;color:#34D399;font-family:'JetBrains Mono',monospace;letter-spacing:1px">LIVE</span>
-    </div>
+    {'<div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:20px"><span style="font-size:11px;color:#FBBF24;font-family:JetBrains Mono,monospace;letter-spacing:1px;font-weight:700">⚠ DEMO</span></div>' if DEMO_MODE else '<div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px"><div style="width:7px;height:7px;border-radius:50%;background:#34D399;box-shadow:0 0 8px #34D399;animation:pulse-ring 1.5s ease-out infinite"></div><span style="font-size:11px;color:#34D399;font-family:JetBrains Mono,monospace;letter-spacing:1px">LIVE</span></div>'}
     <div style="font-size:11px;color:#334155;font-family:'JetBrains Mono',monospace;padding:6px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px">{currency}</div>
   </div>
 </div>
 """, unsafe_allow_html=True)
+
+if DEMO_MODE:
+    st.markdown("""
+    <div style="background:linear-gradient(90deg,rgba(251,191,36,.12),rgba(251,191,36,.06));border:1px solid rgba(251,191,36,.3);border-left:4px solid #FBBF24;border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:20px">⚠️</span>
+      <div>
+        <strong style="color:#FBBF24;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:2px">MODO DEMONSTRAÇÃO</strong>
+        <p style="margin:2px 0 0;color:#94A3B8;font-size:12px">Os dados exibidos são <strong style="color:#E2E8F0">simulados</strong> para fins de demonstração. Para conectar dados reais, configure o token Meta Ads nas configurações do app.</p>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ── tabs ───────────────────────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab_ins = st.tabs([
@@ -759,6 +772,8 @@ def apply_camp_filter(df, col="Campanha"):
 # TAB 1 — CONTA
 # ═══════════════════════════════════════════════════════════════════════════════
 with tab1:
+    if DEMO_MODE:
+        st.info("📊 **Dados de demonstração** — valores simulados para fins de visualização do layout e funcionalidades.")
     slabel("Informações da Conta")
     spent = safe_float(acc_info.get("amount_spent", 0)) / 100
     balance = safe_float(acc_info.get("balance", 0)) / 100
