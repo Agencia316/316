@@ -158,6 +158,63 @@ hr { border-color: rgba(255,255,255,.06) !important; }
   border-radius:20px; padding:32px; text-align:center;
 }
 
+/* ── CREATIVE CARD ── */
+.creative-card {
+  background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.07);
+  border-radius:16px; overflow:hidden; transition:transform .25s,box-shadow .25s;
+  margin-bottom:16px; position:relative;
+}
+.creative-card:hover { transform:translateY(-3px); box-shadow:0 12px 40px rgba(0,0,0,.3); }
+.creative-card.winner { border-color:rgba(52,211,153,.35); }
+.creative-card.winner::after { content:'🏆 TOP'; position:absolute; top:8px; right:8px;
+  background:#34D399; color:#0a0a0a; font-size:.6rem; font-weight:900;
+  padding:2px 8px; border-radius:20px; letter-spacing:.08em; }
+.creative-card.worst { border-color:rgba(248,113,113,.25); }
+.creative-thumb { width:100%; height:160px; background:rgba(255,255,255,.04);
+  display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; }
+.creative-thumb img { width:100%; height:100%; object-fit:cover; }
+.creative-thumb-placeholder { font-size:2.5rem; opacity:.4; }
+.creative-body { padding:14px 16px 16px; }
+.creative-name { font-size:.82rem; font-weight:700; color:#E2E8F0; margin-bottom:6px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.creative-copy { font-size:.75rem; color:#64748B; margin-bottom:10px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.creative-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-bottom:10px; }
+.creative-metric { background:rgba(255,255,255,.04); border-radius:7px; padding:6px 8px; text-align:center; }
+.cm-label { color:#475569; font-size:.6rem; text-transform:uppercase; letter-spacing:.07em;
+  font-family:'JetBrains Mono',monospace; }
+.cm-value { color:#E2E8F0; font-size:.82rem; font-weight:700; margin-top:2px; }
+.utm-box { background:rgba(56,189,248,.06); border:1px solid rgba(56,189,248,.15);
+  border-radius:8px; padding:8px 10px; margin-top:8px; }
+.utm-row { display:flex; align-items:center; gap:6px; margin-bottom:3px; flex-wrap:wrap; }
+.utm-key { font-size:.62rem; font-family:'JetBrains Mono',monospace; color:#38BDF8;
+  background:rgba(56,189,248,.1); padding:1px 6px; border-radius:4px; white-space:nowrap; }
+.utm-val { font-size:.65rem; color:#94A3B8; font-family:'JetBrains Mono',monospace;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px; }
+.cta-badge { display:inline-block; background:rgba(129,140,248,.12); color:#818CF8;
+  font-size:.65rem; font-weight:700; padding:2px 8px; border-radius:20px;
+  font-family:'JetBrains Mono',monospace; letter-spacing:.05em; margin-top:4px; }
+
+/* ── INSIGHT EXECUTIVE ── */
+.exec-card { background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.07);
+  border-radius:16px; padding:20px 22px; margin-bottom:10px; }
+.exec-card-title { font-size:.7rem; font-weight:800; letter-spacing:.12em;
+  text-transform:uppercase; color:#475569; font-family:'JetBrains Mono',monospace; margin-bottom:12px; }
+.action-item { display:flex; align-items:flex-start; gap:12px; padding:12px 14px;
+  border-radius:10px; margin-bottom:8px; }
+.action-item.high { background:rgba(248,113,113,.07); border:1px solid rgba(248,113,113,.2);
+  border-left:3px solid #F87171; }
+.action-item.medium { background:rgba(251,191,36,.07); border:1px solid rgba(251,191,36,.2);
+  border-left:3px solid #FBBF24; }
+.action-item.low { background:rgba(52,211,153,.07); border:1px solid rgba(52,211,153,.2);
+  border-left:3px solid #34D399; }
+.action-num { font-size:1.1rem; font-weight:900; min-width:24px; }
+.action-body { flex:1; }
+.action-title { font-size:.85rem; font-weight:700; color:#F8FAFC; margin-bottom:2px; }
+.action-desc { font-size:.78rem; color:#94A3B8; line-height:1.5; }
+.action-impact { font-size:.68rem; font-family:'JetBrains Mono',monospace;
+  color:#38BDF8; margin-top:4px; }
+
 /* ── ANIMATIONS ── */
 @keyframes pulse-ring { 0%{transform:scale(1);opacity:.6} 100%{transform:scale(1.5);opacity:0} }
 @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
@@ -561,6 +618,39 @@ def load_daily(account_id, date_preset):
         df["Data"] = pd.to_datetime(df["Data"])
     return df
 
+@st.cache_data(ttl=600, show_spinner="Buscando criativos e UTMs...")
+def load_creatives(account_id):
+    """Retorna {ad_id: {thumbnail_url, image_url, url_tags, utms, body, title, cta}}"""
+    account = AdAccount(account_id)
+    ads = account.get_ads(
+        fields=["id", "name",
+                "creative{id,thumbnail_url,image_url,url_tags,body,title,call_to_action_type}"],
+        params={"limit": 500},
+    )
+    result = {}
+    for ad in ads:
+        ad_id = ad.get("id", "")
+        creative = ad.get("creative") or {}
+        url_tags = creative.get("url_tags", "") or ""
+        utms = {}
+        for pair in url_tags.split("&"):
+            if "=" in pair:
+                k, v = pair.split("=", 1)
+                if "utm" in k.lower():
+                    utms[k.replace("%7B%7B", "{{").replace("%7D%7D", "}}")] = \
+                        v.replace("+", " ").replace("%20", " ")
+        result[ad_id] = {
+            "creative_id": creative.get("id", ""),
+            "thumbnail_url": creative.get("thumbnail_url", ""),
+            "image_url": creative.get("image_url", "") or creative.get("thumbnail_url", ""),
+            "url_tags": url_tags,
+            "utms": utms,
+            "body": (creative.get("body") or "")[:150],
+            "title": creative.get("title") or "",
+            "cta": creative.get("call_to_action_type", ""),
+        }
+    return result
+
 DEMO_MODE = False
 
 if not ACCESS_TOKEN:
@@ -717,6 +807,30 @@ if DEMO_MODE:
             })
         return pd.DataFrame(rows)
 
+    def _demo_creatives(account_id):
+        # Thumbnails usando placehold.co (sem dependências externas)
+        _THUMBS = {
+            "ad_Anúnci_1": ("https://placehold.co/400x225/1e3a5f/38BDF8?text=🎬+Video+15s",   "Anúncio | Vídeo 15s | Imóveis",    "Encontre o imóvel dos seus sonhos com as melhores condições do mercado. Consulte agora!", "LEARN_MORE", "utm_source=facebook&utm_medium=paid_social&utm_campaign=imoveis_premium&utm_content=video_15s&utm_term=imoveis_30_45"),
+            "ad_Anúnci_2": ("https://placehold.co/400x225/1e293b/818CF8?text=🖼️+Carrossel",    "Anúncio | Carrossel | Depoimentos", "Mais de 500 famílias já realizaram o sonho da casa própria. Veja os depoimentos.", "LEARN_MORE", "utm_source=facebook&utm_medium=paid_social&utm_campaign=imoveis_premium&utm_content=carrossel_depoimentos&utm_term=imoveis_30_45"),
+            "ad_Anúnci_3": ("https://placehold.co/400x225/1a1a2e/F472B6?text=📸+Imagem+CTA",   "Anúncio | Imagem | CTA Forte",      "Últimas unidades disponíveis! Garanta já o seu imóvel com entrada facilitada.", "APPLY_NOW",  "utm_source=facebook&utm_medium=paid_social&utm_campaign=imoveis_premium&utm_content=imagem_cta_forte&utm_term=imoveis_45_60"),
+            "ad_Anúnci_4": ("https://placehold.co/400x225/1e2d1e/34D399?text=🎥+Vídeo+30s",    "Anúncio | Vídeo 30s | Branding",   "316 Imóveis — referência em qualidade e atendimento personalizado.", "LEARN_MORE",  "utm_source=facebook&utm_medium=paid_social&utm_campaign=imoveis_premium&utm_content=video_30s_branding&utm_term=imoveis_45_60"),
+            "ad_Anúnci_5": ("https://placehold.co/400x225/1a2e1a/25D366?text=💬+WhatsApp",      "Anúncio | WhatsApp | Vídeo Curto",  "Fale agora com nosso especialista pelo WhatsApp e tire todas as suas dúvidas!", "WHATSAPP_MESSAGE", "utm_source=facebook&utm_medium=paid_social&utm_campaign=whatsapp_msg&utm_content=video_curto_wpp&utm_term=whatsapp_25_45"),
+            "ad_Anúnci_6": ("https://placehold.co/400x225/1a2b1a/10B981?text=💬+WPP+Carrossel","Anúncio | WhatsApp | Carrossel",    "Conheça nossos planos e fale com um consultor agora mesmo no WhatsApp.", "WHATSAPP_MESSAGE", "utm_source=facebook&utm_medium=paid_social&utm_campaign=whatsapp_msg&utm_content=carrossel_wpp&utm_term=whatsapp_25_45"),
+            "ad_Anúnci_7": ("https://placehold.co/400x225/1a2016/F59E0B?text=💬+WPP+Oferta",   "Anúncio | WhatsApp | Imagem | Oferta","Oferta por tempo limitado! Consulte pelo WhatsApp e garanta condições exclusivas.", "WHATSAPP_MESSAGE", "utm_source=facebook&utm_medium=paid_social&utm_campaign=whatsapp_msg&utm_content=imagem_oferta_wpp&utm_term=whatsapp_45_65"),
+            "ad_Anúnci_8": ("https://placehold.co/400x225/0f1729/60A5FA?text=📱+Blog+Mobile",   "Anúncio | Blog | Mobile Feed",      "5 dicas para financiar seu imóvel com a menor taxa de juros. Leia agora.", "LEARN_MORE",  "utm_source=facebook&utm_medium=paid_social&utm_campaign=trafego_blog&utm_content=blog_mobile_feed&utm_term=blog_mobile"),
+        }
+        result = {}
+        for k, (thumb, title, body, cta, url_tags) in _THUMBS.items():
+            utms = {}
+            for pair in url_tags.split("&"):
+                if "=" in pair:
+                    kk, vv = pair.split("=", 1)
+                    utms[kk] = vv.replace("_", " ")
+            result[k] = {"creative_id": f"cre_{k[-4:]}", "thumbnail_url": thumb,
+                         "image_url": thumb, "url_tags": url_tags, "utms": utms,
+                         "body": body, "title": title, "cta": cta}
+        return result
+
     # Patch das funções de carregamento para usar dados demo
     load_campaigns = _demo_campaigns
     load_adsets = _demo_adsets
@@ -724,6 +838,7 @@ if DEMO_MODE:
     load_demographics = _demo_demographics
     load_placement = _demo_placement
     load_daily = _demo_daily
+    load_creatives = _demo_creatives
 
 account_labels = {
     acc["id"]: f"{acc.get('name', 'Sem nome')} ({STATUS_MAP.get(acc.get('account_status'), '?')})"
@@ -1160,7 +1275,7 @@ with tab4:
         # ── Modo de visualização ────────────────────────────────────────────
         view_mode = st.radio(
             "Visualização",
-            ["📊 Gráficos", "🃏 Cards", "🌳 Hierarquia", "📋 Tabela"],
+            ["📊 Gráficos", "🖼️ Criativos", "🃏 Cards", "🌳 Hierarquia", "📋 Tabela"],
             horizontal=True,
             label_visibility="collapsed",
         )
@@ -1212,6 +1327,94 @@ with tab4:
                              color="Leads", color_continuous_scale="Purples",
                              title="CPL por Anúncio (top 15)", template=CHART_THEME)
                 fig.update_layout(xaxis=dict(tickangle=-30))
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+
+        # ── CRIATIVOS ───────────────────────────────────────────────────────
+        elif view_mode == "🖼️ Criativos":
+            slabel("Performance por Criativo")
+            try:
+                creatives_map = load_creatives(selected_id)
+            except Exception:
+                creatives_map = {}
+
+            sort_cr = st.selectbox("Ordenar por", ["CTR (%)", "Gasto", "Leads", "Conversas", "CPL", "CPC"],
+                                   key="cr_sort")
+            df_cr = df_filtered.copy()
+            # Normaliza id: insights retorna ad_id sem prefixo act_
+            df_cr["_cre"] = df_cr["ID"].apply(lambda x: creatives_map.get(x, creatives_map.get(f"ad_{x}", {})))
+
+            df_cr = df_cr.sort_values(sort_cr, ascending=False)
+            best_id = df_cr.iloc[0]["ID"] if len(df_cr) > 0 else None
+            worst_id = df_cr.iloc[-1]["ID"] if len(df_cr) > 1 else None
+
+            n_cols = 3
+            cols_cr = st.columns(n_cols)
+            for i, (_, row) in enumerate(df_cr.iterrows()):
+                cre = row.get("_cre") or {}
+                thumb = cre.get("thumbnail_url", "") or cre.get("image_url", "")
+                utms = cre.get("utms", {})
+                body = cre.get("body", "")
+                cta = cre.get("cta", "").replace("_", " ")
+                is_winner = row["ID"] == best_id
+                is_worst = row["ID"] == worst_id and not is_winner
+                card_cls = "creative-card winner" if is_winner else ("creative-card worst" if is_worst else "creative-card")
+
+                name_short = (str(row["Anúncio"])[:55] + "…") if len(str(row["Anúncio"])) > 55 else str(row["Anúncio"])
+                leads_v = f"{int(row['Leads'])}" if row.get("Leads", 0) > 0 else "–"
+                conv_v  = f"{int(row['Conversas'])}" if row.get("Conversas", 0) > 0 else "–"
+                cpl_v   = fmt(row["CPL"], currency) if row.get("CPL", 0) > 0 else "–"
+
+                utm_html = ""
+                if utms:
+                    utm_html = '<div class="utm-box"><div style="font-size:.6rem;color:#38BDF8;font-weight:700;margin-bottom:4px;letter-spacing:.08em">UTMs</div>'
+                    for k, v in list(utms.items())[:5]:
+                        k_short = k.replace("utm_", "")
+                        utm_html += f'<div class="utm-row"><span class="utm-key">{k_short}</span><span class="utm-val">{v}</span></div>'
+                    utm_html += '</div>'
+                elif cre.get("url_tags"):
+                    utm_html = f'<div class="utm-box"><span style="font-size:.65rem;color:#475569;font-family:JetBrains Mono,monospace">{cre["url_tags"][:120]}</span></div>'
+
+                cta_html = f'<span class="cta-badge">{cta}</span>' if cta else ""
+
+                thumb_html = (f'<img src="{thumb}" alt="criativo" onerror="this.style.display=\'none\'">'
+                              if thumb else '<div class="creative-thumb-placeholder">🖼️</div>')
+
+                with cols_cr[i % n_cols]:
+                    st.markdown(f"""
+<div class="{card_cls}">
+  <div class="creative-thumb">{thumb_html}</div>
+  <div class="creative-body">
+    <div class="creative-name" title="{row['Anúncio']}">{name_short}</div>
+    {f'<div class="creative-copy">{body}</div>' if body else ''}
+    {cta_html}
+    <div class="creative-metrics">
+      <div class="creative-metric"><div class="cm-label">CTR</div><div class="cm-value">{row['CTR (%)']:.2f}%</div></div>
+      <div class="creative-metric"><div class="cm-label">Gasto</div><div class="cm-value">{fmt(row['Gasto'], currency)}</div></div>
+      <div class="creative-metric"><div class="cm-label">CPC</div><div class="cm-value">{fmt(row['CPC'], currency)}</div></div>
+      <div class="creative-metric"><div class="cm-label">Leads</div><div class="cm-value">{leads_v}</div></div>
+      <div class="creative-metric"><div class="cm-label">Conv</div><div class="cm-value">{conv_v}</div></div>
+      <div class="creative-metric"><div class="cm-label">CPL</div><div class="cm-value">{cpl_v}</div></div>
+    </div>
+    {utm_html}
+  </div>
+</div>""", unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            # Gráfico comparativo
+            slabel("Comparativo de Criativos")
+            cr_col1, cr_col2 = st.columns(2)
+            with cr_col1:
+                fig = px.bar(df_cr.head(12), x="CTR (%)", y="Anúncio", orientation="h",
+                             color="CTR (%)", color_continuous_scale="RdYlGn",
+                             title="CTR por Criativo", template=CHART_THEME)
+                fig.update_layout(coloraxis_showscale=False, height=420)
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            with cr_col2:
+                metric_cr = "Leads" if df_cr["Leads"].sum() > 0 else ("Conversas" if df_cr.get("Conversas", pd.Series([0])).sum() > 0 else "Cliques")
+                fig = px.bar(df_cr.head(12), x=metric_cr, y="Anúncio", orientation="h",
+                             color=metric_cr, color_continuous_scale="Purples",
+                             title=f"{metric_cr} por Criativo", template=CHART_THEME)
+                fig.update_layout(coloraxis_showscale=False, height=420)
                 apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         # ── CARDS ───────────────────────────────────────────────────────────
@@ -1767,291 +1970,499 @@ with tab_msg:
         st.download_button("⬇️ Exportar Mensagens CSV", csv_msg, "mensagens.csv", "text/csv")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 9 — INSIGHTS & RECOMENDAÇÕES
+# TAB 9 — INSIGHTS & RECOMENDAÇÕES (PROFESSIONAL)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tab_ins:
-    st.markdown("## 🧠 Insights & Recomendações")
-    st.caption(f"Análise automática baseada no período: **{PERIOD_LABELS[date_preset]}**")
-
-    # Carrega dados necessários (pré-inicializa para evitar NameError)
+    # ── Carrega todos os dados ─────────────────────────────────────────────────
     df_camp_i = pd.DataFrame()
     df_adset_i = pd.DataFrame()
     df_ads_i = pd.DataFrame()
     df_daily_i = pd.DataFrame()
     df_age_i, df_gender_i = pd.DataFrame(), pd.DataFrame()
     df_place_i = pd.DataFrame()
+    creatives_i = {}
     try:
-        df_camp_i = load_campaigns(selected_id, date_preset)
-        df_adset_i = load_adsets(selected_id, date_preset)
-        df_ads_i = load_ads(selected_id, date_preset)
-        df_daily_i = load_daily(selected_id, date_preset)
-        try:
-            df_age_i, df_gender_i, _ = load_demographics(selected_id, date_preset)
-        except Exception:
-            pass
-        try:
-            df_place_i = load_placement(selected_id, date_preset)
-        except Exception:
-            pass
+        df_camp_i   = load_campaigns(selected_id, date_preset)
+        df_adset_i  = load_adsets(selected_id, date_preset)
+        df_ads_i    = load_ads(selected_id, date_preset)
+        df_daily_i  = load_daily(selected_id, date_preset)
+        try: df_age_i, df_gender_i, _ = load_demographics(selected_id, date_preset)
+        except Exception: pass
+        try: df_place_i = load_placement(selected_id, date_preset)
+        except Exception: pass
+        try: creatives_i = load_creatives(selected_id)
+        except Exception: pass
     except Exception as e:
         st.error(f"Erro ao carregar dados para insights: {e}")
 
     if df_camp_i.empty:
         st.warning("Sem dados suficientes para gerar insights no período selecionado.")
-        st.stop()  # último tab — seguro parar aqui
+        st.stop()
 
-    # ── Score de saúde ─────────────────────────────────────────────────────────
-    score = 100
-    problemas = []
-
-    total_imp_i = df_camp_i["Impressões"].sum()
+    # ── Métricas base ──────────────────────────────────────────────────────────
+    total_imp_i    = df_camp_i["Impressões"].sum()
     total_clicks_i = df_camp_i["Cliques"].sum()
-    total_spend_i = df_camp_i["Gasto"].sum()
-    total_leads_i = df_camp_i["Leads"].sum()
-    avg_ctr_i = (total_clicks_i / total_imp_i * 100) if total_imp_i else 0
-    avg_freq_i = df_camp_i["Frequência"].mean()
-    avg_cpm_i = (total_spend_i / total_imp_i * 1000) if total_imp_i else 0
+    total_reach_i  = df_camp_i["Alcance"].sum()
+    total_spend_i  = df_camp_i["Gasto"].sum()
+    total_leads_i  = df_camp_i["Leads"].sum()
+    total_purch_i  = df_camp_i["Compras"].sum()
+    avg_ctr_i      = (total_clicks_i / total_imp_i * 100) if total_imp_i else 0
+    avg_freq_i     = df_camp_i["Frequência"].mean()
+    avg_cpm_i      = (total_spend_i / total_imp_i * 1000) if total_imp_i else 0
+    avg_cpc_i      = (total_spend_i / total_clicks_i) if total_clicks_i else 0
+    cpl_medio_i    = (total_spend_i / total_leads_i) if total_leads_i else 0
+    total_conv_i   = df_camp_i["Conversas"].sum() if "Conversas" in df_camp_i.columns else 0
+    total_pr_i     = df_camp_i["Primeiras Respostas"].sum() if "Primeiras Respostas" in df_camp_i.columns else 0
+    total_bloq_i   = df_camp_i["Bloqueios"].sum() if "Bloqueios" in df_camp_i.columns else 0
+    taxa_conv_r_i  = (total_pr_i / total_conv_i * 100) if total_conv_i else 0
+    taxa_bloq_i    = (total_bloq_i / total_conv_i * 100) if total_conv_i else 0
 
-    if avg_freq_i > 4: score -= 20; problemas.append("frequência muito alta")
-    elif avg_freq_i > 3: score -= 10; problemas.append("frequência alta")
-
-    if avg_ctr_i < 0.5: score -= 20; problemas.append("CTR muito baixo")
-    elif avg_ctr_i < 1.0: score -= 10; problemas.append("CTR abaixo do ideal")
-
+    # ── Score de saúde (mais granular) ────────────────────────────────────────
+    score = 100
+    deducoes = []
+    if avg_freq_i > 4:   score -= 25; deducoes.append(("high", "Frequência crítica (>4x)", f"{avg_freq_i:.1f}x"))
+    elif avg_freq_i > 3: score -= 12; deducoes.append(("medium", "Frequência elevada (>3x)", f"{avg_freq_i:.1f}x"))
+    if avg_ctr_i < 0.5:  score -= 25; deducoes.append(("high", "CTR muito baixo (<0.5%)", f"{avg_ctr_i:.2f}%"))
+    elif avg_ctr_i < 1.0:score -= 12; deducoes.append(("medium", "CTR abaixo do benchmark", f"{avg_ctr_i:.2f}%"))
     if not df_daily_i.empty:
-        gasto_std = df_daily_i["Gasto"].std()
-        gasto_mean = df_daily_i["Gasto"].mean()
-        if gasto_mean > 0 and (gasto_std / gasto_mean) > 0.5:
-            score -= 10; problemas.append("gasto muito irregular")
+        cv = df_daily_i["Gasto"].std() / df_daily_i["Gasto"].mean() if df_daily_i["Gasto"].mean() > 0 else 0
+        if cv > 0.5: score -= 10; deducoes.append(("medium", "Entrega irregular (CV >50%)", f"{cv*100:.0f}%"))
+    if total_spend_i > 0:
+        top_share = df_camp_i["Gasto"].max() / total_spend_i
+        if top_share > 0.8: score -= 8; deducoes.append(("medium", "Concentração de verba >80%", f"{top_share*100:.0f}%"))
+    if total_conv_i > 0 and taxa_bloq_i > 7:
+        score -= 15; deducoes.append(("high", "Taxa de bloqueio em mensagens", f"{taxa_bloq_i:.1f}%"))
+    elif total_conv_i > 0 and taxa_conv_r_i < 50:
+        score -= 10; deducoes.append(("medium", "Taxa de resposta baixa nas msgs", f"{taxa_conv_r_i:.1f}%"))
+    score = max(0, min(100, score))
 
-    if len(df_camp_i) > 0:
-        top_share = df_camp_i["Gasto"].max() / total_spend_i if total_spend_i else 0
-        if top_share > 0.8: score -= 10; problemas.append("concentração de verba em 1 campanha")
+    if score >= 80:   sc_c = "#34D399"; sc_l = "SAUDÁVEL";  sc_icon = "✅"
+    elif score >= 60: sc_c = "#FBBF24"; sc_l = "ATENÇÃO";   sc_icon = "⚠️"
+    else:             sc_c = "#F87171"; sc_l = "CRÍTICO";   sc_icon = "🚨"
 
-    score = max(0, score)
-    if score >= 80: score_color = "#48bb78"; score_label = "Saudável"
-    elif score >= 60: score_color = "#ed8936"; score_label = "Atenção"
-    else: score_color = "#fc8181"; score_label = "Crítico"
+    # ── Header executivo ───────────────────────────────────────────────────────
+    st.markdown(f"""
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 0 18px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:24px">
+      <div>
+        <h2 style="margin:0;font-size:1.35rem;font-weight:800;color:#F8FAFC">🧠 Diagnóstico Estratégico</h2>
+        <p style="margin:0;font-size:.82rem;color:#475569;font-family:'JetBrains Mono',monospace">
+          Período: <strong style="color:#94A3B8">{PERIOD_LABELS[date_preset]}</strong> &nbsp;·&nbsp;
+          Campanhas: <strong style="color:#94A3B8">{len(df_camp_i)}</strong> &nbsp;·&nbsp;
+          Investimento: <strong style="color:#94A3B8">{fmt(total_spend_i, currency)}</strong>
+        </p>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    col_score, col_prob = st.columns([1, 3])
-    with col_score:
+    # ── Score + KPIs executivos ────────────────────────────────────────────────
+    sc1, sc2, sc3, sc4, sc5, sc6 = st.columns(6)
+    with sc1:
         st.markdown(f"""
-        <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;padding:32px;text-align:center;border:1px solid #2d3748">
-          <div style="color:#718096;font-size:.85rem;text-transform:uppercase;letter-spacing:.1em">Score de Saúde</div>
-          <div style="color:{score_color};font-size:4rem;font-weight:800;margin:8px 0">{score}</div>
-          <div style="color:{score_color};font-size:1.1rem;font-weight:600">{score_label}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col_prob:
-        st.markdown("#### Pontos identificados:")
-        if not problemas:
-            st.success("Nenhum problema crítico detectado. Continue monitorando!")
-        else:
-            for p in problemas:
-                st.warning(f"⚠️ {p.capitalize()}")
+        <div style="background:rgba(255,255,255,.025);border:1px solid {sc_c}40;border-radius:16px;padding:18px;text-align:center">
+          <div style="font-size:.65rem;color:#475569;letter-spacing:.1em;font-family:'JetBrains Mono',monospace;text-transform:uppercase">Health Score</div>
+          <div style="font-size:2.4rem;font-weight:900;color:{sc_c};line-height:1.1">{score}</div>
+          <div style="font-size:.75rem;font-weight:700;color:{sc_c}">{sc_icon} {sc_l}</div>
+        </div>""", unsafe_allow_html=True)
+    with sc2: kpi("CTR Médio", f"{avg_ctr_i:.2f}%", icon="📈", color="#34D399" if avg_ctr_i >= 1.5 else "#FBBF24" if avg_ctr_i >= 1.0 else "#F87171")
+    with sc3: kpi("CPM Médio", fmt(avg_cpm_i, currency), icon="📢", color="#818CF8")
+    with sc4: kpi("CPC Médio", fmt(avg_cpc_i, currency), icon="🖱️", color="#38BDF8")
+    with sc5:
+        if total_leads_i > 0: kpi("CPL", fmt(cpl_medio_i, currency), icon="🎯", color="#F472B6")
+        elif total_conv_i > 0: kpi("Custo/Conv", fmt(total_spend_i/total_conv_i, currency), icon="💬", color="#25D366")
+        else: kpi("Frequência", f"{avg_freq_i:.1f}x", icon="🔁", color="#FB923C")
+    with sc6: kpi("Freq Média", f"{avg_freq_i:.1f}x", icon="🔁", color="#34D399" if avg_freq_i <= 3 else "#F87171")
+
+    if deducoes:
+        st.markdown("<br>", unsafe_allow_html=True)
+        for sev, msg, val in deducoes:
+            col_cls = "bad" if sev == "high" else "warn"
+            ico = "🚨" if sev == "high" else "⚠️"
+            insight(col_cls, ico, msg, f"Valor atual: <strong>{val}</strong>")
 
     st.divider()
 
-    # ── Seções de insights ─────────────────────────────────────────────────────
-    col1, col2 = st.columns(2)
+    # ── Inteligência de Criativos ──────────────────────────────────────────────
+    slabel("Inteligência de Criativos")
+    if not df_ads_i.empty:
+        df_cr_ins = df_ads_i.copy()
+        cr_col1, cr_col2 = st.columns(2)
+        with cr_col1:
+            # Ranking de criativos por eficiência: CTR + lead rate
+            df_cr_rank = df_cr_ins[df_cr_ins["Impressões"] > 500].copy()
+            if not df_cr_rank.empty:
+                df_cr_rank["Score Criativo"] = (
+                    df_cr_rank["CTR (%)"].rank(pct=True) * 0.4 +
+                    (df_cr_rank["Leads"] / df_cr_rank["Gasto"].replace(0, 1)).rank(pct=True) * 0.35 +
+                    (1 / df_cr_rank["CPM"].replace(0, 9999)).rank(pct=True) * 0.25
+                ) * 100
+                df_cr_rank = df_cr_rank.sort_values("Score Criativo", ascending=False)
+                best_cr = df_cr_rank.iloc[0]
+                worst_cr = df_cr_rank.iloc[-1]
 
-    with col1:
-        st.markdown("### 📊 Performance Geral")
+                insight("good", "🏆", f"Criativo Campeão: {str(best_cr['Anúncio'])[:60]}",
+                        f"Score <strong>{best_cr['Score Criativo']:.0f}/100</strong> — CTR: {best_cr['CTR (%)']:.2f}% | Gasto: {fmt(best_cr['Gasto'], currency)} | Leads: {int(best_cr['Leads'])}. "
+                        f"<strong>Ação:</strong> Duplique este criativo em novos conjuntos e teste variações do copy/thumbnail para escalar.")
+                if len(df_cr_rank) > 1:
+                    insight("bad", "📉", f"Criativo Problemático: {str(worst_cr['Anúncio'])[:60]}",
+                            f"Score <strong>{worst_cr['Score Criativo']:.0f}/100</strong> — CTR: {worst_cr['CTR (%)']:.2f}% | Gasto: {fmt(worst_cr['Gasto'], currency)}. "
+                            f"<strong>Ação:</strong> Pause este criativo se CTR < 0.8% por 3 dias consecutivos. Orçamento realocado para o campeão pode gerar +{max(0,int((best_cr['CTR (%)']/max(worst_cr['CTR (%)'],0.1)-1)*100))}% mais cliques.")
 
-        # CTR
-        if avg_ctr_i >= 2.0:
-            insight("good", "✅", "CTR Excelente", f"CTR médio de <strong>{avg_ctr_i:.2f}%</strong> está acima da média do mercado (1–2%). Seus criativos estão performando muito bem.")
-        elif avg_ctr_i >= 1.0:
-            insight("info", "📈", "CTR Dentro do Esperado", f"CTR médio de <strong>{avg_ctr_i:.2f}%</strong>. Há espaço para melhorar testando novos criativos e chamadas para ação.")
-        elif avg_ctr_i >= 0.5:
-            insight("warn", "⚠️", "CTR Abaixo do Ideal", f"CTR médio de <strong>{avg_ctr_i:.2f}%</strong>. Considere renovar os criativos ou rever a segmentação de público.")
-        else:
-            insight("bad", "🚨", "CTR Muito Baixo", f"CTR de <strong>{avg_ctr_i:.2f}%</strong> está muito abaixo do esperado. Revise urgentemente criativos, copy e segmentação.")
+        with cr_col2:
+            # Análise de formato: video vs imagem vs carrossel
+            if creatives_i:
+                cta_counts = {}
+                cta_spend = {}
+                for ad_id, cre in creatives_i.items():
+                    cta = cre.get("cta", "OUTROS") or "OUTROS"
+                    row_match = df_ads_i[df_ads_i["ID"] == ad_id]
+                    spend_v = row_match["Gasto"].sum() if not row_match.empty else 0
+                    cta_counts[cta] = cta_counts.get(cta, 0) + 1
+                    cta_spend[cta] = cta_spend.get(cta, 0) + spend_v
+                if cta_spend:
+                    df_cta = pd.DataFrame({"CTA": list(cta_spend.keys()), "Gasto": list(cta_spend.values())})
+                    df_cta = df_cta[df_cta["Gasto"] > 0].sort_values("Gasto", ascending=False)
+                    if not df_cta.empty:
+                        fig_cta = px.pie(df_cta, values="Gasto", names="CTA",
+                                         title="Gasto por CTA de Criativo", template=CHART_THEME, hole=0.4)
+                        apply_fig(fig_cta); st.plotly_chart(fig_cta, use_container_width=True)
 
-        # Frequência
-        if avg_freq_i > 4:
-            insight("bad", "🚨", "Fadiga de Público Severa", f"Frequência média de <strong>{avg_freq_i:.1f}x</strong>. O público já viu seus anúncios muitas vezes — aumente o público-alvo ou renove os criativos imediatamente.")
-        elif avg_freq_i > 3:
-            insight("warn", "⚠️", "Atenção: Frequência Alta", f"Frequência média de <strong>{avg_freq_i:.1f}x</strong>. Risco de fadiga de público. Considere expandir o público ou trocar criativos.")
-        elif avg_freq_i >= 1.5:
-            insight("good", "✅", "Frequência Ideal", f"Frequência média de <strong>{avg_freq_i:.1f}x</strong> está dentro da faixa recomendada (1.5–3x).")
-        else:
-            insight("info", "📋", "Frequência Baixa", f"Frequência de <strong>{avg_freq_i:.1f}x</strong>. Pode indicar público muito amplo ou orçamento insuficiente para saturar o público.")
-
-        # CPM
-        insight("info", "💡", "CPM Médio da Conta",
-                f"Seu CPM médio é <strong>{fmt(avg_cpm_i, currency)}</strong>. CPMs altos indicam leilões competitivos — tente segmentações mais específicas ou horários alternativos.")
-
-    with col2:
-        st.markdown("### 🎯 Campanhas")
-
-        # Melhor e pior campanha
-        if len(df_camp_i) > 0:
-            best = df_camp_i.loc[df_camp_i["CTR (%)"].idxmax()]
-            worst = df_camp_i.loc[df_camp_i["CTR (%)"].idxmin()]
-            insight("good", "🏆", "Melhor Campanha por CTR",
-                    f"<strong>{best['Campanha']}</strong> com CTR de {best['CTR (%)']:.2f}% e gasto de {fmt(best['Gasto'], currency)}. Use como referência para otimizar as demais.")
-            if len(df_camp_i) > 1:
-                insight("warn", "🔻", "Campanha com Menor CTR",
-                        f"<strong>{worst['Campanha']}</strong> com CTR de {worst['CTR (%)']:.2f}%. Avalie pausar ou reformular esta campanha.")
-
-        # Concentração de orçamento
-        if len(df_camp_i) > 1 and total_spend_i > 0:
-            top_camp = df_camp_i.nlargest(1, "Gasto").iloc[0]
-            share = top_camp["Gasto"] / total_spend_i * 100
-            if share > 70:
-                insight("warn", "⚠️", "Concentração de Verba",
-                        f"<strong>{share:.0f}%</strong> do orçamento está em uma única campanha (<em>{top_camp['Campanha']}</em>). Diversifique para reduzir risco.")
+            # Fadiga de criativo: alta frequência + queda de CTR
+            df_fadiga = df_cr_ins[(df_cr_ins["Frequência"] > 3) & (df_cr_ins["CTR (%)"] < avg_ctr_i * 0.8)]
+            if not df_fadiga.empty:
+                insight("bad", "🔥", f"{len(df_fadiga)} criativo(s) em fadiga severa",
+                        f"Frequência > 3x e CTR abaixo da média da conta. <strong>Ação imediata:</strong> "
+                        f"Renove os criativos: {', '.join(str(x)[:40] for x in df_fadiga['Anúncio'].head(2))}.")
             else:
-                insight("good", "✅", "Distribuição de Orçamento Saudável",
-                        f"Nenhuma campanha concentra mais de <strong>{share:.0f}%</strong> do orçamento. Boa diversificação de risco.")
-
-        # Leads / conversões
-        if total_leads_i > 0 and total_spend_i > 0:
-            cpl_medio = total_spend_i / total_leads_i
-            insight("info", "🎯", f"CPL Médio: {fmt(cpl_medio, currency)}",
-                    f"Total de <strong>{int(total_leads_i)}</strong> leads gerados. Compare com o valor do cliente para avaliar ROI.")
-            # CPL por campanha
-            df_leads_camp = df_camp_i[df_camp_i["Leads"] > 0].copy()
-            if len(df_leads_camp) > 1:
-                best_cpl = df_leads_camp.loc[df_leads_camp["CPL"].replace(0, float("inf")).idxmin()]
-                insight("good", "🥇", "Campanha com Menor CPL",
-                        f"<strong>{best_cpl['Campanha']}</strong> com CPL de {fmt(best_cpl['CPL'], currency)}. Considere aumentar o orçamento desta campanha.")
-
-        # Mensagens
-        if "Conversas" in df_camp_i.columns:
-            total_conv_i = df_camp_i["Conversas"].sum()
-            total_pr_i = df_camp_i["Primeiras Respostas"].sum() if "Primeiras Respostas" in df_camp_i.columns else 0
-            if total_conv_i > 0:
-                taxa_r_i = total_pr_i / total_conv_i * 100 if total_conv_i else 0
-                custo_c_i = total_spend_i / total_conv_i
-                insight("info", "💬", f"Mensagens: {int(total_conv_i):,} Conversas",
-                        f"Custo médio por conversa: <strong>{fmt(custo_c_i, currency)}</strong> — Taxa de resposta: <strong>{taxa_r_i:.1f}%</strong>. Acesse a aba 💬 Mensagens para análise completa.")
-                df_bloq_i = df_camp_i[df_camp_i.get("Bloqueios", pd.Series([0]*len(df_camp_i))) > 0] if "Bloqueios" in df_camp_i.columns else pd.DataFrame()
-                total_bloq_i = df_camp_i["Bloqueios"].sum() if "Bloqueios" in df_camp_i.columns else 0
-                taxa_bloq_i = total_bloq_i / total_conv_i * 100 if total_conv_i else 0
-                if taxa_bloq_i > 5:
-                    insight("bad", "🚫", "Taxa de Bloqueio Alarmante nas Mensagens",
-                            f"<strong>{taxa_bloq_i:.1f}%</strong> de bloqueios. Revise a qualidade do público e a abordagem da comunicação.")
+                insight("good", "✅", "Nenhum criativo em fadiga detectado",
+                        f"Todos os criativos com frequência > 3x ainda mantêm CTR saudável. Continue monitorando semanalmente.")
 
     st.divider()
-    col3, col4 = st.columns(2)
 
-    with col3:
-        st.markdown("### 👥 Público")
+    # ── Eficiência de Orçamento ────────────────────────────────────────────────
+    slabel("Eficiência de Orçamento & Escala")
+    ef_col1, ef_col2 = st.columns(2)
 
+    with ef_col1:
+        if len(df_camp_i) > 1 and total_spend_i > 0:
+            # Ranking de eficiência: resultado por real gasto
+            df_eff = df_camp_i.copy()
+            if total_leads_i > 0:
+                df_eff["Resultado/R$"] = df_eff["Leads"] / df_eff["Gasto"].replace(0, 1)
+                metric_eff = "Leads/R$1000"
+                df_eff["Resultado/R$1000"] = df_eff["Resultado/R$"] * 1000
+            elif total_conv_i > 0:
+                df_eff["Resultado/R$"] = df_eff["Conversas"] / df_eff["Gasto"].replace(0, 1)
+                df_eff["Resultado/R$1000"] = df_eff["Resultado/R$"] * 1000
+                metric_eff = "Conv/R$1000"
+            else:
+                df_eff["Resultado/R$"] = df_eff["Cliques"] / df_eff["Gasto"].replace(0, 1)
+                df_eff["Resultado/R$1000"] = df_eff["Resultado/R$"] * 1000
+                metric_eff = "Cliques/R$1000"
+
+            df_eff = df_eff.sort_values("Resultado/R$1000", ascending=False)
+            fig_eff = px.bar(df_eff, x="Resultado/R$1000", y="Campanha", orientation="h",
+                             color="Resultado/R$1000", color_continuous_scale="RdYlGn",
+                             title=f"Eficiência: {metric_eff} por Campanha", template=CHART_THEME)
+            fig_eff.update_layout(coloraxis_showscale=False, height=max(300, len(df_eff)*52))
+            apply_fig(fig_eff); st.plotly_chart(fig_eff, use_container_width=True)
+
+            top_eff = df_eff.iloc[0]
+            bot_eff = df_eff.iloc[-1]
+            multiplier = top_eff["Resultado/R$"] / max(bot_eff["Resultado/R$"], 0.001)
+            insight("good", "🚀", f"Campanha mais eficiente: {str(top_eff['Campanha'])[:50]}",
+                    f"Gera <strong>{multiplier:.1f}x mais resultados por real</strong> do que a menos eficiente. "
+                    f"<strong>Ação:</strong> Transfira 20-30% do orçamento de '{str(bot_eff['Campanha'])[:40]}' para esta campanha.")
+
+    with ef_col2:
+        if total_spend_i > 0:
+            # Matriz eficiência vs gasto
+            if total_leads_i > 0:
+                df_matrix = df_camp_i[df_camp_i["Leads"] > 0].copy()
+                df_matrix["CPL_rank"] = df_matrix["CPL"].rank(pct=True)
+                df_matrix["Escala_score"] = (1 - df_matrix["CPL_rank"]) * 100
+                col_y, col_color = "Leads", "CPL"
+                title_m = "Gasto vs Leads (cor = CPL)"
+            elif total_conv_i > 0 and "Conversas" in df_camp_i.columns:
+                df_matrix = df_camp_i[df_camp_i["Conversas"] > 0].copy()
+                col_y, col_color = "Conversas", "Custo/Conversa"
+                title_m = "Gasto vs Conversas (cor = Custo/Conversa)"
+            else:
+                df_matrix = df_camp_i.copy()
+                col_y, col_color = "Cliques", "CPC"
+                title_m = "Gasto vs Cliques (cor = CPC)"
+
+            if not df_matrix.empty and col_y in df_matrix.columns:
+                fig_mat = px.scatter(df_matrix, x="Gasto", y=col_y, size="Impressões",
+                                     color=col_color, hover_name="Campanha",
+                                     color_continuous_scale="RdYlGn_r",
+                                     title=title_m, template=CHART_THEME)
+                apply_fig(fig_mat); st.plotly_chart(fig_mat, use_container_width=True)
+
+        # Oportunidade de escala
+        if total_leads_i > 0 and len(df_camp_i) > 1:
+            df_scale = df_camp_i[df_camp_i["Leads"] > 0].sort_values("CPL")
+            best_scale = df_scale.iloc[0]
+            est_leads_extra = int(best_scale["Leads"] * 0.3)
+            est_budget_extra = est_leads_extra * best_scale["CPL"]
+            insight("good", "📈", "Oportunidade de escala identificada",
+                    f"Aumentando {fmt(est_budget_extra, currency)} na campanha <strong>{str(best_scale['Campanha'])[:45]}</strong> "
+                    f"(CPL {fmt(best_scale['CPL'], currency)}), estimativa de <strong>+{est_leads_extra} leads adicionais</strong> "
+                    f"mantendo a eficiência atual.")
+
+    st.divider()
+
+    # ── Análise de Público & Posicionamento ──────────────────────────────────
+    slabel("Inteligência de Público & Canal")
+    pub_col1, pub_col2 = st.columns(2)
+
+    with pub_col1:
+        st.markdown("#### 👥 Segmentação Demográfica")
         if not df_age_i.empty:
-            best_age = df_age_i.loc[df_age_i["CTR (%)"].idxmax()]
-            worst_age = df_age_i.loc[df_age_i["Gasto"].idxmax()]
-            insight("good", "🎯", f"Melhor Faixa Etária por CTR: {best_age['age']}",
-                    f"CTR de <strong>{best_age['CTR (%)']:.2f}%</strong>. Considere criar campanhas específicas para este público.")
-            insight("info", "💰", f"Faixa que mais consome orçamento: {worst_age['age']}",
-                    f"Gasto de <strong>{fmt(worst_age['Gasto'], currency)}</strong>. Verifique se o ROI justifica este investimento.")
+            # Eficiência por faixa: (leads/gasto) normalizado
+            df_age_eff = df_age_i.copy()
+            if df_age_eff["Leads"].sum() > 0:
+                df_age_eff["Eficiência"] = df_age_eff["Leads"] / df_age_eff["Gasto"].replace(0, 1) * 1000
+                best_age_eff = df_age_eff.loc[df_age_eff["Eficiência"].idxmax()]
+                worst_age_eff = df_age_eff.loc[df_age_eff["Eficiência"].idxmin()]
+                insight("good", "🎯", f"Público de maior ROI: {best_age_eff['age']} anos",
+                        f"{int(best_age_eff['Leads'])} leads com gasto de {fmt(best_age_eff['Gasto'], currency)} "
+                        f"({best_age_eff['Eficiência']:.1f} leads/R$1000). <strong>Ação:</strong> Crie conjunto dedicado para este segmento com orçamento próprio.")
+                insight("warn", "💸", f"Público menos eficiente: {worst_age_eff['age']} anos",
+                        f"Gasto de {fmt(worst_age_eff['Gasto'], currency)} com apenas {int(worst_age_eff['Leads'])} leads. "
+                        f"<strong>Ação:</strong> Reduza o bid ou exclua esta faixa e redirecione para o segmento campeão.")
+            else:
+                best_age_ctr = df_age_i.loc[df_age_i["CTR (%)"].idxmax()]
+                worst_age_spend = df_age_i.loc[df_age_i["Gasto"].idxmax()]
+                insight("good", "🎯", f"Maior CTR: faixa {best_age_ctr['age']}",
+                        f"CTR de <strong>{best_age_ctr['CTR (%)']:.2f}%</strong>. Público mais receptivo ao criativo. Crie segmentação específica.")
+                insight("info", "💰", f"Maior gasto: faixa {worst_age_spend['age']}",
+                        f"{fmt(worst_age_spend['Gasto'], currency)} investidos. Confirme se o CTR/resultado justifica a alocação.")
 
-            if df_age_i["Leads"].sum() > 0:
-                best_age_leads = df_age_i.loc[df_age_i["Leads"].idxmax()]
-                insight("good", "🏆", f"Faixa que mais gera leads: {best_age_leads['age']}",
-                        f"<strong>{int(best_age_leads['Leads'])}</strong> leads. Priorize este público nas próximas campanhas.")
+        if not df_gender_i.empty and len(df_gender_i[df_gender_i["gender"] != "unknown"]) > 1:
+            gl = {"male": "Masculino", "female": "Feminino", "unknown": "Desconhecido"}
+            df_g = df_gender_i[df_gender_i["gender"] != "unknown"].copy()
+            df_g["Gênero"] = df_g["gender"].map(gl)
+            if df_g["Leads"].sum() > 0:
+                best_g_leads = df_g.loc[df_g["Leads"].idxmax()]
+                cpl_g = {r["Gênero"]: r["Gasto"]/max(r["Leads"],1) for _, r in df_g.iterrows()}
+                best_g_cpl = min(cpl_g, key=cpl_g.get)
+                insight("info", "⚡", f"Melhor gênero por CPL: {best_g_cpl}",
+                        f"CPL de <strong>{fmt(cpl_g[best_g_cpl], currency)}</strong>. "
+                        f"Se há diferença >20% entre gêneros, considere criativos e copies diferenciados por gênero.")
+            else:
+                best_g = df_g.loc[df_g["CTR (%)"].idxmax()]
+                insight("info", "⚡", f"Gênero de maior CTR: {gl.get(best_g['gender'], best_g['gender'])}",
+                        f"CTR de <strong>{best_g['CTR (%)']:.2f}%</strong> com gasto de {fmt(best_g['Gasto'], currency)}.")
 
-        if not df_gender_i.empty and len(df_gender_i) > 1:
-            gender_label_map = {"male": "Masculino", "female": "Feminino", "unknown": "Desconhecido"}
-            df_gender_i["Gênero"] = df_gender_i["gender"].map(gender_label_map).fillna(df_gender_i["gender"])
-            best_g = df_gender_i.loc[df_gender_i["CTR (%)"].idxmax()]
-            insight("info", "⚡", f"Melhor gênero por CTR: {best_g['Gênero']}",
-                    f"CTR de <strong>{best_g['CTR (%)']:.2f}%</strong>. Avalie direcionar mais verba para este segmento.")
-
-    with col4:
-        st.markdown("### 📍 Posicionamento")
-
+    with pub_col2:
+        st.markdown("#### 📍 Canal & Posicionamento")
         if not df_place_i.empty:
-            best_place = df_place_i.loc[df_place_i["CTR (%)"].idxmax()]
-            worst_place = df_place_i.loc[df_place_i["CPC"].replace(0, float("inf")).idxmin()]
-            insight("good", "🏆", f"Melhor posição por CTR",
-                    f"<strong>{best_place['Plataforma']} / {best_place['Posição']}</strong> com CTR de {best_place['CTR (%)']:.2f}%. Priorize este posicionamento.")
-            insight("good", "💸", f"Menor CPC por posição",
-                    f"<strong>{worst_place['Plataforma']} / {worst_place['Posição']}</strong> com CPC de {fmt(worst_place['CPC'], currency)}. Ótimo custo por clique.")
+            # Eficiência por posicionamento
+            df_pl = df_place_i.copy()
+            df_pl["Plat+Pos"] = df_pl["Plataforma"].str.capitalize() + " / " + df_pl["Posição"].str.replace("_", " ")
+            if df_pl["Leads"].sum() > 0:
+                df_pl["CPL_pos"] = df_pl["Gasto"] / df_pl["Leads"].replace(0, float("inf"))
+                best_pl_cpl = df_pl[df_pl["Leads"] > 0].sort_values("CPL_pos").iloc[0]
+                insight("good", "🏆", f"Melhor posicionamento por CPL",
+                        f"<strong>{best_pl_cpl['Plat+Pos']}</strong> — CPL: {fmt(best_pl_cpl['CPL_pos'], currency)} | "
+                        f"Leads: {int(best_pl_cpl['Leads'])} | Gasto: {fmt(best_pl_cpl['Gasto'], currency)}. "
+                        f"<strong>Ação:</strong> Force este posicionamento nas campanhas de geração de leads.")
+            best_pl_ctr = df_pl.loc[df_pl["CTR (%)"].idxmax()]
+            insight("good", "📊", f"Posicionamento de maior CTR",
+                    f"<strong>{best_pl_ctr['Plat+Pos']}</strong> com CTR de {best_pl_ctr['CTR (%)']:.2f}% e CPC de {fmt(best_pl_ctr['CPC'], currency)}.")
 
-            # Plataforma com mais gasto
-            plat_gasto = df_place_i.groupby("Plataforma")["Gasto"].sum()
-            top_plat = plat_gasto.idxmax()
-            top_pct = plat_gasto[top_plat] / plat_gasto.sum() * 100
-            insight("info", "📊", f"{top_pct:.0f}% do gasto em {top_plat.capitalize()}",
-                    f"Verifique se a distribuição entre plataformas reflete o comportamento do seu público-alvo.")
+            # Distribuição de gasto por plataforma
+            plat_df = df_pl.groupby("Plataforma").agg(Gasto=("Gasto","sum"), CTR=("CTR (%)","mean")).reset_index()
+            plat_df = plat_df.sort_values("Gasto", ascending=False)
+            top_plat_row = plat_df.iloc[0]
+            top_pct_plat = top_plat_row["Gasto"] / plat_df["Gasto"].sum() * 100
+            if top_pct_plat > 70 and len(plat_df) > 1:
+                second_plat = plat_df.iloc[1]
+                insight("warn", "⚠️", f"{top_pct_plat:.0f}% do gasto concentrado em {top_plat_row['Plataforma'].capitalize()}",
+                        f"<strong>Ação:</strong> Teste alocar 15-20% para {second_plat['Plataforma'].capitalize()} — "
+                        f"atualmente entregando CTR de {second_plat['CTR']:.2f}% com menor investimento.")
 
     st.divider()
-    st.markdown("### 📅 Tendências Temporais")
 
+    # ── Tendência & Sazonalidade ───────────────────────────────────────────────
+    slabel("Tendências & Sazonalidade")
     if not df_daily_i.empty and len(df_daily_i) >= 7:
-        col5, col6 = st.columns(2)
+        tend_col1, tend_col2, tend_col3 = st.columns(3)
         mid = len(df_daily_i) // 2
         primeira = df_daily_i.iloc[:mid]
         segunda = df_daily_i.iloc[mid:]
         gasto_trend = segunda["Gasto"].mean() - primeira["Gasto"].mean()
         ctr_trend = segunda["CTR (%)"].mean() - primeira["CTR (%)"].mean()
+        cpm_trend = segunda["CPM"].mean() - primeira["CPM"].mean() if "CPM" in df_daily_i.columns else 0
 
-        with col5:
+        with tend_col1:
+            gasto_pct = (gasto_trend / primeira["Gasto"].mean() * 100) if primeira["Gasto"].mean() > 0 else 0
             if gasto_trend > 0:
-                insight("info", "📈", "Gasto em Alta",
-                        f"O gasto médio diário aumentou <strong>{fmt(abs(gasto_trend), currency)}</strong> na segunda metade do período. Verifique se os resultados acompanham o aumento.")
+                insight("info", "📈", f"Gasto +{gasto_pct:.0f}% na 2ª metade",
+                        f"Média subiu de {fmt(primeira['Gasto'].mean(), currency)}/dia para {fmt(segunda['Gasto'].mean(), currency)}/dia. "
+                        f"Confirme se o ROAS/CPL se manteve com o aumento de verba.")
             else:
-                insight("warn", "📉", "Gasto em Queda",
-                        f"O gasto médio diário caiu <strong>{fmt(abs(gasto_trend), currency)}</strong> na segunda metade do período. Verifique limites de campanha ou orçamentos esgotados.")
+                insight("warn", "📉", f"Gasto -{abs(gasto_pct):.0f}% na 2ª metade",
+                        f"Queda de {fmt(abs(gasto_trend), currency)}/dia. Verifique limites de orçamento diário ou restrições de conta.")
 
-        with col6:
+        with tend_col2:
             if ctr_trend > 0.1:
-                insight("good", "✅", "CTR em Melhora",
-                        f"CTR médio subiu <strong>{ctr_trend:.2f}%</strong> na segunda metade do período. Boa tendência — continue com a estratégia atual.")
-            elif ctr_trend < -0.1:
-                insight("bad", "🚨", "CTR em Queda",
-                        f"CTR médio caiu <strong>{abs(ctr_trend):.2f}%</strong> na segunda metade do período. Sinal de fadiga — renove criativos ou ajuste a segmentação.")
+                insight("good", "🔺", f"CTR +{ctr_trend:.2f}pp em alta",
+                        f"Tendência positiva — criativos ficaram mais relevantes ao longo do período. Continue testando variações.")
+            elif ctr_trend < -0.15:
+                insight("bad", "🔻", f"CTR -{abs(ctr_trend):.2f}pp em queda",
+                        f"Queda consistente de CTR indica fadiga de criativo ou saturação de público. <strong>Ação:</strong> Renove pelo menos 2 criativos imediatamente.")
             else:
-                insight("info", "➡️", "CTR Estável",
-                        f"Variação de CTR de <strong>{ctr_trend:.2f}%</strong>. Performance consistente ao longo do período.")
+                insight("info", "➡️", "CTR estável no período",
+                        f"Variação de {ctr_trend:+.2f}pp. Performance consistente — bom sinal de qualidade de criativo sustentada.")
 
-        # Melhor dia
+        with tend_col3:
+            if cpm_trend > avg_cpm_i * 0.15:
+                insight("warn", "💸", f"CPM subindo +{cpm_trend:.1f}",
+                        f"Leilão ficou mais competitivo na 2ª metade. <strong>Ações:</strong> 1) Teste horários alternativos; "
+                        f"2) Expanda o público para reduzir sobreposição; 3) Verifique datas sazonais (feriados, concorrência).")
+            elif cpm_trend < -avg_cpm_i * 0.1:
+                insight("good", "💰", f"CPM caindo {abs(cpm_trend):.1f}",
+                        "Custo de impressão melhorou. Boa oportunidade para aumentar investimento e capturar mais alcance.")
+            else:
+                insight("info", "📊", "CPM estável",
+                        f"CPM médio de {fmt(avg_cpm_i, currency)}. Leilão estável no período.")
+
+        # Melhor e pior dia
         best_day = df_daily_i.loc[df_daily_i["CTR (%)"].idxmax()]
-        best_day_name = best_day["Data"].strftime("%A, %d/%m") if hasattr(best_day["Data"], "strftime") else str(best_day["Data"])
-        insight("info", "📆", f"Melhor dia do período",
-                f"<strong>{best_day_name}</strong> teve o maior CTR ({best_day['CTR (%)']:.2f}%) com gasto de {fmt(best_day['Gasto'], currency)}. Analise o que diferenciou esse dia.")
+        worst_day = df_daily_i.loc[df_daily_i["CTR (%)"].idxmin()]
+        bd_name = best_day["Data"].strftime("%A %d/%m") if hasattr(best_day["Data"], "strftime") else str(best_day["Data"])
+        wd_name = worst_day["Data"].strftime("%A %d/%m") if hasattr(worst_day["Data"], "strftime") else str(worst_day["Data"])
+        ctr_gap = best_day["CTR (%)"] - worst_day["CTR (%)"]
+        insight("info", "📆", f"Padrão temporal: melhor dia foi {bd_name}",
+                f"CTR de <strong>{best_day['CTR (%)']:.2f}%</strong> vs pior dia ({wd_name}) com {worst_day['CTR (%)']:.2f}%. "
+                f"Gap de <strong>{ctr_gap:.2f}pp</strong>. Se o padrão se repetir, concentre budget nos melhores dias da semana.")
+
+    # ── Insights de Mensagens ─────────────────────────────────────────────────
+    if total_conv_i > 0:
+        st.divider()
+        slabel("Diagnóstico de Mensagens (WhatsApp / Messenger)")
+        msg_col1, msg_col2 = st.columns(2)
+        custo_conv_medio_i = total_spend_i / total_conv_i if total_conv_i else 0
+        with msg_col1:
+            if taxa_conv_r_i >= 75:
+                insight("good", "✅", f"Taxa de resposta excelente: {taxa_conv_r_i:.1f}%",
+                        f"<strong>{int(total_pr_i):,}</strong> de <strong>{int(total_conv_i):,}</strong> conversas geraram primeira resposta. "
+                        f"Público altamente qualificado. <strong>Ação:</strong> Escale o investimento neste canal.")
+            elif taxa_conv_r_i >= 55:
+                insight("warn", "📊", f"Taxa de resposta moderada: {taxa_conv_r_i:.1f}%",
+                        f"Benchmark saudável é >70%. <strong>Ações:</strong> 1) Revise a mensagem automática de boas-vindas; "
+                        f"2) Teste copy mais direto no anúncio; 3) Restrinja o público a segmentos de maior intenção.")
+            else:
+                insight("bad", "🚨", f"Taxa de resposta crítica: {taxa_conv_r_i:.1f}%",
+                        f"Menos de 55% das conversas iniciadas geram engajamento. Indica desalinhamento criativo-público ou mensagem de boas-vindas fraca. "
+                        f"<strong>Ação imediata:</strong> Pause e reescreva toda a sequência de mensagens.")
+            if custo_conv_medio_i < 12:
+                insight("good", "💰", f"Custo/Conversa excelente: {fmt(custo_conv_medio_i, currency)}",
+                        "Abaixo de R$12 é referência top de mercado no Brasil. Maximize o investimento neste canal.")
+            elif custo_conv_medio_i < 25:
+                insight("info", "💡", f"Custo/Conversa dentro do mercado: {fmt(custo_conv_medio_i, currency)}",
+                        "Referência de mercado: R$10-25 para MESSAGES. Otimize criativos para buscar abaixo de R$15.")
+            else:
+                insight("bad", "🚨", f"Custo/Conversa alto: {fmt(custo_conv_medio_i, currency)}",
+                        "Acima de R$25 indica segmentação ampla ou criativo de baixa intenção. Refine público e teste novos criativos.")
+        with msg_col2:
+            if taxa_bloq_i > 7:
+                insight("bad", "🚫", f"Alerta: {taxa_bloq_i:.1f}% de bloqueios",
+                        f"<strong>{int(total_bloq_i)} usuários bloquearam</strong> após a conversa. Isso sinaliza mensagens invasivas ou público errado. "
+                        f"Meta é <3%. <strong>Ação urgente:</strong> Revise tom, frequência de mensagens e qualificação do público.")
+            elif taxa_bloq_i > 3:
+                insight("warn", "⚠️", f"Taxa de bloqueio elevada: {taxa_bloq_i:.1f}%",
+                        "Acima de 3% pode prejudicar a reputação da conta no Meta. Revise a abordagem pós-conversa.")
+            else:
+                insight("good", "✅", f"Taxa de bloqueio saudável: {taxa_bloq_i:.1f}%",
+                        "Abaixo de 3%. Público bem qualificado e comunicação bem recebida.")
+
+            if "Conversas" in df_camp_i.columns and df_camp_i["Conversas"].sum() > 0:
+                df_msg_rank = df_camp_i[df_camp_i["Conversas"] > 0].copy()
+                if len(df_msg_rank) > 1 and "Custo/Conversa" in df_msg_rank.columns:
+                    best_msg_c = df_msg_rank.sort_values("Custo/Conversa").iloc[0]
+                    worst_msg_c = df_msg_rank.sort_values("Custo/Conversa").iloc[-1]
+                    economia = (worst_msg_c["Custo/Conversa"] - best_msg_c["Custo/Conversa"]) * int(df_msg_rank["Conversas"].sum() * 0.3)
+                    insight("good", "🚀", f"Melhor campanha msg: {str(best_msg_c['Campanha'])[:45]}",
+                            f"Custo/Conversa: <strong>{fmt(best_msg_c['Custo/Conversa'], currency)}</strong>. "
+                            f"Realocando 30% do budget da campanha menos eficiente para esta, economia estimada de <strong>{fmt(max(0,economia), currency)}</strong>.")
 
     st.divider()
-    st.markdown("### 💡 Plano de Ação Prioritário")
 
-    acoes = []
-    if avg_freq_i > 3:
-        acoes.append(("🔴 Alta Prioridade", "Renovar criativos ou ampliar público para reduzir frequência"))
-    if avg_ctr_i < 1.0:
-        acoes.append(("🔴 Alta Prioridade", "Testar novos criativos com chamadas para ação mais diretas"))
-    if total_leads_i > 0:
-        df_leads_c = df_camp_i[df_camp_i["Leads"] > 0]
-        if len(df_leads_c) > 1:
-            best_cpl_c = df_leads_c.loc[df_leads_c["CPL"].replace(0, float("inf")).idxmin()]
-            acoes.append(("🟡 Média Prioridade", f"Aumentar orçamento da campanha '{best_cpl_c['Campanha']}' (menor CPL)"))
-    if len(df_camp_i) > 1:
-        worst_ctr_c = df_camp_i.loc[df_camp_i["CTR (%)"].idxmin()]
-        acoes.append(("🟡 Média Prioridade", f"Pausar ou reformular '{worst_ctr_c['Campanha']}' (menor CTR: {worst_ctr_c['CTR (%)']:.2f}%)"))
+    # ── Plano de Ação Executivo ────────────────────────────────────────────────
+    slabel("Plano de Ação Executivo — 30 Dias")
+
+    acoes_exec = []  # (prioridade: high/medium/low, titulo, descricao, impacto_estimado)
+
+    # Alta prioridade
+    if avg_freq_i > 3.5:
+        acoes_exec.append(("high", "Renovação de Criativos Urgente",
+            f"Frequência de {avg_freq_i:.1f}x indica fadiga severa. Produza 3-4 novos criativos e substitua os ativos.",
+            "↓ CPM 15-25% | ↑ CTR 20-40% em 2 semanas"))
+    if avg_ctr_i < 0.8:
+        acoes_exec.append(("high", "Reformulação de Copy e CTA",
+            "CTR abaixo de 0.8% indica que o criativo não está chamando atenção suficiente. Teste headlines com benefício direto na primeira linha.",
+            "↑ CTR +0.5-1.5pp | ↓ CPC 20-30%"))
+    if total_conv_i > 0 and taxa_bloq_i > 5:
+        acoes_exec.append(("high", "Revisão de Fluxo de Mensagens",
+            f"Taxa de bloqueio de {taxa_bloq_i:.1f}% está prejudicando a reputação da conta. Reescreva a mensagem de boas-vindas e reduza a frequência de mensagens ativas.",
+            "↓ Bloqueios -50% em 7 dias | ↑ Qualidade de conta"))
+
+    # Média prioridade
+    if total_leads_i > 0 and len(df_camp_i[df_camp_i["Leads"] > 0]) > 1:
+        df_leads_c = df_camp_i[df_camp_i["Leads"] > 0].sort_values("CPL")
+        best_c = df_leads_c.iloc[0]
+        worst_c = df_leads_c.iloc[-1]
+        redirecionar = worst_c["Gasto"] * 0.3
+        leads_ganhos = int(redirecionar / max(best_c["CPL"], 1))
+        acoes_exec.append(("medium", f"Realocação de Orçamento: -{worst_c['Campanha'][:35]} → +{best_c['Campanha'][:35]}",
+            f"Transfira {fmt(redirecionar, currency)} (30% da campanha menos eficiente) para a de menor CPL.",
+            f"Estimativa: +{leads_ganhos} leads sem aumentar o budget total"))
+    if not df_age_i.empty and not df_age_i.empty:
+        best_age_row = df_age_i.loc[df_age_i["CTR (%)"].idxmax()]
+        acoes_exec.append(("medium", f"Campanha Dedicada: Faixa {best_age_row['age']} anos",
+            f"Esta faixa tem CTR de {best_age_row['CTR (%)']:.2f}% — crie um conjunto separado com bid otimizado e criativos personalizados para esta audiência.",
+            "↑ CTR +0.3-0.8pp | ↓ CPL 10-20% neste segmento"))
     if not df_place_i.empty:
-        best_pl = df_place_i.loc[df_place_i["CTR (%)"].idxmax()]
-        acoes.append(("🟢 Oportunidade", f"Priorizar posicionamento {best_pl['Plataforma']}/{best_pl['Posição']} (CTR {best_pl['CTR (%)']:.2f}%)"))
-    if not df_age_i.empty:
-        best_ag = df_age_i.loc[df_age_i["CTR (%)"].idxmax()]
-        acoes.append(("🟢 Oportunidade", f"Criar campanha específica para faixa {best_ag['age']} (CTR {best_ag['CTR (%)']:.2f}%)"))
-    if "Conversas" in df_camp_i.columns and df_camp_i["Conversas"].sum() > 0:
-        df_conv_i = df_camp_i[df_camp_i["Conversas"] > 0]
-        taxa_r_acao = df_conv_i["Primeiras Respostas"].sum() / df_conv_i["Conversas"].sum() * 100 if df_conv_i["Conversas"].sum() > 0 else 0
-        if taxa_r_acao < 60:
-            acoes.append(("🔴 Alta Prioridade", f"Taxa de resposta nas mensagens em {taxa_r_acao:.0f}% — revise mensagem de boas-vindas e qualidade do público"))
-        if "Bloqueios" in df_camp_i.columns:
-            taxa_b = df_camp_i["Bloqueios"].sum() / df_camp_i["Conversas"].sum() * 100
-            if taxa_b > 5:
-                acoes.append(("🔴 Alta Prioridade", f"Taxa de bloqueio de {taxa_b:.1f}% nas campanhas de mensagens — revise segmentação e abordagem"))
-        if len(df_conv_i) > 1:
-            best_msg = df_conv_i.loc[df_conv_i["Custo/Conversa"].replace(0, float("inf")).idxmin()]
-            acoes.append(("🟢 Oportunidade", f"Escalar campanha de mensagens '{best_msg['Campanha']}' — menor Custo/Conversa ({fmt(best_msg['Custo/Conversa'], currency)})"))
+        best_pl_r = df_place_i.sort_values("CTR (%)", ascending=False).iloc[0]
+        acoes_exec.append(("medium", f"Forçar Posicionamento: {best_pl_r['Plataforma'].capitalize()} {best_pl_r['Posição'].replace('_',' ')}",
+            f"CTR de {best_pl_r['CTR (%)']:.2f}%. Use 'Posicionamentos Manuais' no Ad Manager para priorizar este canal.",
+            "↑ CTR +0.2-0.5pp | ↓ CPM no canal"))
 
-    if acoes:
-        for prioridade, acao in acoes:
-            cor = "bad" if "Alta" in prioridade else "warn" if "Média" in prioridade else "good"
-            insight(cor, "", prioridade, acao)
+    # Oportunidades
+    if total_conv_i > 0 and taxa_conv_r_i >= 70:
+        acoes_exec.append(("low", "Escalar Canal de Mensagens",
+            f"Taxa de resposta de {taxa_conv_r_i:.1f}% indica canal maduro e qualificado. Aumente o orçamento em 30-50% e teste novos segmentos de público.",
+            f"Potencial: +{int(total_conv_i*0.4)} conversas adicionais por mês"))
+    if not df_daily_i.empty and len(df_daily_i) >= 14:
+        # Detecta melhor dia da semana
+        df_d = df_daily_i.copy()
+        if hasattr(df_d["Data"].iloc[0], "dayofweek"):
+            df_d["DiaSemana"] = df_d["Data"].dt.day_name()
+            dias_perf = df_d.groupby("DiaSemana")["CTR (%)"].mean().sort_values(ascending=False)
+            if len(dias_perf) > 0:
+                melhor_dia = dias_perf.index[0]
+                acoes_exec.append(("low", f"Otimizar Agendamento: Concentrar em {melhor_dia}",
+                    f"Análise histórica mostra melhor CTR às {melhor_dia}s. Configure programação de anúncios no Ad Manager.",
+                    "↑ CTR +5-10% com mesmo orçamento"))
+    acoes_exec.append(("low", "Implementar Testes A/B Sistemáticos",
+        "Crie 2-3 variações de cada criativo ativo testando: 1) Diferentes hooks (primeiros 3 segundos do vídeo), 2) CTAs alternativos, 3) Copy longo vs curto. Use 20% do budget para testes.",
+        "Identifica vencedores em 7-14 dias | ↑ CTR 15-30% médio"))
+
+    if acoes_exec:
+        for prioridade, titulo, descricao, impacto in acoes_exec:
+            p_class = "high" if prioridade == "high" else "medium" if prioridade == "medium" else "low"
+            p_label = "🔴 URGENTE" if prioridade == "high" else "🟡 IMPORTANTE" if prioridade == "medium" else "🟢 OPORTUNIDADE"
+            st.markdown(f"""
+<div class="action-item {p_class}">
+  <div class="action-num">{p_label}</div>
+  <div class="action-body">
+    <div class="action-title">{titulo}</div>
+    <div class="action-desc">{descricao}</div>
+    <div class="action-impact">💡 Impacto estimado: {impacto}</div>
+  </div>
+</div>""", unsafe_allow_html=True)
     else:
-        insight("good", "✅", "Conta em bom estado", "Nenhuma ação crítica identificada. Continue monitorando e testando novos criativos regularmente.")
+        insight("good", "✅", "Conta em excelente estado",
+                "Nenhuma ação crítica identificada. Continue testando novos criativos semanalmente e monitore a frequência de perto.")
