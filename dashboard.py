@@ -321,6 +321,11 @@ def load_campaigns(account_id, date_preset):
         if c.get("video_thruplay_watched_actions"):
             thruplays = sum(safe_int(v.get("value", 0)) for v in c["video_thruplay_watched_actions"])
         spend = safe_float(c.get("spend", 0))
+        conversas = extract_action(actions, "onsite_conversion.messaging_conversation_started_7d")
+        primeiras_resp = extract_action(actions, "onsite_conversion.messaging_first_reply")
+        bloqueios = extract_action(actions, "onsite_conversion.messaging_block")
+        conexoes_msg = extract_action(actions, "onsite_conversion.total_messaging_connection")
+        custo_conversa = extract_cpa(cpa_list, "onsite_conversion.messaging_conversation_started_7d")
         rows.append({
             "ID": c.get("campaign_id", ""),
             "Campanha": c.get("campaign_name", ""),
@@ -344,6 +349,12 @@ def load_campaigns(account_id, date_preset):
             "CPP Compra": extract_cpa(cpa_list, "purchase"),
             "Video Views": video_plays,
             "ThruPlays": thruplays,
+            "Conversas": conversas,
+            "Custo/Conversa": custo_conversa,
+            "Primeiras Respostas": primeiras_resp,
+            "Bloqueios": bloqueios,
+            "Conexões Msg": conexoes_msg,
+            "Taxa Resposta (%)": round(primeiras_resp / conversas * 100, 1) if conversas > 0 else 0.0,
             "Todas Ações": extract_all_actions(actions),
         })
     return pd.DataFrame(rows)
@@ -368,6 +379,10 @@ def load_adsets(account_id, date_preset):
         leads = extract_action(actions, "lead") or extract_action(actions, "onsite_conversion.lead_grouped")
         purchases = extract_action(actions, "purchase")
         spend = safe_float(c.get("spend", 0))
+        conversas = extract_action(actions, "onsite_conversion.messaging_conversation_started_7d")
+        primeiras_resp = extract_action(actions, "onsite_conversion.messaging_first_reply")
+        bloqueios = extract_action(actions, "onsite_conversion.messaging_block")
+        custo_conversa = extract_cpa(cpa_list, "onsite_conversion.messaging_conversation_started_7d")
         rows.append({
             "ID": c.get("adset_id", ""),
             "Conjunto": c.get("adset_name", ""),
@@ -384,6 +399,11 @@ def load_adsets(account_id, date_preset):
             "CPL": extract_cpa(cpa_list, "lead"),
             "Compras": purchases,
             "CPP": extract_cpa(cpa_list, "purchase"),
+            "Conversas": conversas,
+            "Custo/Conversa": custo_conversa,
+            "Primeiras Respostas": primeiras_resp,
+            "Bloqueios": bloqueios,
+            "Taxa Resposta (%)": round(primeiras_resp / conversas * 100, 1) if conversas > 0 else 0.0,
         })
     return pd.DataFrame(rows)
 
@@ -414,6 +434,10 @@ def load_ads(account_id, date_preset):
         if c.get("video_thruplay_watched_actions"):
             thruplays = sum(safe_int(v.get("value", 0)) for v in c["video_thruplay_watched_actions"])
         spend = safe_float(c.get("spend", 0))
+        conversas = extract_action(actions, "onsite_conversion.messaging_conversation_started_7d")
+        primeiras_resp = extract_action(actions, "onsite_conversion.messaging_first_reply")
+        bloqueios = extract_action(actions, "onsite_conversion.messaging_block")
+        custo_conversa = extract_cpa(cpa_list, "onsite_conversion.messaging_conversation_started_7d")
         rows.append({
             "ID": c.get("ad_id", ""),
             "Anúncio": c.get("ad_name", ""),
@@ -434,6 +458,11 @@ def load_ads(account_id, date_preset):
             "CPP": extract_cpa(cpa_list, "purchase"),
             "Video Views": video_plays,
             "ThruPlays": thruplays,
+            "Conversas": conversas,
+            "Custo/Conversa": custo_conversa,
+            "Primeiras Respostas": primeiras_resp,
+            "Bloqueios": bloqueios,
+            "Taxa Resposta (%)": round(primeiras_resp / conversas * 100, 1) if conversas > 0 else 0.0,
         })
     return pd.DataFrame(rows)
 
@@ -552,15 +581,17 @@ if DEMO_MODE:
                  "spend_cap": "3000000", "timezone_name": "America/Sao_Paulo", "business_name": "316"}]
 
     def _demo_campaigns(account_id, date_preset):
+        # (nome, obj, spend, imp, reach, clicks, ctr, cpc, cpm, freq, leads, cpl, purchases, cpp, vid, thru, conversas, custo_conv, prim_resp, bloqueios)
         camps = [
-            ("Campanha | Leads | Imóveis Premium", "LEAD_GENERATION", 6800, 320000, 290000, 4100, 3.9, 1.66, 21.25, 1.34, 312, 21.79, 0, 0, 18200, 4200),
-            ("Campanha | Tráfego | Blog 316", "LINK_CLICKS", 3200, 195000, 180000, 6800, 3.49, 0.47, 16.41, 1.28, 0, 0, 0, 0, 0, 0),
-            ("Campanha | Conversões | Landing Page", "CONVERSIONS", 4100, 240000, 215000, 3600, 1.5, 1.14, 17.08, 1.12, 89, 46.07, 23, 178.26, 0, 0),
-            ("Campanha | Remarketing | Visitantes", "CONVERSIONS", 2350, 98000, 92000, 1900, 1.94, 1.24, 23.98, 1.07, 45, 52.22, 12, 195.83, 0, 0),
-            ("Campanha | Awareness | Branding 316", "REACH", 2000, 410000, 398000, 2100, 0.51, 0.95, 4.88, 1.03, 0, 0, 0, 0, 32000, 18000),
+            ("Campanha | Leads | Imóveis Premium",  "LEAD_GENERATION", 6800, 320000, 290000, 4100, 3.9,  1.66, 21.25, 1.34, 312, 21.79,  0,      0,      18200, 4200,  0,   0,    0,   0),
+            ("Campanha | Mensagens | WhatsApp",       "MESSAGES",        4500, 210000, 195000, 3800, 1.81, 1.18, 21.43, 1.42,   0,     0,  0,      0,          0,    0,  387, 11.63, 341,  8),
+            ("Campanha | Tráfego | Blog 316",        "LINK_CLICKS",     3200, 195000, 180000, 6800, 3.49, 0.47, 16.41, 1.28,   0,     0,  0,      0,          0,    0,    0,     0,   0,  0),
+            ("Campanha | Conversões | Landing Page", "CONVERSIONS",     4100, 240000, 215000, 3600, 1.5,  1.14, 17.08, 1.12,  89, 46.07, 23, 178.26,          0,    0,   62, 66.13,  48, 14),
+            ("Campanha | Remarketing | Visitantes",  "CONVERSIONS",     2350,  98000,  92000, 1900, 1.94, 1.24, 23.98, 1.07,  45, 52.22, 12, 195.83,          0,    0,   78, 30.13,  65,  6),
+            ("Campanha | Awareness | Branding 316",  "REACH",           2000, 410000, 398000, 2100, 0.51, 0.95,  4.88, 1.03,   0,     0,  0,      0,      32000,18000,    0,     0,   0,  0),
         ]
         rows = []
-        for camp, obj, spend, imp, reach, clicks, ctr, cpc, cpm, freq, leads, cpl, purchases, cpp, vid, thru in camps:
+        for camp, obj, spend, imp, reach, clicks, ctr, cpc, cpm, freq, leads, cpl, purchases, cpp, vid, thru, conversas, custo_conv, prim_resp, bloqueios in camps:
             rows.append({
                 "ID": f"camp_{camp[:6].replace(' ','_')}",
                 "Campanha": camp, "Objetivo": obj,
@@ -569,20 +600,28 @@ if DEMO_MODE:
                 "CPC": cpc, "CPM": cpm, "CPP": round(spend/reach*1000,2) if reach else 0,
                 "Frequência": freq, "Cliques no Link": int(clicks*0.7), "Cliques Externos": int(clicks*0.6),
                 "Leads": leads, "CPL": cpl, "Compras": purchases, "CPP Compra": cpp,
-                "Video Views": vid, "ThruPlays": thru, "Todas Ações": f"leads:{leads}, purchases:{purchases}",
+                "Video Views": vid, "ThruPlays": thru,
+                "Conversas": conversas, "Custo/Conversa": custo_conv,
+                "Primeiras Respostas": prim_resp, "Bloqueios": bloqueios,
+                "Conexões Msg": int(conversas * 1.15) if conversas else 0,
+                "Taxa Resposta (%)": round(prim_resp / conversas * 100, 1) if conversas > 0 else 0.0,
+                "Todas Ações": f"leads:{leads}, purchases:{purchases}, conversas:{conversas}",
             })
         return pd.DataFrame(rows)
 
     def _demo_adsets(account_id, date_preset):
+        # (nome, camp, spend, imp, reach, clicks, ctr, cpc, cpm, freq, leads, cpl, purchases, conversas, custo_conv, prim_resp, bloqueios)
         sets = [
-            ("Conj | Imóveis | 30-45 anos", "Campanha | Leads | Imóveis Premium", 3200, 155000, 142000, 1950, 1.26, 1.64, 20.65, 1.22, 148, 21.62, 0),
-            ("Conj | Imóveis | 45-60 anos", "Campanha | Leads | Imóveis Premium", 3600, 165000, 148000, 2150, 1.30, 1.67, 21.82, 1.46, 164, 21.95, 0),
-            ("Conj | Blog | Mobile", "Campanha | Tráfego | Blog 316", 1600, 98000, 90000, 3400, 3.47, 0.47, 16.33, 1.3, 0, 0, 0),
-            ("Conj | Blog | Desktop", "Campanha | Tráfego | Blog 316", 1600, 97000, 90000, 3400, 3.51, 0.47, 16.49, 1.26, 0, 0, 0),
-            ("Conj | Conversão | Leads Quentes", "Campanha | Conversões | Landing Page", 4100, 240000, 215000, 3600, 1.5, 1.14, 17.08, 1.12, 89, 46.07, 23),
+            ("Conj | Imóveis | 30-45 anos",   "Campanha | Leads | Imóveis Premium",  3200, 155000, 142000, 1950, 1.26, 1.64, 20.65, 1.22, 148, 21.62,  0,   0,     0,   0,  0),
+            ("Conj | Imóveis | 45-60 anos",   "Campanha | Leads | Imóveis Premium",  3600, 165000, 148000, 2150, 1.30, 1.67, 21.82, 1.46, 164, 21.95,  0,   0,     0,   0,  0),
+            ("Conj | WhatsApp | 25-45 anos",  "Campanha | Mensagens | WhatsApp",     2400, 112000, 104000, 2050, 1.83, 1.17, 21.43, 1.38,   0,     0,  0, 214, 11.21, 189,  4),
+            ("Conj | WhatsApp | 45-65 anos",  "Campanha | Mensagens | WhatsApp",     2100,  98000,  91000, 1750, 1.79, 1.20, 21.43, 1.46,   0,     0,  0, 173, 12.14, 152,  4),
+            ("Conj | Blog | Mobile",          "Campanha | Tráfego | Blog 316",       1600,  98000,  90000, 3400, 3.47, 0.47, 16.33, 1.30,   0,     0,  0,   0,     0,   0,  0),
+            ("Conj | Blog | Desktop",         "Campanha | Tráfego | Blog 316",       1600,  97000,  90000, 3400, 3.51, 0.47, 16.49, 1.26,   0,     0,  0,   0,     0,   0,  0),
+            ("Conj | Conversão | Leads Quentes", "Campanha | Conversões | Landing Page", 4100, 240000, 215000, 3600, 1.5, 1.14, 17.08, 1.12, 89, 46.07, 23,  62, 66.13,  48, 14),
         ]
         rows = []
-        for name, camp, spend, imp, reach, clicks, ctr, cpc, cpm, freq, leads, cpl, purchases in sets:
+        for name, camp, spend, imp, reach, clicks, ctr, cpc, cpm, freq, leads, cpl, purchases, conversas, custo_conv, prim_resp, bloqueios in sets:
             rows.append({
                 "ID": f"adset_{name[:6].replace(' ','_')}",
                 "Conjunto": name, "Campanha": camp,
@@ -590,19 +629,26 @@ if DEMO_MODE:
                 "CTR (%)": ctr, "CPC": cpc, "CPM": cpm, "Frequência": freq,
                 "Leads": leads, "CPL": cpl, "Compras": purchases,
                 "CPP": round(spend/purchases,2) if purchases else 0,
+                "Conversas": conversas, "Custo/Conversa": custo_conv,
+                "Primeiras Respostas": prim_resp, "Bloqueios": bloqueios,
+                "Taxa Resposta (%)": round(prim_resp / conversas * 100, 1) if conversas > 0 else 0.0,
             })
         return pd.DataFrame(rows)
 
     def _demo_ads(account_id, date_preset):
+        # (nome, adset, camp, spend, imp, reach, clicks, ctr, cpc, cpm, freq, leads, cpl, purchases, vid, thru, conversas, custo_conv, prim_resp, bloqueios)
         ads = [
-            ("Anúncio | Vídeo 15s | Imóveis", "Conj | Imóveis | 30-45 anos", "Campanha | Leads | Imóveis Premium", 1800, 85000, 78000, 1050, 1.24, 1.71, 21.18, 1.21, 78, 23.08, 0, 12000, 5000),
-            ("Anúncio | Carrossel | Depoimentos", "Conj | Imóveis | 30-45 anos", "Campanha | Leads | Imóveis Premium", 1400, 70000, 64000, 900, 1.29, 1.56, 20.0, 1.23, 70, 20.0, 0, 0, 0),
-            ("Anúncio | Imagem | CTA Forte", "Conj | Imóveis | 45-60 anos", "Campanha | Leads | Imóveis Premium", 1900, 88000, 80000, 1200, 1.36, 1.58, 21.59, 1.48, 90, 21.11, 0, 0, 0),
-            ("Anúncio | Vídeo 30s | Branding", "Conj | Imóveis | 45-60 anos", "Campanha | Leads | Imóveis Premium", 1700, 77000, 68000, 950, 1.23, 1.79, 22.08, 1.44, 74, 22.97, 0, 8200, 3000),
-            ("Anúncio | Blog | Mobile Feed", "Conj | Blog | Mobile", "Campanha | Tráfego | Blog 316", 1600, 98000, 90000, 3400, 3.47, 0.47, 16.33, 1.3, 0, 0, 0, 0, 0),
+            ("Anúncio | Vídeo 15s | Imóveis",     "Conj | Imóveis | 30-45 anos",  "Campanha | Leads | Imóveis Premium", 1800, 85000, 78000, 1050, 1.24, 1.71, 21.18, 1.21, 78, 23.08, 0, 12000, 5000,   0,     0,   0,  0),
+            ("Anúncio | Carrossel | Depoimentos",  "Conj | Imóveis | 30-45 anos",  "Campanha | Leads | Imóveis Premium", 1400, 70000, 64000,  900, 1.29, 1.56, 20.00, 1.23, 70, 20.00, 0,     0,    0,   0,     0,   0,  0),
+            ("Anúncio | Imagem | CTA Forte",       "Conj | Imóveis | 45-60 anos",  "Campanha | Leads | Imóveis Premium", 1900, 88000, 80000, 1200, 1.36, 1.58, 21.59, 1.48, 90, 21.11, 0,     0,    0,   0,     0,   0,  0),
+            ("Anúncio | Vídeo 30s | Branding",     "Conj | Imóveis | 45-60 anos",  "Campanha | Leads | Imóveis Premium", 1700, 77000, 68000,  950, 1.23, 1.79, 22.08, 1.44, 74, 22.97, 0,  8200, 3000,   0,     0,   0,  0),
+            ("Anúncio | WhatsApp | Vídeo Curto",   "Conj | WhatsApp | 25-45 anos", "Campanha | Mensagens | WhatsApp",    1350, 63000, 58000, 1200, 1.90, 1.13, 21.43, 1.35,  0,     0, 0,     0,    0, 130, 10.38, 116,  2),
+            ("Anúncio | WhatsApp | Carrossel",     "Conj | WhatsApp | 25-45 anos", "Campanha | Mensagens | WhatsApp",    1050, 49000, 46000, 850,  1.73, 1.24, 21.43, 1.41,  0,     0, 0,     0,    0,  84, 12.50,  73,  2),
+            ("Anúncio | WhatsApp | Imagem | Oferta","Conj | WhatsApp | 45-65 anos","Campanha | Mensagens | WhatsApp",    2100, 98000, 91000, 1750, 1.79, 1.20, 21.43, 1.46,  0,     0, 0,     0,    0, 173, 12.14, 152,  4),
+            ("Anúncio | Blog | Mobile Feed",       "Conj | Blog | Mobile",         "Campanha | Tráfego | Blog 316",      1600, 98000, 90000, 3400, 3.47, 0.47, 16.33, 1.30,  0,     0, 0,     0,    0,   0,     0,   0,  0),
         ]
         rows = []
-        for name, adset, camp, spend, imp, reach, clicks, ctr, cpc, cpm, freq, leads, cpl, purchases, vid, thru in ads:
+        for name, adset, camp, spend, imp, reach, clicks, ctr, cpc, cpm, freq, leads, cpl, purchases, vid, thru, conversas, custo_conv, prim_resp, bloqueios in ads:
             rows.append({
                 "ID": f"ad_{name[:6].replace(' ','_')}",
                 "Anúncio": name, "Conjunto": adset, "Campanha": camp,
@@ -611,6 +657,9 @@ if DEMO_MODE:
                 "Leads": leads, "CPL": cpl, "Compras": purchases,
                 "CPP": round(spend/purchases,2) if purchases else 0,
                 "Video Views": vid, "ThruPlays": thru,
+                "Conversas": conversas, "Custo/Conversa": custo_conv,
+                "Primeiras Respostas": prim_resp, "Bloqueios": bloqueios,
+                "Taxa Resposta (%)": round(prim_resp / conversas * 100, 1) if conversas > 0 else 0.0,
             })
         return pd.DataFrame(rows)
 
@@ -776,7 +825,7 @@ if DEMO_MODE:
     """, unsafe_allow_html=True)
 
 # ── tabs ───────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab_ins = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab_msg, tab_ins = st.tabs([
     "🏦 Conta",
     "📣 Campanhas",
     "🗂️ Conjuntos",
@@ -784,6 +833,7 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab_ins = st.tabs([
     "👥 Público",
     "📍 Posicionamento",
     "📅 Evolução Diária",
+    "💬 Mensagens",
     "🧠 Insights",
 ])
 
@@ -880,6 +930,49 @@ with tab2:
             elif total_purchases:
                 kpi("CPP Médio", fmt(total_spend / total_purchases, currency), icon="💡", color="#FB923C")
         with c10: kpi("Campanhas Ativas", str(len(df_camp)), icon="📣", color="#38BDF8")
+
+        # ── Mensagens KPIs (visíveis se existirem) ──────────────────────────────
+        total_conversas = df_camp["Conversas"].sum() if "Conversas" in df_camp.columns else 0
+        total_prim_resp = df_camp["Primeiras Respostas"].sum() if "Primeiras Respostas" in df_camp.columns else 0
+        if total_conversas > 0:
+            st.markdown("<br>", unsafe_allow_html=True)
+            slabel("KPIs de Mensagens")
+            mc1, mc2, mc3, mc4 = st.columns(4)
+            custo_conv_medio = total_spend / total_conversas if total_conversas else 0
+            taxa_resp = total_prim_resp / total_conversas * 100 if total_conversas else 0
+            total_bloqueios = df_camp["Bloqueios"].sum() if "Bloqueios" in df_camp.columns else 0
+            with mc1: kpi("Conversas Iniciadas", f"{int(total_conversas):,}", icon="💬", color="#25D366")
+            with mc2: kpi("Custo / Conversa", fmt(custo_conv_medio, currency), icon="💰", color="#25D366")
+            with mc3: kpi("Primeiras Respostas", f"{int(total_prim_resp):,}", icon="↩️", color="#34D399")
+            with mc4: kpi("Taxa de Resposta", f"{taxa_resp:.1f}%", icon="📊", color="#34D399" if taxa_resp >= 70 else "#FBBF24")
+
+        # ── Funil de conversão ───────────────────────────────────────────────────
+        st.divider()
+        slabel("Funil de Performance")
+        funnel_labels = ["Alcance", "Impressões", "Cliques"]
+        funnel_values = [int(total_reach), int(total_imp), int(total_clicks)]
+        funnel_colors = ["#818CF8", "#38BDF8", "#34D399"]
+        if total_conversas > 0:
+            funnel_labels.append("Conversas")
+            funnel_values.append(int(total_conversas))
+            funnel_colors.append("#25D366")
+        if total_leads > 0:
+            funnel_labels.append("Leads")
+            funnel_values.append(int(total_leads))
+            funnel_colors.append("#F472B6")
+        if total_purchases > 0:
+            funnel_labels.append("Compras")
+            funnel_values.append(int(total_purchases))
+            funnel_colors.append("#FB923C")
+        fig_funnel = go.Figure(go.Funnel(
+            y=funnel_labels, x=funnel_values,
+            textinfo="value+percent initial",
+            marker=dict(color=funnel_colors),
+            connector=dict(line=dict(color="rgba(255,255,255,0.1)", dash="dot", width=2)),
+        ))
+        fig_funnel.update_layout(height=340, title="Funil: do Alcance à Conversão")
+        apply_fig(fig_funnel)
+        st.plotly_chart(fig_funnel, use_container_width=True)
 
         st.divider()
         col_a, col_b = st.columns(2)
@@ -1437,7 +1530,244 @@ with tab7:
         st.download_button("⬇️ Exportar Diário CSV", csv, "diario.csv", "text/csv")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 8 — INSIGHTS & RECOMENDAÇÕES
+# TAB 8 — MENSAGENS
+# ═══════════════════════════════════════════════════════════════════════════════
+with tab_msg:
+    try:
+        df_msg = load_campaigns(selected_id, date_preset)
+        df_msg_adset = load_adsets(selected_id, date_preset)
+        df_msg_ads = load_ads(selected_id, date_preset)
+    except Exception as e:
+        st.error(f"Erro ao carregar dados de mensagens: {e}")
+        df_msg = pd.DataFrame()
+
+    df_msg = apply_camp_filter(df_msg)
+    df_msg_adset = apply_camp_filter(df_msg_adset)
+    df_msg_ads = apply_camp_filter(df_msg_ads)
+
+    has_msg = "Conversas" in df_msg.columns and df_msg["Conversas"].sum() > 0
+
+    if not has_msg:
+        st.markdown("""
+        <div style="background:rgba(37,211,102,.06);border:1px solid rgba(37,211,102,.2);border-left:4px solid #25D366;border-radius:12px;padding:28px 24px;margin:20px 0;text-align:center">
+          <div style="font-size:2rem;margin-bottom:10px">💬</div>
+          <strong style="color:#25D366;font-size:1.1rem">Nenhuma campanha de Mensagens no período</strong>
+          <p style="color:#94A3B8;margin:8px 0 0;font-size:.9rem">Para ver métricas de mensagens, crie campanhas com objetivo <strong style="color:#E2E8F0">MESSAGES</strong> no Meta Ads Manager com destino WhatsApp, Messenger ou Instagram Direct.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        df_msg_camp = df_msg[df_msg["Conversas"] > 0].copy()
+
+        # ── KPIs Principais ──────────────────────────────────────────────────
+        slabel("KPIs de Mensagens")
+        total_conv     = int(df_msg_camp["Conversas"].sum())
+        total_pr       = int(df_msg_camp["Primeiras Respostas"].sum())
+        total_bloq     = int(df_msg_camp["Bloqueios"].sum()) if "Bloqueios" in df_msg_camp.columns else 0
+        total_gasto_m  = df_msg_camp["Gasto"].sum()
+        custo_conv_m   = total_gasto_m / total_conv if total_conv else 0
+        taxa_resp_m    = total_pr / total_conv * 100 if total_conv else 0
+        taxa_bloq_m    = total_bloq / total_conv * 100 if total_conv else 0
+
+        c1, c2, c3, c4, c5, c6 = st.columns(6)
+        with c1: kpi("Conversas Iniciadas",  f"{total_conv:,}",          icon="💬", color="#25D366")
+        with c2: kpi("Custo / Conversa",     fmt(custo_conv_m, currency), icon="💰", color="#25D366")
+        with c3: kpi("Primeiras Respostas",  f"{total_pr:,}",             icon="↩️", color="#34D399")
+        with c4: kpi("Taxa de Resposta",     f"{taxa_resp_m:.1f}%",       icon="📊", color="#34D399" if taxa_resp_m >= 70 else "#FBBF24")
+        with c5: kpi("Bloqueios",            f"{total_bloq:,}",           icon="🚫", color="#F87171" if total_bloq > 0 else "#94A3B8")
+        with c6: kpi("Taxa de Bloqueio",     f"{taxa_bloq_m:.1f}%",       icon="⚠️", color="#F87171" if taxa_bloq_m > 5 else "#34D399")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # ── Qualidade das Conversas ────────────────────────────────────────
+        slabel("Qualidade de Engajamento")
+        qual_col1, qual_col2, qual_col3 = st.columns(3)
+
+        with qual_col1:
+            # Funil de mensagens
+            funnel_m = go.Figure(go.Funnel(
+                y=["Cliques", "Conversas Iniciadas", "Primeiras Respostas"],
+                x=[int(df_msg_camp["Cliques"].sum()), total_conv, total_pr],
+                textinfo="value+percent initial",
+                marker=dict(color=["#38BDF8", "#25D366", "#34D399"]),
+                connector=dict(line=dict(color="rgba(255,255,255,0.1)", dash="dot", width=2)),
+            ))
+            funnel_m.update_layout(height=300, title="Funil de Mensagens")
+            apply_fig(funnel_m)
+            st.plotly_chart(funnel_m, use_container_width=True)
+
+        with qual_col2:
+            # Gauge - Taxa de resposta
+            fig_gauge = go.Figure(go.Indicator(
+                mode="gauge+number+delta",
+                value=taxa_resp_m,
+                number={"suffix": "%", "font": {"size": 28, "color": "#F8FAFC"}},
+                delta={"reference": 70, "increasing": {"color": "#34D399"}, "decreasing": {"color": "#F87171"}},
+                gauge={
+                    "axis": {"range": [0, 100], "tickcolor": "#475569"},
+                    "bar": {"color": "#25D366"},
+                    "steps": [
+                        {"range": [0, 40], "color": "rgba(248,113,113,0.15)"},
+                        {"range": [40, 70], "color": "rgba(251,191,36,0.15)"},
+                        {"range": [70, 100], "color": "rgba(52,211,153,0.15)"},
+                    ],
+                    "threshold": {"line": {"color": "#38BDF8", "width": 3}, "thickness": 0.8, "value": 70},
+                },
+                title={"text": "Taxa de Resposta", "font": {"color": "#94A3B8"}},
+            ))
+            fig_gauge.update_layout(height=300, paper_bgcolor="rgba(255,255,255,0.02)", font_color="#94A3B8")
+            st.plotly_chart(fig_gauge, use_container_width=True)
+
+        with qual_col3:
+            # Gauge - Taxa de bloqueio
+            fig_bloq = go.Figure(go.Indicator(
+                mode="gauge+number",
+                value=taxa_bloq_m,
+                number={"suffix": "%", "font": {"size": 28, "color": "#F8FAFC"}},
+                gauge={
+                    "axis": {"range": [0, 20], "tickcolor": "#475569"},
+                    "bar": {"color": "#F87171" if taxa_bloq_m > 5 else "#34D399"},
+                    "steps": [
+                        {"range": [0, 3], "color": "rgba(52,211,153,0.15)"},
+                        {"range": [3, 7], "color": "rgba(251,191,36,0.15)"},
+                        {"range": [7, 20], "color": "rgba(248,113,113,0.15)"},
+                    ],
+                    "threshold": {"line": {"color": "#FBBF24", "width": 3}, "thickness": 0.8, "value": 5},
+                },
+                title={"text": "Taxa de Bloqueio (meta: < 5%)", "font": {"color": "#94A3B8"}},
+            ))
+            fig_bloq.update_layout(height=300, paper_bgcolor="rgba(255,255,255,0.02)", font_color="#94A3B8")
+            st.plotly_chart(fig_bloq, use_container_width=True)
+
+        st.divider()
+
+        # ── Análise por Campanha ────────────────────────────────────────────
+        slabel("Performance por Campanha")
+        col_a, col_b = st.columns(2)
+        with col_a:
+            fig = px.bar(df_msg_camp.sort_values("Conversas"), x="Conversas", y="Campanha",
+                         orientation="h", color="Conversas", color_continuous_scale=[[0, "#1a3d2b"], [1, "#25D366"]],
+                         text_auto=True, title="Conversas por Campanha", template=CHART_THEME)
+            fig.update_layout(coloraxis_showscale=False, height=360)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+        with col_b:
+            fig = px.bar(df_msg_camp.sort_values("Custo/Conversa"), x="Custo/Conversa", y="Campanha",
+                         orientation="h", color="Custo/Conversa", color_continuous_scale="RdYlGn_r",
+                         text_auto=".2f", title="Custo por Conversa (menor = melhor)", template=CHART_THEME)
+            fig.update_layout(coloraxis_showscale=False, height=360)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+
+        col_c, col_d = st.columns(2)
+        with col_c:
+            fig = px.bar(df_msg_camp, x="Campanha", y=["Conversas", "Primeiras Respostas"],
+                         barmode="group", title="Conversas vs Primeiras Respostas",
+                         color_discrete_map={"Conversas": "#25D366", "Primeiras Respostas": "#34D399"},
+                         template=CHART_THEME)
+            fig.update_layout(height=340, xaxis=dict(tickangle=-20))
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+        with col_d:
+            fig = px.scatter(df_msg_camp, x="Gasto", y="Conversas",
+                             size="Primeiras Respostas", color="Taxa Resposta (%)",
+                             hover_name="Campanha", color_continuous_scale="Greens",
+                             title="Gasto vs Conversas (tamanho = Primeiras Respostas)",
+                             template=CHART_THEME)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+
+        # ── Análise por Conjunto ────────────────────────────────────────────
+        if "Conversas" in df_msg_adset.columns:
+            df_adset_msg = df_msg_adset[df_msg_adset["Conversas"] > 0]
+            if not df_adset_msg.empty:
+                st.divider()
+                slabel("Performance por Conjunto de Anúncios")
+                col_e, col_f = st.columns(2)
+                with col_e:
+                    fig = px.bar(df_adset_msg.sort_values("Conversas"), x="Conversas", y="Conjunto",
+                                 orientation="h", color="Custo/Conversa", color_continuous_scale="RdYlGn_r",
+                                 hover_data=["Campanha", "Taxa Resposta (%)"],
+                                 title="Conversas por Conjunto (cor = Custo/Conversa)", template=CHART_THEME)
+                    fig.update_layout(coloraxis_showscale=True, height=380)
+                    apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+                with col_f:
+                    fig = px.scatter(df_adset_msg, x="Custo/Conversa", y="Taxa Resposta (%)",
+                                     size="Conversas", color="Bloqueios",
+                                     hover_name="Conjunto",
+                                     title="Custo/Conversa vs Taxa de Resposta",
+                                     color_continuous_scale="Reds", template=CHART_THEME)
+                    apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+
+        # ── Análise por Anúncio ─────────────────────────────────────────────
+        if "Conversas" in df_msg_ads.columns:
+            df_ads_msg = df_msg_ads[df_msg_ads["Conversas"] > 0]
+            if not df_ads_msg.empty:
+                st.divider()
+                slabel("Top Anúncios — Mensagens")
+                top_conv = df_ads_msg.sort_values("Conversas", ascending=False).head(10)
+                fig = px.bar(top_conv, x="Anúncio", y="Conversas",
+                             color="Custo/Conversa", color_continuous_scale="RdYlGn_r",
+                             hover_data=["Conjunto", "Campanha", "Taxa Resposta (%)"],
+                             title="Top 10 Anúncios por Conversas (cor = Custo/Conversa)",
+                             template=CHART_THEME)
+                fig.update_layout(xaxis=dict(tickangle=-25), coloraxis_showscale=True)
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+
+        # ── Insights de Mensagens ───────────────────────────────────────────
+        st.divider()
+        slabel("Diagnóstico de Qualidade")
+        ic1, ic2 = st.columns(2)
+        with ic1:
+            if taxa_resp_m >= 80:
+                insight("good", "✅", "Taxa de Resposta Excelente",
+                        f"<strong>{taxa_resp_m:.1f}%</strong> das conversas geraram uma primeira resposta. Seu público está altamente engajado com o conteúdo.")
+            elif taxa_resp_m >= 60:
+                insight("warn", "📊", "Taxa de Resposta Razoável",
+                        f"<strong>{taxa_resp_m:.1f}%</strong> de taxa de resposta. Melhore o criativo e a mensagem de boas-vindas para aumentar o engajamento.")
+            else:
+                insight("bad", "🚨", "Taxa de Resposta Crítica",
+                        f"Apenas <strong>{taxa_resp_m:.1f}%</strong> das conversas recebem resposta. Revise urgentemente a mensagem automática de boas-vindas e a qualidade do público.")
+
+            if custo_conv_m > 0:
+                if custo_conv_m < 15:
+                    insight("good", "💰", "Custo por Conversa Competitivo",
+                            f"Custo médio de <strong>{fmt(custo_conv_m, currency)}</strong> por conversa. Excelente eficiência para campanhas de mensagens no Brasil.")
+                elif custo_conv_m < 30:
+                    insight("warn", "💡", "Custo por Conversa Moderado",
+                            f"Custo médio de <strong>{fmt(custo_conv_m, currency)}</strong>. Há espaço para otimizar via melhor segmentação e criativos mais atrativos.")
+                else:
+                    insight("bad", "🚨", "Custo por Conversa Alto",
+                            f"Custo de <strong>{fmt(custo_conv_m, currency)}</strong> por conversa está acima do esperado. Revise segmentação e criativos imediatamente.")
+        with ic2:
+            if taxa_bloq_m > 7:
+                insight("bad", "🚫", "Taxa de Bloqueio Alarmante",
+                        f"<strong>{taxa_bloq_m:.1f}%</strong> dos usuários estão bloqueando após a conversa. Isso sinaliza que o público não está qualificado ou a abordagem é invasiva.")
+            elif taxa_bloq_m > 3:
+                insight("warn", "⚠️", "Taxa de Bloqueio Elevada",
+                        f"<strong>{taxa_bloq_m:.1f}%</strong> de bloqueios. Revise a qualidade do público-alvo e o tom da comunicação.")
+            else:
+                insight("good", "✅", "Taxa de Bloqueio Saudável",
+                        f"Apenas <strong>{taxa_bloq_m:.1f}%</strong> de bloqueios. Seu público está bem segmentado e receptivo à comunicação.")
+
+            if len(df_msg_camp) > 1 and "Custo/Conversa" in df_msg_camp.columns:
+                melhor = df_msg_camp.loc[df_msg_camp["Custo/Conversa"].replace(0, float("inf")).idxmin()]
+                insight("good", "🏆", "Melhor Campanha por Custo/Conversa",
+                        f"<strong>{melhor['Campanha']}</strong> com custo de {fmt(melhor['Custo/Conversa'], currency)}/conversa e {int(melhor['Conversas'])} conversas. Priorize esta campanha.")
+
+        # ── Tabela completa ─────────────────────────────────────────────────
+        st.divider()
+        slabel("Tabela Detalhada — Mensagens por Campanha")
+        msg_cols = ["Campanha", "Gasto", "Impressões", "Cliques", "CTR (%)",
+                    "Conversas", "Custo/Conversa", "Primeiras Respostas", "Taxa Resposta (%)", "Bloqueios"]
+        msg_cols_avail = [c for c in msg_cols if c in df_msg_camp.columns]
+        _styled_msg = df_msg_camp[msg_cols_avail].style.format({
+            "Gasto": "{:.2f}", "CTR (%)": "{:.2f}", "Custo/Conversa": "{:.2f}", "Taxa Resposta (%)": "{:.1f}",
+        })
+        _styled_msg = _styled_msg.background_gradient(subset=["Conversas"], cmap="Greens")
+        if "Custo/Conversa" in msg_cols_avail:
+            _styled_msg = _styled_msg.background_gradient(subset=["Custo/Conversa"], cmap="RdYlGn_r")
+        st.dataframe(_styled_msg, use_container_width=True, height=380)
+        csv_msg = df_msg_camp[msg_cols_avail].to_csv(index=False).encode("utf-8")
+        st.download_button("⬇️ Exportar Mensagens CSV", csv_msg, "mensagens.csv", "text/csv")
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TAB 9 — INSIGHTS & RECOMENDAÇÕES
 # ═══════════════════════════════════════════════════════════════════════════════
 with tab_ins:
     st.markdown("## 🧠 Insights & Recomendações")
@@ -1588,6 +1918,22 @@ with tab_ins:
                 insight("good", "🥇", "Campanha com Menor CPL",
                         f"<strong>{best_cpl['Campanha']}</strong> com CPL de {fmt(best_cpl['CPL'], currency)}. Considere aumentar o orçamento desta campanha.")
 
+        # Mensagens
+        if "Conversas" in df_camp_i.columns:
+            total_conv_i = df_camp_i["Conversas"].sum()
+            total_pr_i = df_camp_i["Primeiras Respostas"].sum() if "Primeiras Respostas" in df_camp_i.columns else 0
+            if total_conv_i > 0:
+                taxa_r_i = total_pr_i / total_conv_i * 100 if total_conv_i else 0
+                custo_c_i = total_spend_i / total_conv_i
+                insight("info", "💬", f"Mensagens: {int(total_conv_i):,} Conversas",
+                        f"Custo médio por conversa: <strong>{fmt(custo_c_i, currency)}</strong> — Taxa de resposta: <strong>{taxa_r_i:.1f}%</strong>. Acesse a aba 💬 Mensagens para análise completa.")
+                df_bloq_i = df_camp_i[df_camp_i.get("Bloqueios", pd.Series([0]*len(df_camp_i))) > 0] if "Bloqueios" in df_camp_i.columns else pd.DataFrame()
+                total_bloq_i = df_camp_i["Bloqueios"].sum() if "Bloqueios" in df_camp_i.columns else 0
+                taxa_bloq_i = total_bloq_i / total_conv_i * 100 if total_conv_i else 0
+                if taxa_bloq_i > 5:
+                    insight("bad", "🚫", "Taxa de Bloqueio Alarmante nas Mensagens",
+                            f"<strong>{taxa_bloq_i:.1f}%</strong> de bloqueios. Revise a qualidade do público e a abordagem da comunicação.")
+
     st.divider()
     col3, col4 = st.columns(2)
 
@@ -1690,6 +2036,18 @@ with tab_ins:
     if not df_age_i.empty:
         best_ag = df_age_i.loc[df_age_i["CTR (%)"].idxmax()]
         acoes.append(("🟢 Oportunidade", f"Criar campanha específica para faixa {best_ag['age']} (CTR {best_ag['CTR (%)']:.2f}%)"))
+    if "Conversas" in df_camp_i.columns and df_camp_i["Conversas"].sum() > 0:
+        df_conv_i = df_camp_i[df_camp_i["Conversas"] > 0]
+        taxa_r_acao = df_conv_i["Primeiras Respostas"].sum() / df_conv_i["Conversas"].sum() * 100 if df_conv_i["Conversas"].sum() > 0 else 0
+        if taxa_r_acao < 60:
+            acoes.append(("🔴 Alta Prioridade", f"Taxa de resposta nas mensagens em {taxa_r_acao:.0f}% — revise mensagem de boas-vindas e qualidade do público"))
+        if "Bloqueios" in df_camp_i.columns:
+            taxa_b = df_camp_i["Bloqueios"].sum() / df_camp_i["Conversas"].sum() * 100
+            if taxa_b > 5:
+                acoes.append(("🔴 Alta Prioridade", f"Taxa de bloqueio de {taxa_b:.1f}% nas campanhas de mensagens — revise segmentação e abordagem"))
+        if len(df_conv_i) > 1:
+            best_msg = df_conv_i.loc[df_conv_i["Custo/Conversa"].replace(0, float("inf")).idxmin()]
+            acoes.append(("🟢 Oportunidade", f"Escalar campanha de mensagens '{best_msg['Campanha']}' — menor Custo/Conversa ({fmt(best_msg['Custo/Conversa'], currency)})"))
 
     if acoes:
         for prioridade, acao in acoes:
