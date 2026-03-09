@@ -26,7 +26,7 @@ def _get_token():
 ACCESS_TOKEN = _get_token()
 
 # ── CSS ────────────────────────────────────────────────────────────────────────
-st.markdown("""
+st.html("""
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ── BASE ── */
@@ -162,7 +162,7 @@ hr { border-color: rgba(255,255,255,.06) !important; }
 @keyframes pulse-ring { 0%{transform:scale(1);opacity:.6} 100%{transform:scale(1.5);opacity:0} }
 @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 </style>
-""", unsafe_allow_html=True)
+""")
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 CHART_THEME = "plotly" if st.session_state.get("theme", "dark") == "light" else "plotly_dark"
