@@ -165,7 +165,7 @@ hr { border-color: rgba(255,255,255,.06) !important; }
 """, unsafe_allow_html=True)
 
 # ── helpers ────────────────────────────────────────────────────────────────────
-CHART_THEME = "plotly_dark"
+CHART_THEME = "plotly" if st.session_state.get("theme", "dark") == "light" else "plotly_dark"
 
 def fmt(value, currency="BRL"):
     symbol = "R$" if currency == "BRL" else "$"
@@ -213,6 +213,26 @@ def dark_fig(fig):
     fig.update_xaxes(gridcolor="rgba(255,255,255,0.05)", linecolor="rgba(0,0,0,0)", tickcolor="rgba(0,0,0,0)")
     fig.update_yaxes(gridcolor="rgba(255,255,255,0.05)", linecolor="rgba(0,0,0,0)", tickcolor="rgba(0,0,0,0)")
     return fig
+
+def light_fig(fig):
+    """Aplica estilo light consistente em figuras plotly."""
+    fig.update_layout(
+        paper_bgcolor="#FFFFFF",
+        plot_bgcolor="#F8FAFC",
+        font_color="#334155",
+        title_font=dict(color="#0F172A", family="Outfit", size=14),
+        legend=dict(bgcolor="rgba(255,255,255,0.8)", font=dict(color="#334155")),
+        margin=dict(l=0, r=10, t=44, b=10),
+    )
+    fig.update_xaxes(gridcolor="rgba(0,0,0,0.06)", linecolor="rgba(0,0,0,0.1)", tickcolor="rgba(0,0,0,0.1)")
+    fig.update_yaxes(gridcolor="rgba(0,0,0,0.06)", linecolor="rgba(0,0,0,0.1)", tickcolor="rgba(0,0,0,0.1)")
+    return fig
+
+def apply_fig(fig):
+    """Aplica o tema selecionado (dark ou light) na figura."""
+    if st.session_state.get("theme", "dark") == "light":
+        return light_fig(fig)
+    return dark_fig(fig)
 
 def kpi(label, value, delta=None, icon="", color="#818CF8"):
     icon_html = f'<div class="kpi-icon-box" style="background:{color}18">{icon}</div>' if icon else ""
@@ -713,6 +733,12 @@ with st.sidebar:
         selected_campaigns = []
 
     st.divider()
+    _theme_current = st.session_state.get("theme", "dark")
+    _theme_label = "☀️ Modo Claro" if _theme_current == "dark" else "🌙 Modo Escuro"
+    if st.button(_theme_label, use_container_width=True):
+        st.session_state["theme"] = "light" if _theme_current == "dark" else "dark"
+        st.rerun()
+    st.divider()
     if st.button("🔄 Atualizar dados", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
@@ -863,14 +889,14 @@ with tab2:
                          color_continuous_scale="Blues", text_auto=".2f",
                          title="Gasto por Campanha", template=CHART_THEME)
             fig.update_layout(coloraxis_showscale=False, height=420)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_b:
             fig = px.bar(df_camp.sort_values("CTR (%)"), x="CTR (%)", y="Campanha",
                          orientation="h", color="CTR (%)",
                          color_continuous_scale="Greens", text_auto=".2f",
                          title="CTR por Campanha", template=CHART_THEME)
             fig.update_layout(coloraxis_showscale=False, height=420)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         col_c, col_d = st.columns(2)
         with col_c:
@@ -878,20 +904,20 @@ with tab2:
             fig.add_trace(go.Bar(name="Alcance", x=df_camp["Campanha"], y=df_camp["Alcance"], marker_color="#818CF8"))
             fig.add_trace(go.Bar(name="Impressões", x=df_camp["Campanha"], y=df_camp["Impressões"], marker_color="#38BDF8"))
             fig.update_layout(barmode="group", height=380, xaxis=dict(tickangle=-30), title="Alcance vs Impressões")
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_d:
             fig = go.Figure(layout=dict(template=CHART_THEME))
             fig.add_trace(go.Bar(name="CPC", x=df_camp["Campanha"], y=df_camp["CPC"], marker_color="#34D399"))
             fig.add_trace(go.Bar(name="CPM", x=df_camp["Campanha"], y=df_camp["CPM"], marker_color="#A78BFA"))
             fig.update_layout(barmode="group", height=380, xaxis=dict(tickangle=-30), title="CPC vs CPM")
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         if df_camp["Video Views"].sum() > 0:
             fig = go.Figure(layout=dict(template=CHART_THEME))
             fig.add_trace(go.Bar(name="Video Views", x=df_camp["Campanha"], y=df_camp["Video Views"], marker_color="#FB923C"))
             fig.add_trace(go.Bar(name="ThruPlays", x=df_camp["Campanha"], y=df_camp["ThruPlays"], marker_color="#38BDF8"))
             fig.update_layout(barmode="group", height=350, xaxis=dict(tickangle=-30), title="Video Views vs ThruPlays")
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         if total_leads > 0:
             df_l = df_camp[df_camp["Leads"] > 0]
@@ -899,19 +925,19 @@ with tab2:
             with col_e:
                 fig = px.pie(df_l, values="Leads", names="Campanha",
                              title="Distribuição de Leads", template=CHART_THEME, hole=0.4)
-                dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
             with col_f:
                 fig = px.bar(df_l.sort_values("CPL"), x="Campanha", y="CPL",
                              color="CPL", color_continuous_scale="Reds",
                              text_auto=".2f", title="CPL por Campanha", template=CHART_THEME)
                 fig.update_layout(coloraxis_showscale=False)
-                dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         if df_camp["Objetivo"].nunique() > 1:
             df_obj = df_camp.groupby("Objetivo")["Gasto"].sum().reset_index()
             fig = px.pie(df_obj, values="Gasto", names="Objetivo",
                          title="Gasto por Objetivo", template=CHART_THEME, hole=0.4)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         st.divider()
         slabel("Tabela Completa — Campanhas")
@@ -958,7 +984,7 @@ with tab3:
                      hover_data=["Campanha", "CTR (%)", "CPL"],
                      title="Top 20 Conjuntos por Gasto", template=CHART_THEME)
         fig.update_layout(coloraxis_showscale=False, height=500)
-        dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+        apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         col_a, col_b = st.columns(2)
         with col_a:
@@ -966,13 +992,13 @@ with tab3:
                              color="CPM", hover_name="Conjunto",
                              title="Gasto vs CTR (tamanho = Impressões)",
                              template=CHART_THEME)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_b:
             fig = px.scatter(df_adset, x="CPC", y="CTR (%)", size="Cliques",
                              color="Frequência", hover_name="Conjunto",
                              title="CPC vs CTR (tamanho = Cliques)",
                              template=CHART_THEME)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         slabel("Tabela Completa — Conjuntos")
         st.dataframe(
@@ -1055,7 +1081,7 @@ with tab4:
                          hover_data=["Campanha", "Conjunto", "CPL"],
                          title="Top 20 Anúncios por Gasto (cor = CTR)", template=CHART_THEME)
             fig.update_layout(height=max(400, len(top20) * 28), yaxis=dict(title=""))
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
             col_a, col_b = st.columns(2)
             with col_a:
@@ -1063,13 +1089,13 @@ with tab4:
                                  color="CPC", hover_name="Anúncio",
                                  hover_data=["Campanha", "Conjunto"],
                                  title="Gasto vs CTR (tamanho = Impressões)", template=CHART_THEME)
-                dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
             with col_b:
                 fig = px.scatter(df_filtered, x="CPM", y="CTR (%)", size="Cliques",
                                  color="Frequência", hover_name="Anúncio",
                                  hover_data=["Campanha", "Conjunto"],
                                  title="CPM vs CTR (tamanho = Cliques)", template=CHART_THEME)
-                dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
             if df_filtered["Video Views"].sum() > 0:
                 df_vid = df_filtered[df_filtered["Video Views"] > 0].sort_values("Video Views").tail(15)
@@ -1079,13 +1105,13 @@ with tab4:
                                  color="Video Views", color_continuous_scale="Oranges",
                                  title="Video Views por Anúncio", template=CHART_THEME)
                     fig.update_layout(coloraxis_showscale=False)
-                    dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+                    apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
                 with col_v2:
                     fig = px.bar(df_vid, x="ThruPlays", y="Anúncio", orientation="h",
                                  color="ThruPlays", color_continuous_scale="Teal",
                                  title="ThruPlays por Anúncio", template=CHART_THEME)
                     fig.update_layout(coloraxis_showscale=False)
-                    dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+                    apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
             if df_filtered["Leads"].sum() > 0:
                 df_leads_ad = df_filtered[df_filtered["Leads"] > 0].sort_values("CPL")
@@ -1093,7 +1119,7 @@ with tab4:
                              color="Leads", color_continuous_scale="Purples",
                              title="CPL por Anúncio (top 15)", template=CHART_THEME)
                 fig.update_layout(xaxis=dict(tickangle=-30))
-                dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         # ── CARDS ───────────────────────────────────────────────────────────
         elif view_mode == "🃏 Cards":
@@ -1240,13 +1266,13 @@ with tab5:
                          color_continuous_scale="Blues",
                          title="Impressões por Idade", template=CHART_THEME)
             fig.update_layout(coloraxis_showscale=False)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_b:
             fig = px.bar(df_age, x="age", y="Gasto", color="Gasto",
                          color_continuous_scale="Reds",
                          title="Gasto por Idade", template=CHART_THEME)
             fig.update_layout(coloraxis_showscale=False)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         col_c, col_d = st.columns(2)
         with col_c:
@@ -1254,14 +1280,14 @@ with tab5:
                          color_continuous_scale="Greens",
                          title="CTR por Idade", template=CHART_THEME)
             fig.update_layout(coloraxis_showscale=False)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_d:
             if df_age["Leads"].sum() > 0:
                 fig = px.bar(df_age[df_age["Leads"] > 0], x="age", y="Leads",
                              color="Leads", color_continuous_scale="Purples",
                              title="Leads por Idade", template=CHART_THEME)
                 fig.update_layout(coloraxis_showscale=False)
-                dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         st.dataframe(df_age, use_container_width=True, hide_index=True)
 
     st.divider()
@@ -1273,15 +1299,15 @@ with tab5:
         with col_a:
             fig = px.pie(df_gender, values="Impressões", names="Gênero",
                          title="Impressões", template=CHART_THEME, hole=0.4)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_b:
             fig = px.pie(df_gender, values="Gasto", names="Gênero",
                          title="Gasto", template=CHART_THEME, hole=0.4)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_c:
             fig = px.bar(df_gender, x="Gênero", y="CTR (%)", color="Gênero",
                          title="CTR por Gênero", template=CHART_THEME)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         st.dataframe(df_gender.drop(columns=["gender"]), use_container_width=True, hide_index=True)
 
     st.divider()
@@ -1292,7 +1318,7 @@ with tab5:
         pivot = df_ag.pivot_table(index="age", columns="gender", values="Gasto", aggfunc="sum", fill_value=0)
         fig = px.imshow(pivot, text_auto=".1f", color_continuous_scale="RdYlGn",
                         title="Gasto por Faixa Etária × Gênero", template=CHART_THEME)
-        dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+        apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TAB 6 — POSICIONAMENTO
@@ -1311,28 +1337,28 @@ with tab6:
         with col_a:
             fig = px.pie(df_place, values="Gasto", names="Plataforma",
                          title="Gasto por Plataforma", template=CHART_THEME, hole=0.4)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_b:
             fig = px.pie(df_place, values="Impressões", names="Plataforma",
                          title="Impressões por Plataforma", template=CHART_THEME, hole=0.4)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         fig = px.bar(df_place.sort_values("CTR (%)"), x="CTR (%)",
                      y=df_place["Plataforma"] + " / " + df_place["Posição"],
                      orientation="h", color="CTR (%)", color_continuous_scale="Greens",
                      text_auto=".2f", title="CTR por Posicionamento", template=CHART_THEME)
         fig.update_layout(coloraxis_showscale=False, height=500)
-        dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+        apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         col_c, col_d = st.columns(2)
         with col_c:
             fig = px.bar(df_place, x="Plataforma", y="Gasto", color="Posição",
                          title="Gasto por Plataforma e Posição", template=CHART_THEME)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_d:
             fig = px.bar(df_place, x="Plataforma", y="CPC", color="Posição",
                          barmode="group", title="CPC por Plataforma e Posição", template=CHART_THEME)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         st.subheader("Tabela Completa — Posicionamento")
         st.dataframe(
@@ -1366,19 +1392,19 @@ with tab7:
         fig = px.area(df_daily, x="Data", y="Gasto", markers=True,
                       title="Evolução do Gasto Diário", template=CHART_THEME)
         fig.update_traces(fill="tozeroy", line_color="#636EFA", fillcolor="rgba(99,110,250,0.15)")
-        dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+        apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         col_a, col_b = st.columns(2)
         with col_a:
             fig = px.line(df_daily, x="Data", y="CTR (%)", markers=True,
                           title="CTR Diário (%)", template=CHART_THEME)
             fig.update_traces(line_color="#48bb78")
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_b:
             fig = px.line(df_daily, x="Data", y="CPM", markers=True,
                           title="CPM Diário", template=CHART_THEME)
             fig.update_traces(line_color="#EF553B")
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         col_c, col_d = st.columns(2)
         with col_c:
@@ -1386,19 +1412,19 @@ with tab7:
                          title="Impressões Diárias", template=CHART_THEME,
                          color="Impressões", color_continuous_scale="Blues")
             fig.update_layout(coloraxis_showscale=False)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
         with col_d:
             fig = px.bar(df_daily, x="Data", y="Cliques",
                          title="Cliques Diários", template=CHART_THEME,
                          color="Cliques", color_continuous_scale="Greens")
             fig.update_layout(coloraxis_showscale=False)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         if df_daily["Leads"].sum() > 0:
             fig = px.bar(df_daily, x="Data", y="Leads", title="Leads por Dia",
                          color="Leads", color_continuous_scale="Purples", template=CHART_THEME)
             fig.update_layout(coloraxis_showscale=False)
-            dark_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         st.subheader("Tabela Diária Completa")
         st.dataframe(
