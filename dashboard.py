@@ -31,7 +31,13 @@ st.html("""
 <style>
 /* ── BASE ── */
 html, body, [class*="css"] { font-family: 'Outfit', sans-serif !important; }
-.stApp { background-color: #020617 !important; }
+.stApp {
+  background: #020617 !important;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(56,189,248,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(129,140,248,.06) 0%, transparent 60%) !important;
+  background-attachment: fixed !important;
+}
 .block-container { padding-top: 16px !important; padding-bottom: 60px !important; }
 h1,h2,h3,h4,h5,h6,p,span,div,label { color: #F8FAFC; }
 
@@ -39,6 +45,7 @@ h1,h2,h3,h4,h5,h6,p,span,div,label { color: #F8FAFC; }
 [data-testid="stSidebar"] {
   background: rgba(2,6,23,.98) !important;
   border-right: 1px solid rgba(255,255,255,.06) !important;
+  backdrop-filter: blur(20px) !important;
 }
 [data-testid="stSidebar"] * { color: #94A3B8 !important; }
 [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2,
@@ -46,58 +53,101 @@ h1,h2,h3,h4,h5,h6,p,span,div,label { color: #F8FAFC; }
 
 /* ── TABS ── */
 .stTabs [data-baseweb="tab-list"] {
-  background: rgba(255,255,255,.03) !important;
-  border-radius: 12px !important;
+  background: rgba(255,255,255,.028) !important;
+  border-radius: 14px !important;
   padding: 4px !important;
-  border: 1px solid rgba(255,255,255,.05) !important;
+  border: 1px solid rgba(255,255,255,.06) !important;
   gap: 2px !important;
+  backdrop-filter: blur(10px) !important;
 }
 .stTabs [data-baseweb="tab"] {
   background: transparent !important;
   color: #475569 !important;
-  border-radius: 8px !important;
+  border-radius: 10px !important;
   font-family: 'Outfit', sans-serif !important;
   font-size: 12px !important;
   font-weight: 600 !important;
-  padding: 8px 18px !important;
+  padding: 8px 16px !important;
   border: none !important;
-  transition: all .2s !important;
+  transition: all .2s cubic-bezier(.2,0,0,1) !important;
+  letter-spacing: .01em !important;
 }
 .stTabs [aria-selected="true"] {
-  background: rgba(56,189,248,.12) !important;
+  background: linear-gradient(135deg, rgba(56,189,248,.15), rgba(129,140,248,.12)) !important;
   color: #38BDF8 !important;
+  border: 1px solid rgba(56,189,248,.2) !important;
 }
 .stTabs [data-baseweb="tab-highlight"],
 .stTabs [data-baseweb="tab-border"] { display: none !important; }
 
 /* ── MISC ── */
-hr { border-color: rgba(255,255,255,.06) !important; }
+hr { border-color: rgba(255,255,255,.055) !important; }
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.09); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.18); }
 [data-testid="stDataFrame"] {
+  border: 1px solid rgba(255,255,255,.07) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+/* Streamlit buttons */
+.stButton > button {
+  background: rgba(255,255,255,.04) !important;
+  border: 1px solid rgba(255,255,255,.1) !important;
+  color: #94A3B8 !important;
+  border-radius: 10px !important;
+  transition: all .2s !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 600 !important;
+}
+.stButton > button:hover {
+  background: rgba(56,189,248,.1) !important;
+  border-color: rgba(56,189,248,.3) !important;
+  color: #38BDF8 !important;
+  transform: translateY(-1px) !important;
+}
+/* Selectbox and radio */
+[data-testid="stSelectbox"] > div > div,
+[data-testid="stRadio"] {
+  background: rgba(255,255,255,.025) !important;
+  border-radius: 10px !important;
+}
+/* Expanders */
+[data-testid="stExpander"] {
+  background: rgba(255,255,255,.02) !important;
   border: 1px solid rgba(255,255,255,.07) !important;
   border-radius: 12px !important;
 }
 
 /* ── KPI CARD ── */
 .kpi-card {
-  background: rgba(255,255,255,.025);
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 20px; padding: 22px 24px;
+  background: rgba(255,255,255,.028);
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 22px; padding: 22px 24px;
   position: relative; overflow: hidden;
-  transition: transform .25s cubic-bezier(.2,0,0,1), box-shadow .25s;
+  transition: transform .3s cubic-bezier(.2,0,0,1), box-shadow .3s, border-color .3s;
   margin-bottom: 4px;
+  backdrop-filter: blur(12px);
 }
-.kpi-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.12); }
-.kpi-top { position: absolute; top: 0; left: 0; right: 0; height: 2px; }
-.kpi-glow { position: absolute; top:-40px; right:-40px; width:120px; height:120px; border-radius:50%; opacity:.05; filter:blur(30px); }
+.kpi-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,.14);
+  box-shadow: 0 16px 48px rgba(0,0,0,.35);
+}
+.kpi-top { position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 22px 22px 0 0; }
+.kpi-glow { position: absolute; top:-40px; right:-40px; width:130px; height:130px; border-radius:50%; opacity:.06; filter:blur(32px); }
+.kpi-noise {
+  position: absolute; inset: 0; border-radius: 22px; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+  opacity: .4;
+}
 .kpi-row { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
 .kpi-label { font-size:10px; letter-spacing:3px; color:#475569; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
-.kpi-icon-box { width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; }
-.kpi-value { font-size:28px; font-weight:800; color:#F8FAFC; font-family:'Outfit',sans-serif; line-height:1; margin-bottom:10px; }
+.kpi-icon-box { width:34px; height:34px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:17px; border:1px solid rgba(255,255,255,.08); }
+.kpi-value { font-size:28px; font-weight:900; color:#F8FAFC; font-family:'Outfit',sans-serif; line-height:1; margin-bottom:10px; letter-spacing:-.02em; }
 .kpi-delta-row { display:flex; align-items:center; gap:8px; }
-.kpi-badge { font-size:11px; padding:2px 8px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:600; }
+.kpi-badge { font-size:11px; padding:2px 8px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:700; letter-spacing:.03em; }
 .kpi-sub { font-size:11px; color:#475569; }
 
 /* ── SECTION LABEL ── */
@@ -158,42 +208,143 @@ hr { border-color: rgba(255,255,255,.06) !important; }
   border-radius:20px; padding:32px; text-align:center;
 }
 
-/* ── CREATIVE CARD ── */
-.creative-card {
-  background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.07);
-  border-radius:16px; overflow:hidden; transition:transform .25s,box-shadow .25s;
-  margin-bottom:16px; position:relative;
+/* ── CREATIVE CARD — CINEMA STYLE ── */
+.cr-card {
+  background: #0a0f1e;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 20px; overflow: hidden; position: relative;
+  transition: all .35s cubic-bezier(.2,0,.0,1);
+  cursor: pointer;
 }
-.creative-card:hover { transform:translateY(-3px); box-shadow:0 12px 40px rgba(0,0,0,.3); }
-.creative-card.winner { border-color:rgba(52,211,153,.35); }
-.creative-card.winner::after { content:'🏆 TOP'; position:absolute; top:8px; right:8px;
-  background:#34D399; color:#0a0a0a; font-size:.6rem; font-weight:900;
-  padding:2px 8px; border-radius:20px; letter-spacing:.08em; }
-.creative-card.worst { border-color:rgba(248,113,113,.25); }
-.creative-thumb { width:100%; height:160px; background:rgba(255,255,255,.04);
-  display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; }
-.creative-thumb img { width:100%; height:100%; object-fit:cover; }
-.creative-thumb-placeholder { font-size:2.5rem; opacity:.4; }
-.creative-body { padding:14px 16px 16px; }
-.creative-name { font-size:.82rem; font-weight:700; color:#E2E8F0; margin-bottom:6px;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.creative-copy { font-size:.75rem; color:#64748B; margin-bottom:10px;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.creative-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-bottom:10px; }
-.creative-metric { background:rgba(255,255,255,.04); border-radius:7px; padding:6px 8px; text-align:center; }
-.cm-label { color:#475569; font-size:.6rem; text-transform:uppercase; letter-spacing:.07em;
-  font-family:'JetBrains Mono',monospace; }
-.cm-value { color:#E2E8F0; font-size:.82rem; font-weight:700; margin-top:2px; }
-.utm-box { background:rgba(56,189,248,.06); border:1px solid rgba(56,189,248,.15);
-  border-radius:8px; padding:8px 10px; margin-top:8px; }
-.utm-row { display:flex; align-items:center; gap:6px; margin-bottom:3px; flex-wrap:wrap; }
-.utm-key { font-size:.62rem; font-family:'JetBrains Mono',monospace; color:#38BDF8;
-  background:rgba(56,189,248,.1); padding:1px 6px; border-radius:4px; white-space:nowrap; }
-.utm-val { font-size:.65rem; color:#94A3B8; font-family:'JetBrains Mono',monospace;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px; }
-.cta-badge { display:inline-block; background:rgba(129,140,248,.12); color:#818CF8;
-  font-size:.65rem; font-weight:700; padding:2px 8px; border-radius:20px;
-  font-family:'JetBrains Mono',monospace; letter-spacing:.05em; margin-top:4px; }
+.cr-card:hover {
+  transform: translateY(-5px) scale(1.015);
+  border-color: rgba(56,189,248,.35);
+  box-shadow: 0 24px 64px rgba(0,0,0,.5), 0 0 0 1px rgba(56,189,248,.12);
+}
+.cr-card.winner { border-color: rgba(52,211,153,.4); box-shadow: 0 0 0 1px rgba(52,211,153,.12); }
+.cr-card.loser  { border-color: rgba(248,113,113,.3); }
+
+/* Rank badge on image */
+.cr-rank {
+  position: absolute; top: 10px; left: 10px; z-index: 4;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px; padding: 4px 10px;
+  font-size: .6rem; font-weight: 900; letter-spacing: .1em;
+  font-family: 'JetBrains Mono', monospace;
+}
+.cr-rank.gold  { background: linear-gradient(135deg,#d97706,#f59e0b); color: #0a0a0a; }
+.cr-rank.blue  { background: rgba(56,189,248,.18); border: 1px solid rgba(56,189,248,.3); color: #38BDF8; }
+.cr-rank.red   { background: rgba(248,113,113,.15); border: 1px solid rgba(248,113,113,.25); color: #fca5a5; }
+.cr-rank.gray  { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); color: #94A3B8; }
+
+/* Image wrapper with aspect ratio */
+.cr-img-wrap {
+  position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden;
+  background: #0f172a;
+}
+.cr-img-wrap img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform .5s cubic-bezier(.2,0,0,1);
+  display: block;
+}
+.cr-card:hover .cr-img-wrap img { transform: scale(1.06); }
+.cr-no-img {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  font-size: 3rem; opacity: .2;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+}
+
+/* Gradient overlay over image */
+.cr-img-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+  background: linear-gradient(to top, rgba(5,10,25,.95) 0%, rgba(5,10,25,.5) 50%, transparent 100%);
+  padding: 32px 12px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.cr-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+.cr-pill {
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-radius: 20px; padding: 3px 9px;
+  font-size: .65rem; font-weight: 700; letter-spacing: .04em;
+  font-family: 'JetBrains Mono', monospace;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.08); color: #e2e8f0;
+  white-space: nowrap;
+}
+.cr-pill.green { background: rgba(52,211,153,.18); border-color: rgba(52,211,153,.35); color: #6ee7b7; }
+.cr-pill.blue  { background: rgba(56,189,248,.18); border-color: rgba(56,189,248,.35); color: #7dd3fc; }
+.cr-pill.red   { background: rgba(248,113,113,.18); border-color: rgba(248,113,113,.3); color: #fca5a5; }
+.cr-pill.amber { background: rgba(251,191,36,.15);  border-color: rgba(251,191,36,.3);  color: #fcd34d; }
+
+/* Card body */
+.cr-body { padding: 14px 14px 16px; }
+.cr-name {
+  font-size: .82rem; font-weight: 700; color: #E2E8F0;
+  margin: 0 0 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cr-copy {
+  font-size: .72rem; color: #475569; margin: 0 0 10px; line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+/* Score bar */
+.cr-score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.cr-score-label { font-size: .55rem; color: #334155; font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase; letter-spacing: .1em; white-space: nowrap; }
+.cr-score-track { flex: 1; height: 3px; background: rgba(255,255,255,.06); border-radius: 2px; overflow: hidden; }
+.cr-score-fill { height: 100%; border-radius: 2px; }
+.cr-score-num { font-size: .68rem; font-weight: 800; font-family: 'JetBrains Mono', monospace;
+  min-width: 28px; text-align: right; }
+
+/* Mini metrics */
+.cr-minis { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; margin-bottom: 10px; }
+.cr-mini { background: rgba(255,255,255,.04); border-radius: 6px; padding: 5px 6px; text-align: center; }
+.cr-mini-l { font-size: .52rem; color: #334155; text-transform: uppercase; letter-spacing: .07em;
+  font-family: 'JetBrains Mono', monospace; }
+.cr-mini-v { font-size: .78rem; font-weight: 800; color: #CBD5E1; margin-top: 2px; }
+
+/* UTM pills */
+.cr-utms { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.cr-utm {
+  border-radius: 5px; padding: 2px 7px;
+  background: rgba(56,189,248,.06); border: 1px solid rgba(56,189,248,.12);
+  font-size: .6rem; font-family: 'JetBrains Mono', monospace; line-height: 1.5;
+}
+.cr-utm .uk { color: #38BDF8; }
+.cr-utm .uv { color: #475569; }
+
+/* CTA badge */
+.cr-cta {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(129,140,248,.1); border: 1px solid rgba(129,140,248,.2);
+  border-radius: 20px; padding: 3px 10px;
+  font-size: .62rem; font-weight: 700; color: #a5b4fc;
+  font-family: 'JetBrains Mono', monospace; margin-top: 6px; letter-spacing: .04em;
+}
+
+/* ── SPOTLIGHT HERO ── */
+.cr-spotlight {
+  background: linear-gradient(135deg, rgba(14,20,42,.95), rgba(10,15,30,.98));
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 24px; overflow: hidden; position: relative;
+  margin-bottom: 24px;
+}
+.cr-spotlight-inner { display: flex; align-items: stretch; min-height: 260px; }
+.cr-spotlight-img { flex: 0 0 48%; position: relative; overflow: hidden; }
+.cr-spotlight-img img { width: 100%; height: 100%; object-fit: cover; }
+.cr-spotlight-img::after {
+  content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
+  background: linear-gradient(to right, transparent, rgba(10,15,30,.98));
+}
+.cr-spotlight-info { flex: 1; padding: 24px 28px; display: flex; flex-direction: column; justify-content: center; }
+.cr-spotlight-badge { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px;
+  background: rgba(52,211,153,.12); border: 1px solid rgba(52,211,153,.3); border-radius: 20px;
+  padding: 4px 12px; font-size: .68rem; font-weight: 800; color: #34D399; letter-spacing: .08em; }
+.cr-spotlight-name { font-size: 1rem; font-weight: 800; color: #F8FAFC; margin: 0 0 8px; line-height: 1.3; }
+.cr-spotlight-copy { font-size: .8rem; color: #64748B; margin: 0 0 16px; line-height: 1.5; }
+.cr-spotlight-kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.cr-kpi-box { background: rgba(255,255,255,.04); border-radius: 10px; padding: 10px 12px; text-align: center; }
+.cr-kpi-lbl { font-size: .6rem; color: #334155; text-transform: uppercase; letter-spacing: .1em; font-family: 'JetBrains Mono', monospace; }
+.cr-kpi-val { font-size: 1.1rem; font-weight: 900; color: #F8FAFC; margin-top: 3px; }
 
 /* ── INSIGHT EXECUTIVE ── */
 .exec-card { background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.07);
@@ -306,8 +457,9 @@ def kpi(label, value, delta=None, icon="", color="#818CF8"):
         delta_html = f'<div class="kpi-delta-row"><span class="kpi-badge" style="color:{c};background:{bg}">{arr} {delta}</span></div>'
     st.markdown(f"""
     <div class="kpi-card">
-      <div class="kpi-top" style="background:linear-gradient(90deg,{color},transparent)"></div>
+      <div class="kpi-top" style="background:linear-gradient(90deg,{color},{color}80,transparent)"></div>
       <div class="kpi-glow" style="background:{color}"></div>
+      <div class="kpi-noise"></div>
       <div class="kpi-row">
         <span class="kpi-label">{label}</span>
         {icon_html}
@@ -808,16 +960,16 @@ if DEMO_MODE:
         return pd.DataFrame(rows)
 
     def _demo_creatives(account_id):
-        # Thumbnails usando placehold.co (sem dependências externas)
+        # Thumbnails reais via picsum.photos (fotos de alta qualidade, determinísticas por ID)
         _THUMBS = {
-            "ad_Anúnci_1": ("https://placehold.co/400x225/1e3a5f/38BDF8?text=🎬+Video+15s",   "Anúncio | Vídeo 15s | Imóveis",    "Encontre o imóvel dos seus sonhos com as melhores condições do mercado. Consulte agora!", "LEARN_MORE", "utm_source=facebook&utm_medium=paid_social&utm_campaign=imoveis_premium&utm_content=video_15s&utm_term=imoveis_30_45"),
-            "ad_Anúnci_2": ("https://placehold.co/400x225/1e293b/818CF8?text=🖼️+Carrossel",    "Anúncio | Carrossel | Depoimentos", "Mais de 500 famílias já realizaram o sonho da casa própria. Veja os depoimentos.", "LEARN_MORE", "utm_source=facebook&utm_medium=paid_social&utm_campaign=imoveis_premium&utm_content=carrossel_depoimentos&utm_term=imoveis_30_45"),
-            "ad_Anúnci_3": ("https://placehold.co/400x225/1a1a2e/F472B6?text=📸+Imagem+CTA",   "Anúncio | Imagem | CTA Forte",      "Últimas unidades disponíveis! Garanta já o seu imóvel com entrada facilitada.", "APPLY_NOW",  "utm_source=facebook&utm_medium=paid_social&utm_campaign=imoveis_premium&utm_content=imagem_cta_forte&utm_term=imoveis_45_60"),
-            "ad_Anúnci_4": ("https://placehold.co/400x225/1e2d1e/34D399?text=🎥+Vídeo+30s",    "Anúncio | Vídeo 30s | Branding",   "316 Imóveis — referência em qualidade e atendimento personalizado.", "LEARN_MORE",  "utm_source=facebook&utm_medium=paid_social&utm_campaign=imoveis_premium&utm_content=video_30s_branding&utm_term=imoveis_45_60"),
-            "ad_Anúnci_5": ("https://placehold.co/400x225/1a2e1a/25D366?text=💬+WhatsApp",      "Anúncio | WhatsApp | Vídeo Curto",  "Fale agora com nosso especialista pelo WhatsApp e tire todas as suas dúvidas!", "WHATSAPP_MESSAGE", "utm_source=facebook&utm_medium=paid_social&utm_campaign=whatsapp_msg&utm_content=video_curto_wpp&utm_term=whatsapp_25_45"),
-            "ad_Anúnci_6": ("https://placehold.co/400x225/1a2b1a/10B981?text=💬+WPP+Carrossel","Anúncio | WhatsApp | Carrossel",    "Conheça nossos planos e fale com um consultor agora mesmo no WhatsApp.", "WHATSAPP_MESSAGE", "utm_source=facebook&utm_medium=paid_social&utm_campaign=whatsapp_msg&utm_content=carrossel_wpp&utm_term=whatsapp_25_45"),
-            "ad_Anúnci_7": ("https://placehold.co/400x225/1a2016/F59E0B?text=💬+WPP+Oferta",   "Anúncio | WhatsApp | Imagem | Oferta","Oferta por tempo limitado! Consulte pelo WhatsApp e garanta condições exclusivas.", "WHATSAPP_MESSAGE", "utm_source=facebook&utm_medium=paid_social&utm_campaign=whatsapp_msg&utm_content=imagem_oferta_wpp&utm_term=whatsapp_45_65"),
-            "ad_Anúnci_8": ("https://placehold.co/400x225/0f1729/60A5FA?text=📱+Blog+Mobile",   "Anúncio | Blog | Mobile Feed",      "5 dicas para financiar seu imóvel com a menor taxa de juros. Leia agora.", "LEARN_MORE",  "utm_source=facebook&utm_medium=paid_social&utm_campaign=trafego_blog&utm_content=blog_mobile_feed&utm_term=blog_mobile"),
+            "ad_Anúnci_1": ("https://picsum.photos/id/164/800/450",  "Vídeo 15s — Vista Aérea Premium",    "Encontre o imóvel dos seus sonhos com as melhores condições do mercado. Consulte agora!", "LEARN_MORE",        "utm_source=facebook&utm_medium=paid_social&utm_campaign=imoveis_premium&utm_content=video_15s&utm_term=imoveis_30_45"),
+            "ad_Anúnci_2": ("https://picsum.photos/id/366/800/450",  "Carrossel — Interior Luxo",          "Mais de 500 famílias já realizaram o sonho da casa própria. Veja os depoimentos.", "LEARN_MORE",          "utm_source=facebook&utm_medium=paid_social&utm_campaign=imoveis_premium&utm_content=carrossel_depoimentos&utm_term=imoveis_30_45"),
+            "ad_Anúnci_3": ("https://picsum.photos/id/1029/800/450", "Imagem Estática — CTA Forte",        "Últimas unidades disponíveis! Garanta já o seu imóvel com entrada facilitada.", "APPLY_NOW",             "utm_source=facebook&utm_medium=paid_social&utm_campaign=imoveis_premium&utm_content=imagem_cta_forte&utm_term=imoveis_45_60"),
+            "ad_Anúnci_4": ("https://picsum.photos/id/1040/800/450", "Vídeo 30s — Fachada Moderna",        "316 Imóveis — referência em qualidade e atendimento personalizado.", "LEARN_MORE",                   "utm_source=facebook&utm_medium=paid_social&utm_campaign=imoveis_premium&utm_content=video_30s_branding&utm_term=imoveis_45_60"),
+            "ad_Anúnci_5": ("https://picsum.photos/id/229/800/450",  "WhatsApp — Vídeo Curto 8s",          "Fale agora com nosso especialista pelo WhatsApp e tire todas as suas dúvidas!", "WHATSAPP_MESSAGE",    "utm_source=facebook&utm_medium=paid_social&utm_campaign=whatsapp_msg&utm_content=video_curto_wpp&utm_term=whatsapp_25_45"),
+            "ad_Anúnci_6": ("https://picsum.photos/id/1060/800/450", "WhatsApp — Carrossel 3 imagens",     "Conheça nossos planos e fale com um consultor agora mesmo no WhatsApp.", "WHATSAPP_MESSAGE",            "utm_source=facebook&utm_medium=paid_social&utm_campaign=whatsapp_msg&utm_content=carrossel_wpp&utm_term=whatsapp_25_45"),
+            "ad_Anúnci_7": ("https://picsum.photos/id/280/800/450",  "WhatsApp — Oferta Relâmpago",        "Oferta por tempo limitado! Consulte pelo WhatsApp e garanta condições exclusivas.", "WHATSAPP_MESSAGE",  "utm_source=facebook&utm_medium=paid_social&utm_campaign=whatsapp_msg&utm_content=imagem_oferta_wpp&utm_term=whatsapp_45_65"),
+            "ad_Anúnci_8": ("https://picsum.photos/id/42/800/450",   "Blog — Mobile Feed / Artigo",        "5 dicas para financiar seu imóvel com a menor taxa de juros. Leia agora.", "LEARN_MORE",                "utm_source=facebook&utm_medium=paid_social&utm_campaign=trafego_blog&utm_content=blog_mobile_feed&utm_term=blog_mobile"),
         }
         result = {}
         for k, (thumb, title, body, cta, url_tags) in _THUMBS.items():
@@ -1331,90 +1483,220 @@ with tab4:
 
         # ── CRIATIVOS ───────────────────────────────────────────────────────
         elif view_mode == "🖼️ Criativos":
-            slabel("Performance por Criativo")
             try:
                 creatives_map = load_creatives(selected_id)
             except Exception:
                 creatives_map = {}
 
-            sort_cr = st.selectbox("Ordenar por", ["CTR (%)", "Gasto", "Leads", "Conversas", "CPL", "CPC"],
-                                   key="cr_sort")
+            # ── Controls row ──────────────────────────────────────────────
+            ctrl_a, ctrl_b, ctrl_c = st.columns([2, 2, 4])
+            with ctrl_a:
+                sort_cr = st.selectbox("Ordenar por", ["CTR (%)", "Gasto", "Leads", "Conversas", "CPL", "CPC"], key="cr_sort")
+            with ctrl_b:
+                n_cols_cr = st.selectbox("Colunas", [2, 3, 4], index=1, key="cr_ncols")
+            with ctrl_c:
+                st.markdown("<div style='padding-top:4px'></div>", unsafe_allow_html=True)
+
+            # ── Prepare data ──────────────────────────────────────────────
             df_cr = df_filtered.copy()
-            # Normaliza id: insights retorna ad_id sem prefixo act_
-            df_cr["_cre"] = df_cr["ID"].apply(lambda x: creatives_map.get(x, creatives_map.get(f"ad_{x}", {})))
+            df_cr["_cre"] = df_cr["ID"].apply(
+                lambda x: creatives_map.get(x) or creatives_map.get(f"ad_{x}") or {}
+            )
 
-            df_cr = df_cr.sort_values(sort_cr, ascending=False)
-            best_id = df_cr.iloc[0]["ID"] if len(df_cr) > 0 else None
-            worst_id = df_cr.iloc[-1]["ID"] if len(df_cr) > 1 else None
+            # Score: CTR 40% + leads/spend 35% + CPM efficiency 25%
+            def _cr_score(row):
+                ctr_rank = df_cr["CTR (%)"].rank(pct=True).loc[row.name]
+                spend_safe = max(row["Gasto"], 0.01)
+                lead_rate = (row.get("Leads", 0) + row.get("Conversas", 0)) / spend_safe
+                lr_series = (df_cr.get("Leads", pd.Series(0, index=df_cr.index)).fillna(0) +
+                             df_cr.get("Conversas", pd.Series(0, index=df_cr.index)).fillna(0)) / df_cr["Gasto"].replace(0, 0.01)
+                lr_rank = lr_series.rank(pct=True).loc[row.name]
+                cpm_rank = (1 / df_cr["CPM"].replace(0, 9999)).rank(pct=True).loc[row.name]
+                return round(ctr_rank * 40 + lr_rank * 35 + cpm_rank * 25, 1)
 
-            n_cols = 3
-            cols_cr = st.columns(n_cols)
-            for i, (_, row) in enumerate(df_cr.iterrows()):
-                cre = row.get("_cre") or {}
-                thumb = cre.get("thumbnail_url", "") or cre.get("image_url", "")
-                utms = cre.get("utms", {})
-                body = cre.get("body", "")
-                cta = cre.get("cta", "").replace("_", " ")
-                is_winner = row["ID"] == best_id
-                is_worst = row["ID"] == worst_id and not is_winner
-                card_cls = "creative-card winner" if is_winner else ("creative-card worst" if is_worst else "creative-card")
+            df_cr["_score"] = df_cr.apply(_cr_score, axis=1)
+            df_cr = df_cr.sort_values(sort_cr, ascending=(sort_cr in ["CPL", "CPC", "CPM"]))
+            n_total = len(df_cr)
 
-                name_short = (str(row["Anúncio"])[:55] + "…") if len(str(row["Anúncio"])) > 55 else str(row["Anúncio"])
-                leads_v = f"{int(row['Leads'])}" if row.get("Leads", 0) > 0 else "–"
-                conv_v  = f"{int(row['Conversas'])}" if row.get("Conversas", 0) > 0 else "–"
-                cpl_v   = fmt(row["CPL"], currency) if row.get("CPL", 0) > 0 else "–"
+            # ── SPOTLIGHT: top creative (large hero) ──────────────────────
+            if not df_cr.empty:
+                slabel("Destaque — Melhor Criativo do Período")
+                best_row = df_cr.sort_values("_score", ascending=False).iloc[0]
+                best_cre = best_row.get("_cre") or {}
+                best_thumb = best_cre.get("thumbnail_url") or best_cre.get("image_url") or ""
+                best_body = best_cre.get("body", "")
+                best_cta = (best_cre.get("cta") or "").replace("_", " ")
+                b_leads = int(best_row.get("Leads", 0))
+                b_conv  = int(best_row.get("Conversas", 0))
+                b_cpl   = fmt(best_row["CPL"], currency) if best_row.get("CPL", 0) > 0 else "–"
+                b_name  = str(best_row["Anúncio"])
 
-                utm_html = ""
-                if utms:
-                    utm_html = '<div class="utm-box"><div style="font-size:.6rem;color:#38BDF8;font-weight:700;margin-bottom:4px;letter-spacing:.08em">UTMs</div>'
-                    for k, v in list(utms.items())[:5]:
-                        k_short = k.replace("utm_", "")
-                        utm_html += f'<div class="utm-row"><span class="utm-key">{k_short}</span><span class="utm-val">{v}</span></div>'
-                    utm_html += '</div>'
-                elif cre.get("url_tags"):
-                    utm_html = f'<div class="utm-box"><span style="font-size:.65rem;color:#475569;font-family:JetBrains Mono,monospace">{cre["url_tags"][:120]}</span></div>'
+                sp_img = (f'<img src="{best_thumb}" style="width:100%;height:100%;object-fit:cover" />'
+                          if best_thumb else '<div style="width:100%;height:100%;background:#1e293b;display:flex;align-items:center;justify-content:center;font-size:3rem;opacity:.2">🖼️</div>')
+                sp_cta = f'<div class="cr-cta">▶ {best_cta}</div>' if best_cta else ""
+                sc = best_row["_score"]
+                sc_c = "#34D399" if sc >= 70 else "#FBBF24" if sc >= 45 else "#F87171"
 
-                cta_html = f'<span class="cta-badge">{cta}</span>' if cta else ""
-
-                thumb_html = (f'<img src="{thumb}" alt="criativo" onerror="this.style.display=\'none\'">'
-                              if thumb else '<div class="creative-thumb-placeholder">🖼️</div>')
-
-                with cols_cr[i % n_cols]:
-                    st.markdown(f"""
-<div class="{card_cls}">
-  <div class="creative-thumb">{thumb_html}</div>
-  <div class="creative-body">
-    <div class="creative-name" title="{row['Anúncio']}">{name_short}</div>
-    {f'<div class="creative-copy">{body}</div>' if body else ''}
-    {cta_html}
-    <div class="creative-metrics">
-      <div class="creative-metric"><div class="cm-label">CTR</div><div class="cm-value">{row['CTR (%)']:.2f}%</div></div>
-      <div class="creative-metric"><div class="cm-label">Gasto</div><div class="cm-value">{fmt(row['Gasto'], currency)}</div></div>
-      <div class="creative-metric"><div class="cm-label">CPC</div><div class="cm-value">{fmt(row['CPC'], currency)}</div></div>
-      <div class="creative-metric"><div class="cm-label">Leads</div><div class="cm-value">{leads_v}</div></div>
-      <div class="creative-metric"><div class="cm-label">Conv</div><div class="cm-value">{conv_v}</div></div>
-      <div class="creative-metric"><div class="cm-label">CPL</div><div class="cm-value">{cpl_v}</div></div>
+                st.markdown(f"""
+<div class="cr-spotlight">
+  <div class="cr-spotlight-inner">
+    <div class="cr-spotlight-img">{sp_img}</div>
+    <div class="cr-spotlight-info">
+      <div class="cr-spotlight-badge">🏆 &nbsp;CRIATIVO CAMPEÃO</div>
+      <div class="cr-spotlight-name">{b_name[:80]}</div>
+      {f'<div class="cr-spotlight-copy">{best_body[:140]}</div>' if best_body else ''}
+      {sp_cta}
+      <div class="cr-spotlight-kpis" style="margin-top:14px">
+        <div class="cr-kpi-box">
+          <div class="cr-kpi-lbl">CTR</div>
+          <div class="cr-kpi-val" style="color:#38BDF8">{best_row['CTR (%)']:.2f}%</div>
+        </div>
+        <div class="cr-kpi-box">
+          <div class="cr-kpi-lbl">{"Leads" if b_leads>0 else "Conversas"}</div>
+          <div class="cr-kpi-val" style="color:#34D399">{b_leads if b_leads>0 else b_conv}</div>
+        </div>
+        <div class="cr-kpi-box">
+          <div class="cr-kpi-lbl">{"CPL" if b_leads>0 else "Gasto"}</div>
+          <div class="cr-kpi-val" style="color:#F472B6">{b_cpl if b_leads>0 else fmt(best_row["Gasto"],currency)}</div>
+        </div>
+        <div class="cr-kpi-box">
+          <div class="cr-kpi-lbl">Gasto</div>
+          <div class="cr-kpi-val">{fmt(best_row['Gasto'],currency)}</div>
+        </div>
+        <div class="cr-kpi-box">
+          <div class="cr-kpi-lbl">CPM</div>
+          <div class="cr-kpi-val">{fmt(best_row['CPM'],currency)}</div>
+        </div>
+        <div class="cr-kpi-box">
+          <div class="cr-kpi-lbl">Score</div>
+          <div class="cr-kpi-val" style="color:{sc_c}">{sc:.0f}/100</div>
+        </div>
+      </div>
     </div>
-    {utm_html}
   </div>
 </div>""", unsafe_allow_html=True)
 
-            st.markdown("<br>", unsafe_allow_html=True)
-            # Gráfico comparativo
-            slabel("Comparativo de Criativos")
-            cr_col1, cr_col2 = st.columns(2)
-            with cr_col1:
-                fig = px.bar(df_cr.head(12), x="CTR (%)", y="Anúncio", orientation="h",
-                             color="CTR (%)", color_continuous_scale="RdYlGn",
+            # ── UTMs do top creative (expandable) ─────────────────────────
+            if best_cre.get("utms"):
+                with st.expander("🔗 UTMs do criativo campeão", expanded=False):
+                    utm_cols = st.columns(3)
+                    for ci, (k, v) in enumerate(best_cre["utms"].items()):
+                        with utm_cols[ci % 3]:
+                            st.markdown(f"""
+<div style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.15);border-radius:8px;padding:10px 12px;margin-bottom:6px">
+  <div style="font-size:.6rem;color:#38BDF8;font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase">{k.replace('utm_','')}</div>
+  <div style="font-size:.82rem;font-weight:700;color:#E2E8F0;margin-top:3px;word-break:break-all">{v}</div>
+</div>""", unsafe_allow_html=True)
+
+            # ── Gallery grid ──────────────────────────────────────────────
+            st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+            slabel(f"Galeria de Criativos — {n_total} anúncios")
+
+            rank_map = {row["ID"]: i+1 for i, (_, row) in enumerate(df_cr.sort_values("_score", ascending=False).iterrows())}
+            cols_cr = st.columns(n_cols_cr)
+
+            for i, (_, row) in enumerate(df_cr.iterrows()):
+                cre = row.get("_cre") or {}
+                thumb = cre.get("thumbnail_url") or cre.get("image_url") or ""
+                utms  = cre.get("utms", {})
+                body  = cre.get("body", "")
+                cta   = (cre.get("cta") or "").replace("_", " ")
+                rank  = rank_map.get(row["ID"], i + 1)
+                sc    = row["_score"]
+
+                # rank badge style
+                if rank == 1:   rk_cls = "gold";  rk_lbl = f"🏆 #{rank}"
+                elif rank <= 3: rk_cls = "blue";  rk_lbl = f"⭐ #{rank}"
+                elif rank == n_total: rk_cls = "red"; rk_lbl = f"⚠ #{rank}"
+                else:           rk_cls = "gray";  rk_lbl = f"#{rank}"
+
+                card_cls = "cr-card winner" if rank == 1 else ("cr-card loser" if rank == n_total else "cr-card")
+                sc_c = "#34D399" if sc >= 70 else "#FBBF24" if sc >= 45 else "#F87171"
+                sc_w = max(4, int(sc))
+
+                ctr_cls = "green" if row["CTR (%)"] >= 2 else ("blue" if row["CTR (%)"] >= 1 else "amber" if row["CTR (%)"] >= 0.5 else "red")
+                leads_v = int(row.get("Leads", 0))
+                conv_v  = int(row.get("Conversas", 0))
+                res_v   = leads_v or conv_v
+                res_lbl = "leads" if leads_v > 0 else "conv"
+                cpl_v   = fmt(row["CPL"], currency) if row.get("CPL", 0) > 0 else "–"
+                freq_v  = f"{row.get('Frequência',0):.1f}x" if "Frequência" in row.index else "–"
+                name_short = str(row["Anúncio"])[:52] + ("…" if len(str(row["Anúncio"])) > 52 else "")
+
+                img_tag = (f'<img src="{thumb}" loading="lazy" />'
+                           if thumb else '<div class="cr-no-img">🖼️</div>')
+                cta_html = f'<div class="cr-cta">▶ {cta}</div>' if cta else ""
+
+                # UTM pills (max 4)
+                utm_html = ""
+                if utms:
+                    pills = "".join(
+                        f'<span class="cr-utm"><span class="uk">{k.replace("utm_","")}</span>'
+                        f'<span class="uv"> = {str(v)[:22]}</span></span>'
+                        for k, v in list(utms.items())[:4]
+                    )
+                    utm_html = f'<div class="cr-utms">{pills}</div>'
+
+                with cols_cr[i % n_cols_cr]:
+                    st.markdown(f"""
+<div class="{card_cls}">
+  <div class="cr-img-wrap">
+    {img_tag}
+    <div class="cr-img-overlay">
+      <div class="cr-pills">
+        <span class="cr-pill {ctr_cls}">CTR {row['CTR (%)']:.2f}%</span>
+        <span class="cr-pill">{fmt(row['Gasto'],currency)}</span>
+        {f'<span class="cr-pill green">{res_v} {res_lbl}</span>' if res_v > 0 else ''}
+        {f'<span class="cr-pill amber">CPL {cpl_v}</span>' if row.get("CPL",0) > 0 else ''}
+      </div>
+    </div>
+    <div class="cr-rank {rk_cls}">{rk_lbl}</div>
+  </div>
+  <div class="cr-body">
+    <div class="cr-name" title="{row['Anúncio']}">{name_short}</div>
+    {f'<div class="cr-copy">{body}</div>' if body else ''}
+    <div class="cr-score-row">
+      <span class="cr-score-label">score</span>
+      <div class="cr-score-track">
+        <div class="cr-score-fill" style="width:{sc_w}%;background:{sc_c}"></div>
+      </div>
+      <span class="cr-score-num" style="color:{sc_c}">{sc:.0f}</span>
+    </div>
+    <div class="cr-minis">
+      <div class="cr-mini"><div class="cr-mini-l">CPC</div><div class="cr-mini-v">{fmt(row['CPC'],currency)}</div></div>
+      <div class="cr-mini"><div class="cr-mini-l">CPM</div><div class="cr-mini-v">{fmt(row['CPM'],currency)}</div></div>
+      <div class="cr-mini"><div class="cr-mini-l">Freq</div><div class="cr-mini-v">{freq_v}</div></div>
+      <div class="cr-mini"><div class="cr-mini-l">Imp</div><div class="cr-mini-v">{int(row['Impressões']):,}</div></div>
+    </div>
+    {utm_html}
+    {cta_html}
+  </div>
+</div>""", unsafe_allow_html=True)
+
+            # ── Comparativo analytics ─────────────────────────────────────
+            st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+            slabel("Analytics Comparativos")
+            an1, an2, an3 = st.columns(3)
+            with an1:
+                fig = px.bar(df_cr.head(10).sort_values("CTR (%)"), x="CTR (%)", y="Anúncio",
+                             orientation="h", color="CTR (%)", color_continuous_scale="RdYlGn",
                              title="CTR por Criativo", template=CHART_THEME)
-                fig.update_layout(coloraxis_showscale=False, height=420)
+                fig.update_layout(coloraxis_showscale=False, height=400, yaxis=dict(tickfont=dict(size=9)))
                 apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
-            with cr_col2:
-                metric_cr = "Leads" if df_cr["Leads"].sum() > 0 else ("Conversas" if df_cr.get("Conversas", pd.Series([0])).sum() > 0 else "Cliques")
-                fig = px.bar(df_cr.head(12), x=metric_cr, y="Anúncio", orientation="h",
-                             color=metric_cr, color_continuous_scale="Purples",
-                             title=f"{metric_cr} por Criativo", template=CHART_THEME)
-                fig.update_layout(coloraxis_showscale=False, height=420)
+            with an2:
+                m_cr = "Leads" if df_cr["Leads"].sum() > 0 else ("Conversas" if df_cr.get("Conversas", pd.Series(dtype=float)).sum() > 0 else "Cliques")
+                fig = px.bar(df_cr.head(10).sort_values(m_cr), x=m_cr, y="Anúncio",
+                             orientation="h", color=m_cr, color_continuous_scale="Blues",
+                             title=f"{m_cr} por Criativo", template=CHART_THEME)
+                fig.update_layout(coloraxis_showscale=False, height=400, yaxis=dict(tickfont=dict(size=9)))
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            with an3:
+                fig = px.scatter(df_cr, x="Gasto", y="CTR (%)", size="Impressões",
+                                 color="_score", hover_name="Anúncio",
+                                 color_continuous_scale="RdYlGn",
+                                 title="Gasto × CTR (tamanho = impressões | cor = score)",
+                                 template=CHART_THEME)
+                fig.update_layout(coloraxis_showscale=False, height=400)
                 apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         # ── CARDS ───────────────────────────────────────────────────────────
