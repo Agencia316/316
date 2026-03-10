@@ -27,15 +27,17 @@ ACCESS_TOKEN = _get_token()
 
 # ── CSS ────────────────────────────────────────────────────────────────────────
 st.html("""
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
 <style>
 /* ── BASE ── */
-html, body, [class*="css"] { font-family: 'Outfit', sans-serif !important; }
+html, body, [class*="css"] { font-family: 'Inter', sans-serif !important; }
 .stApp {
   background: #020617 !important;
   background-image:
-    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(56,189,248,.08) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(129,140,248,.06) 0%, transparent 60%) !important;
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(56,189,248,.09) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(129,140,248,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(168,85,247,.04) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='1' fill='rgba(255,255,255,0.025)'/%3E%3C/svg%3E") !important;
   background-attachment: fixed !important;
 }
 .block-container { padding-top: 16px !important; padding-bottom: 60px !important; }
@@ -64,7 +66,7 @@ h1,h2,h3,h4,h5,h6,p,span,div,label { color: #F8FAFC; }
   background: transparent !important;
   color: #475569 !important;
   border-radius: 10px !important;
-  font-family: 'Outfit', sans-serif !important;
+  font-family: 'Inter', sans-serif !important;
   font-size: 12px !important;
   font-weight: 600 !important;
   padding: 8px 16px !important;
@@ -73,9 +75,10 @@ h1,h2,h3,h4,h5,h6,p,span,div,label { color: #F8FAFC; }
   letter-spacing: .01em !important;
 }
 .stTabs [aria-selected="true"] {
-  background: linear-gradient(135deg, rgba(56,189,248,.15), rgba(129,140,248,.12)) !important;
-  color: #38BDF8 !important;
-  border: 1px solid rgba(56,189,248,.2) !important;
+  background: linear-gradient(135deg, rgba(56,189,248,.18), rgba(129,140,248,.15)) !important;
+  color: #7DD3FC !important;
+  border: 1px solid rgba(56,189,248,.28) !important;
+  box-shadow: 0 0 16px rgba(56,189,248,.12), inset 0 1px 0 rgba(255,255,255,.06) !important;
 }
 .stTabs [data-baseweb="tab-highlight"],
 .stTabs [data-baseweb="tab-border"] { display: none !important; }
@@ -98,7 +101,7 @@ hr { border-color: rgba(255,255,255,.055) !important; }
   color: #94A3B8 !important;
   border-radius: 10px !important;
   transition: all .2s !important;
-  font-family: 'Outfit', sans-serif !important;
+  font-family: 'Inter', sans-serif !important;
   font-weight: 600 !important;
 }
 .stButton > button:hover {
@@ -131,10 +134,11 @@ hr { border-color: rgba(255,255,255,.055) !important; }
   backdrop-filter: blur(12px);
 }
 .kpi-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(255,255,255,.14);
-  box-shadow: 0 16px 48px rgba(0,0,0,.35);
+  transform: translateY(-5px) scale(1.01);
+  border-color: rgba(255,255,255,.16);
+  box-shadow: 0 20px 60px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06);
 }
+.kpi-card { animation: fadeUp .4s cubic-bezier(.2,0,0,1) both; }
 .kpi-top { position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 22px 22px 0 0; }
 .kpi-glow { position: absolute; top:-40px; right:-40px; width:130px; height:130px; border-radius:50%; opacity:.06; filter:blur(32px); }
 .kpi-noise {
@@ -143,17 +147,25 @@ hr { border-color: rgba(255,255,255,.055) !important; }
   opacity: .4;
 }
 .kpi-row { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
-.kpi-label { font-size:10px; letter-spacing:3px; color:#475569; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
+.kpi-label { font-size:10px; letter-spacing:3px; color:#475569; text-transform:uppercase; font-family:'DM Mono',monospace; }
 .kpi-icon-box { width:34px; height:34px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:17px; border:1px solid rgba(255,255,255,.08); }
-.kpi-value { font-size:28px; font-weight:900; color:#F8FAFC; font-family:'Outfit',sans-serif; line-height:1; margin-bottom:10px; letter-spacing:-.02em; }
+.kpi-value { font-size:28px; font-weight:900; color:#F8FAFC; font-family:'Inter',sans-serif; line-height:1; margin-bottom:10px; letter-spacing:-.02em; }
 .kpi-delta-row { display:flex; align-items:center; gap:8px; }
-.kpi-badge { font-size:11px; padding:2px 8px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:700; letter-spacing:.03em; }
+.kpi-badge { font-size:11px; padding:2px 8px; border-radius:20px; font-family:'DM Mono',monospace; font-weight:700; letter-spacing:.03em; }
 .kpi-sub { font-size:11px; color:#475569; }
+
+/* Staggered card delays */
+[data-testid="column"]:nth-child(1) .kpi-card { animation-delay: .05s; }
+[data-testid="column"]:nth-child(2) .kpi-card { animation-delay: .1s; }
+[data-testid="column"]:nth-child(3) .kpi-card { animation-delay: .15s; }
+[data-testid="column"]:nth-child(4) .kpi-card { animation-delay: .2s; }
+[data-testid="column"]:nth-child(5) .kpi-card { animation-delay: .25s; }
+[data-testid="column"]:nth-child(6) .kpi-card { animation-delay: .3s; }
 
 /* ── SECTION LABEL ── */
 .slabel { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
 .slabel-bar { width:2px; height:18px; background:linear-gradient(180deg,#38BDF8,#818CF8); border-radius:4px; flex-shrink:0; }
-.slabel-text { font-size:12px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:#94A3B8; font-family:'JetBrains Mono',monospace; margin:0; }
+.slabel-text { font-size:12px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:#94A3B8; font-family:'DM Mono',monospace; margin:0; }
 
 /* ── INSIGHTS ── */
 .insight-good, .insight-warn, .insight-bad, .insight-info {
@@ -182,9 +194,9 @@ hr { border-color: rgba(255,255,255,.055) !important; }
 .ad-breadcrumb { color:#475569; font-size:.75rem; margin-bottom:12px; }
 .ad-metrics-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
 .ad-metric { background:rgba(255,255,255,.04); border-radius:8px; padding:8px 10px; text-align:center; }
-.ad-metric .m-label { color:#475569; font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; font-family:'JetBrains Mono',monospace; }
-.ad-metric .m-value { color:#E2E8F0; font-size:.95rem; font-weight:700; margin-top:2px; font-family:'JetBrains Mono',monospace; }
-.ad-badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:.7rem; font-weight:600; margin-bottom:10px; font-family:'JetBrains Mono',monospace; }
+.ad-metric .m-label { color:#475569; font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; font-family:'DM Mono',monospace; }
+.ad-metric .m-value { color:#E2E8F0; font-size:.95rem; font-weight:700; margin-top:2px; font-family:'DM Mono',monospace; }
+.ad-badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:.7rem; font-weight:600; margin-bottom:10px; font-family:'DM Mono',monospace; }
 .badge-green  { background:rgba(52,211,153,.15); color:#34D399; }
 .badge-orange { background:rgba(251,191,36,.15);  color:#FBBF24; }
 .badge-red    { background:rgba(248,113,113,.15); color:#F87171; }
@@ -230,7 +242,7 @@ hr { border-color: rgba(255,255,255,.055) !important; }
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-radius: 20px; padding: 4px 10px;
   font-size: .6rem; font-weight: 900; letter-spacing: .1em;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'DM Mono', monospace;
 }
 .cr-rank.gold  { background: linear-gradient(135deg,#d97706,#f59e0b); color: #0a0a0a; }
 .cr-rank.blue  { background: rgba(56,189,248,.18); border: 1px solid rgba(56,189,248,.3); color: #38BDF8; }
@@ -266,7 +278,7 @@ hr { border-color: rgba(255,255,255,.055) !important; }
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   border-radius: 20px; padding: 3px 9px;
   font-size: .65rem; font-weight: 700; letter-spacing: .04em;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'DM Mono', monospace;
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.08); color: #e2e8f0;
   white-space: nowrap;
@@ -288,18 +300,18 @@ hr { border-color: rgba(255,255,255,.055) !important; }
 }
 /* Score bar */
 .cr-score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.cr-score-label { font-size: .55rem; color: #334155; font-family: 'JetBrains Mono', monospace;
+.cr-score-label { font-size: .55rem; color: #334155; font-family: 'DM Mono', monospace;
   text-transform: uppercase; letter-spacing: .1em; white-space: nowrap; }
 .cr-score-track { flex: 1; height: 3px; background: rgba(255,255,255,.06); border-radius: 2px; overflow: hidden; }
 .cr-score-fill { height: 100%; border-radius: 2px; }
-.cr-score-num { font-size: .68rem; font-weight: 800; font-family: 'JetBrains Mono', monospace;
+.cr-score-num { font-size: .68rem; font-weight: 800; font-family: 'DM Mono', monospace;
   min-width: 28px; text-align: right; }
 
 /* Mini metrics */
 .cr-minis { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; margin-bottom: 10px; }
 .cr-mini { background: rgba(255,255,255,.04); border-radius: 6px; padding: 5px 6px; text-align: center; }
 .cr-mini-l { font-size: .52rem; color: #334155; text-transform: uppercase; letter-spacing: .07em;
-  font-family: 'JetBrains Mono', monospace; }
+  font-family: 'DM Mono', monospace; }
 .cr-mini-v { font-size: .78rem; font-weight: 800; color: #CBD5E1; margin-top: 2px; }
 
 /* UTM pills */
@@ -307,7 +319,7 @@ hr { border-color: rgba(255,255,255,.055) !important; }
 .cr-utm {
   border-radius: 5px; padding: 2px 7px;
   background: rgba(56,189,248,.06); border: 1px solid rgba(56,189,248,.12);
-  font-size: .6rem; font-family: 'JetBrains Mono', monospace; line-height: 1.5;
+  font-size: .6rem; font-family: 'DM Mono', monospace; line-height: 1.5;
 }
 .cr-utm .uk { color: #38BDF8; }
 .cr-utm .uv { color: #475569; }
@@ -318,7 +330,7 @@ hr { border-color: rgba(255,255,255,.055) !important; }
   background: rgba(129,140,248,.1); border: 1px solid rgba(129,140,248,.2);
   border-radius: 20px; padding: 3px 10px;
   font-size: .62rem; font-weight: 700; color: #a5b4fc;
-  font-family: 'JetBrains Mono', monospace; margin-top: 6px; letter-spacing: .04em;
+  font-family: 'DM Mono', monospace; margin-top: 6px; letter-spacing: .04em;
 }
 
 /* ── SPOTLIGHT HERO ── */
@@ -343,14 +355,14 @@ hr { border-color: rgba(255,255,255,.055) !important; }
 .cr-spotlight-copy { font-size: .8rem; color: #64748B; margin: 0 0 16px; line-height: 1.5; }
 .cr-spotlight-kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
 .cr-kpi-box { background: rgba(255,255,255,.04); border-radius: 10px; padding: 10px 12px; text-align: center; }
-.cr-kpi-lbl { font-size: .6rem; color: #334155; text-transform: uppercase; letter-spacing: .1em; font-family: 'JetBrains Mono', monospace; }
+.cr-kpi-lbl { font-size: .6rem; color: #334155; text-transform: uppercase; letter-spacing: .1em; font-family: 'DM Mono', monospace; }
 .cr-kpi-val { font-size: 1.1rem; font-weight: 900; color: #F8FAFC; margin-top: 3px; }
 
 /* ── INSIGHT EXECUTIVE ── */
 .exec-card { background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.07);
   border-radius:16px; padding:20px 22px; margin-bottom:10px; }
 .exec-card-title { font-size:.7rem; font-weight:800; letter-spacing:.12em;
-  text-transform:uppercase; color:#475569; font-family:'JetBrains Mono',monospace; margin-bottom:12px; }
+  text-transform:uppercase; color:#475569; font-family:'DM Mono',monospace; margin-bottom:12px; }
 .action-item { display:flex; align-items:flex-start; gap:12px; padding:12px 14px;
   border-radius:10px; margin-bottom:8px; }
 .action-item.high { background:rgba(248,113,113,.07); border:1px solid rgba(248,113,113,.2);
@@ -363,7 +375,7 @@ hr { border-color: rgba(255,255,255,.055) !important; }
 .action-body { flex:1; }
 .action-title { font-size:.85rem; font-weight:700; color:#F8FAFC; margin-bottom:2px; }
 .action-desc { font-size:.78rem; color:#94A3B8; line-height:1.5; }
-.action-impact { font-size:.68rem; font-family:'JetBrains Mono',monospace;
+.action-impact { font-size:.68rem; font-family:'DM Mono',monospace;
   color:#38BDF8; margin-top:4px; }
 
 /* ── ANIMATIONS ── */
@@ -414,7 +426,7 @@ def dark_fig(fig):
         paper_bgcolor="rgba(255,255,255,0.02)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="#94A3B8",
-        title_font=dict(color="#E2E8F0", family="Outfit", size=14),
+        title_font=dict(color="#E2E8F0", family="Inter", size=14),
         legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(color="#94A3B8")),
         margin=dict(l=0, r=10, t=44, b=10),
     )
@@ -428,7 +440,7 @@ def light_fig(fig):
         paper_bgcolor="#FFFFFF",
         plot_bgcolor="#F8FAFC",
         font_color="#334155",
-        title_font=dict(color="#0F172A", family="Outfit", size=14),
+        title_font=dict(color="#0F172A", family="Inter", size=14),
         legend=dict(bgcolor="rgba(255,255,255,0.8)", font=dict(color="#334155")),
         margin=dict(l=0, r=10, t=44, b=10),
     )
@@ -482,6 +494,7 @@ def insight(tipo, icon, title, text):
 
 STATUS_MAP = {1: "Ativa", 2: "Desativada", 3: "Suspensa", 7: "Pendente", 9: "Em revisão"}
 PERIOD_LABELS = {
+    "today": "Hoje",
     "last_7d": "Últimos 7 dias", "last_14d": "Últimos 14 dias",
     "last_30d": "Últimos 30 dias", "last_90d": "Últimos 90 dias",
     "this_month": "Este mês", "last_month": "Mês passado",
@@ -1000,38 +1013,38 @@ account_map = {acc["id"]: acc for acc in accounts}
 
 with st.sidebar:
     st.markdown("""
-    <div style="padding:4px 0 12px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1877F2,#42B0FF);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:white;box-shadow:0 0 14px rgba(24,119,242,.4)">M</div>
+    <div style="padding:8px 0 16px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#1877F2,#42B0FF);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:white;box-shadow:0 0 20px rgba(24,119,242,.5),0 4px 12px rgba(0,0,0,.3)">M</div>
         <div>
-          <div style="font-size:15px;font-weight:800;color:#F8FAFC;font-family:'Outfit',sans-serif">316</div>
-          <div style="font-size:9px;color:#475569;font-family:'JetBrains Mono',monospace;letter-spacing:2px">META ADS</div>
+          <div style="font-size:16px;font-weight:800;color:#F8FAFC;font-family:'Inter',sans-serif;letter-spacing:-.3px">316 Analytics</div>
+          <div style="font-size:9px;color:#334155;font-family:'DM Mono',monospace;letter-spacing:2.5px;text-transform:uppercase">Meta Ads · v3</div>
         </div>
       </div>
     </div>
     """, unsafe_allow_html=True)
     if DEMO_MODE:
         st.markdown("""
-        <div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:10px 14px;margin:4px 0 8px">
-          <div style="color:#FBBF24;font-size:11px;font-weight:700;letter-spacing:1px;font-family:'JetBrains Mono',monospace">⚠ MODO DEMO</div>
-          <div style="color:#94A3B8;font-size:11px;margin-top:2px">Dados simulados — token Meta não configurado ou expirado.</div>
+        <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-left:3px solid #FBBF24;border-radius:10px;padding:10px 14px;margin:4px 0 12px">
+          <div style="color:#FBBF24;font-size:10px;font-weight:700;letter-spacing:2px;font-family:'DM Mono',monospace">⚠ MODO DEMO</div>
+          <div style="color:#94A3B8;font-size:10px;margin-top:3px;line-height:1.5">Dados simulados. Configure o token Meta Ads para dados reais.</div>
         </div>
         """, unsafe_allow_html=True)
     st.divider()
     selected_id = st.selectbox(
-        "Conta de anúncio",
+        "🏢 Conta de anúncio",
         options=list(account_labels.keys()),
         format_func=lambda x: account_labels[x],
     )
     date_preset = st.selectbox(
-        "Período",
+        "📅 Período",
         options=list(PERIOD_LABELS.keys()),
         index=2,
         format_func=lambda x: PERIOD_LABELS[x],
     )
     st.divider()
 
-    # Filtro de campanhas (carregado com spinner desativado para não duplicar)
+    # Filtro de campanhas
     try:
         _df_camp_filter = load_campaigns(selected_id, date_preset)
         if not _df_camp_filter.empty:
@@ -1041,7 +1054,7 @@ with st.sidebar:
                 options=camp_names,
                 default=[],
                 placeholder="Todas as campanhas",
-                help="Selecione campanhas específicas para filtrar os dados em todas as abas",
+                help="Filtra dados em todas as abas",
             )
         else:
             selected_campaigns = []
@@ -1049,16 +1062,22 @@ with st.sidebar:
         selected_campaigns = []
 
     st.divider()
-    _theme_current = st.session_state.get("theme", "dark")
-    _theme_label = "☀️ Modo Claro" if _theme_current == "dark" else "🌙 Modo Escuro"
-    if st.button(_theme_label, use_container_width=True):
-        st.session_state["theme"] = "light" if _theme_current == "dark" else "dark"
-        st.rerun()
-    st.divider()
-    if st.button("🔄 Atualizar dados", use_container_width=True):
-        st.cache_data.clear()
-        st.rerun()
-    st.caption("Dados atualizados a cada 5 minutos")
+    _col1, _col2 = st.columns(2)
+    with _col1:
+        _theme_current = st.session_state.get("theme", "dark")
+        _theme_label = "☀️ Claro" if _theme_current == "dark" else "🌙 Escuro"
+        if st.button(_theme_label, use_container_width=True):
+            st.session_state["theme"] = "light" if _theme_current == "dark" else "dark"
+            st.rerun()
+    with _col2:
+        if st.button("🔄 Atualizar", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
+    st.markdown("""
+    <div style="text-align:center;margin-top:8px">
+      <span style="font-size:9px;color:#1E293B;font-family:'DM Mono',monospace;letter-spacing:1px">AUTO-REFRESH · 5 MIN</span>
+    </div>
+    """, unsafe_allow_html=True)
 
 acc_info = account_map[selected_id]
 currency = acc_info.get("currency", "BRL")
@@ -1069,13 +1088,13 @@ st.markdown(f"""
   <div style="display:flex;align-items:center;gap:14px">
     <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#1877F2 0%,#42B0FF 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(24,119,242,.4);font-size:20px;font-weight:900;color:white">M</div>
     <div>
-      <h1 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-.5px;color:#F8FAFC;font-family:'Outfit',sans-serif">Meta Ads <span style="color:#38BDF8">Analytics</span></h1>
-      <p style="margin:0;font-size:11px;color:#475569;font-family:'JetBrains Mono',monospace">{acc_info.get('name','–')} &nbsp;·&nbsp; {PERIOD_LABELS.get(date_preset,'')}</p>
+      <h1 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-.5px;color:#F8FAFC;font-family:'Inter',sans-serif">Meta Ads <span style="color:#38BDF8">Analytics</span></h1>
+      <p style="margin:0;font-size:11px;color:#475569;font-family:'DM Mono',monospace">{acc_info.get('name','–')} &nbsp;·&nbsp; {PERIOD_LABELS.get(date_preset,'')}</p>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
     {'<div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:20px"><span style="font-size:11px;color:#FBBF24;font-family:JetBrains Mono,monospace;letter-spacing:1px;font-weight:700">⚠ DEMO</span></div>' if DEMO_MODE else '<div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px"><div style="width:7px;height:7px;border-radius:50%;background:#34D399;box-shadow:0 0 8px #34D399;animation:pulse-ring 1.5s ease-out infinite"></div><span style="font-size:11px;color:#34D399;font-family:JetBrains Mono,monospace;letter-spacing:1px">LIVE</span></div>'}
-    <div style="font-size:11px;color:#334155;font-family:'JetBrains Mono',monospace;padding:6px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px">{currency}</div>
+    <div style="font-size:11px;color:#334155;font-family:'DM Mono',monospace;padding:6px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px">{currency}</div>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -1085,7 +1104,7 @@ if DEMO_MODE:
     <div style="background:linear-gradient(90deg,rgba(251,191,36,.12),rgba(251,191,36,.06));border:1px solid rgba(251,191,36,.3);border-left:4px solid #FBBF24;border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
       <span style="font-size:20px">⚠️</span>
       <div>
-        <strong style="color:#FBBF24;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:2px">MODO DEMONSTRAÇÃO</strong>
+        <strong style="color:#FBBF24;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px">MODO DEMONSTRAÇÃO</strong>
         <p style="margin:2px 0 0;color:#94A3B8;font-size:12px">Os dados exibidos são <strong style="color:#E2E8F0">simulados</strong> para fins de demonstração. Para conectar dados reais, configure o token Meta Ads nas configurações do app.</p>
       </div>
     </div>
@@ -1584,7 +1603,7 @@ with tab4:
                         with utm_cols[ci % 3]:
                             st.markdown(f"""
 <div style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.15);border-radius:8px;padding:10px 12px;margin-bottom:6px">
-  <div style="font-size:.6rem;color:#38BDF8;font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase">{k.replace('utm_','')}</div>
+  <div style="font-size:.6rem;color:#38BDF8;font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase">{k.replace('utm_','')}</div>
   <div style="font-size:.82rem;font-weight:700;color:#E2E8F0;margin-top:3px;word-break:break-all">{v}</div>
 </div>""", unsafe_allow_html=True)
 
@@ -2327,7 +2346,7 @@ with tab_ins:
     <div style="display:flex;align-items:center;gap:10px;padding:6px 0 18px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:24px">
       <div>
         <h2 style="margin:0;font-size:1.35rem;font-weight:800;color:#F8FAFC">🧠 Diagnóstico Estratégico</h2>
-        <p style="margin:0;font-size:.82rem;color:#475569;font-family:'JetBrains Mono',monospace">
+        <p style="margin:0;font-size:.82rem;color:#475569;font-family:'DM Mono',monospace">
           Período: <strong style="color:#94A3B8">{PERIOD_LABELS[date_preset]}</strong> &nbsp;·&nbsp;
           Campanhas: <strong style="color:#94A3B8">{len(df_camp_i)}</strong> &nbsp;·&nbsp;
           Investimento: <strong style="color:#94A3B8">{fmt(total_spend_i, currency)}</strong>
@@ -2341,7 +2360,7 @@ with tab_ins:
     with sc1:
         st.markdown(f"""
         <div style="background:rgba(255,255,255,.025);border:1px solid {sc_c}40;border-radius:16px;padding:18px;text-align:center">
-          <div style="font-size:.65rem;color:#475569;letter-spacing:.1em;font-family:'JetBrains Mono',monospace;text-transform:uppercase">Health Score</div>
+          <div style="font-size:.65rem;color:#475569;letter-spacing:.1em;font-family:'DM Mono',monospace;text-transform:uppercase">Health Score</div>
           <div style="font-size:2.4rem;font-weight:900;color:{sc_c};line-height:1.1">{score}</div>
           <div style="font-size:.75rem;font-weight:700;color:{sc_c}">{sc_icon} {sc_l}</div>
         </div>""", unsafe_allow_html=True)
