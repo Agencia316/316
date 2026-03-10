@@ -1,4 +1,4 @@
-name: Merge dashboard to main
+name: Deploy — Sync to main & Streamlit Cloud
 
 on:
   push:
@@ -9,7 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  merge:
+  deploy:
+    name: Merge to main → Streamlit Cloud
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,10 +24,22 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
 
+      - name: Get latest commit message
+        id: commit_msg
+        run: |
+          MSG=$(git log -1 --pretty=%s origin/claude/fix-meta-api-proxy-2R1Ui)
+          echo "msg=$MSG" >> $GITHUB_OUTPUT
+
       - name: Merge into main
         run: |
           git checkout main
-          git pull origin main
+          git pull origin main --rebase=false
           git merge --no-ff origin/claude/fix-meta-api-proxy-2R1Ui \
-            -m "feat: dashboard Meta Ads 360 completo com Streamlit Cloud"
+            -m "deploy: ${{ steps.commit_msg.outputs.msg }}" \
+            --allow-unrelated-histories || true
           git push origin main
+
+      - name: Verify deploy
+        run: |
+          echo "✅ main atualizado com: ${{ steps.commit_msg.outputs.msg }}"
+          git log --oneline -3
