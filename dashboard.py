@@ -1083,18 +1083,24 @@ acc_info = account_map[selected_id]
 currency = acc_info.get("currency", "BRL")
 
 # ── header ─────────────────────────────────────────────────────────────────────
+_live_badge = '<div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.2);border-radius:20px"><div style="width:6px;height:6px;border-radius:50%;background:#34D399;box-shadow:0 0 8px #34D399;animation:pulse-ring 1.5s ease-out infinite"></div><span style="font-size:10px;color:#34D399;font-family:DM Mono,monospace;letter-spacing:1.5px;font-weight:500">LIVE</span></div>'
+_demo_badge = '<div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:20px"><span style="font-size:10px;color:#FBBF24;font-family:DM Mono,monospace;letter-spacing:1.5px;font-weight:700">⚠ DEMO</span></div>'
 st.markdown(f"""
-<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 24px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:28px">
-  <div style="display:flex;align-items:center;gap:14px">
-    <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#1877F2 0%,#42B0FF 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(24,119,242,.4);font-size:20px;font-weight:900;color:white">M</div>
-    <div>
-      <h1 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-.5px;color:#F8FAFC;font-family:'Inter',sans-serif">Meta Ads <span style="color:#38BDF8">Analytics</span></h1>
-      <p style="margin:0;font-size:11px;color:#475569;font-family:'DM Mono',monospace">{acc_info.get('name','–')} &nbsp;·&nbsp; {PERIOD_LABELS.get(date_preset,'')}</p>
+<div style="position:relative;overflow:hidden;padding:20px 24px 20px;border:1px solid rgba(255,255,255,.06);border-radius:20px;margin-bottom:24px;background:rgba(255,255,255,.018)">
+  <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,.08),transparent 70%);pointer-events:none"></div>
+  <div style="position:absolute;bottom:-40px;left:30%;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(129,140,248,.06),transparent 70%);pointer-events:none"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div style="width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,#1877F2 0%,#42B0FF 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(24,119,242,.45),0 4px 16px rgba(0,0,0,.3);font-size:22px;font-weight:900;color:white;flex-shrink:0">M</div>
+      <div>
+        <h1 style="margin:0;font-size:22px;font-weight:800;letter-spacing:-.6px;color:#F8FAFC;font-family:'Inter',sans-serif;line-height:1.2">Meta Ads <span style="background:linear-gradient(90deg,#38BDF8,#818CF8);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Analytics</span></h1>
+        <p style="margin:3px 0 0;font-size:11px;color:#334155;font-family:'DM Mono',monospace;letter-spacing:.5px">{acc_info.get('name','–')} &nbsp;/&nbsp; {PERIOD_LABELS.get(date_preset,'')}</p>
+      </div>
     </div>
-  </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    {'<div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:20px"><span style="font-size:11px;color:#FBBF24;font-family:JetBrains Mono,monospace;letter-spacing:1px;font-weight:700">⚠ DEMO</span></div>' if DEMO_MODE else '<div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px"><div style="width:7px;height:7px;border-radius:50%;background:#34D399;box-shadow:0 0 8px #34D399;animation:pulse-ring 1.5s ease-out infinite"></div><span style="font-size:11px;color:#34D399;font-family:JetBrains Mono,monospace;letter-spacing:1px">LIVE</span></div>'}
-    <div style="font-size:11px;color:#334155;font-family:'DM Mono',monospace;padding:6px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px">{currency}</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      {_demo_badge if DEMO_MODE else _live_badge}
+      <div style="font-size:10px;color:#1E293B;font-family:'DM Mono',monospace;padding:6px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px;letter-spacing:1px">{currency}</div>
+    </div>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -1105,7 +1111,7 @@ if DEMO_MODE:
       <span style="font-size:20px">⚠️</span>
       <div>
         <strong style="color:#FBBF24;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px">MODO DEMONSTRAÇÃO</strong>
-        <p style="margin:2px 0 0;color:#94A3B8;font-size:12px">Os dados exibidos são <strong style="color:#E2E8F0">simulados</strong> para fins de demonstração. Para conectar dados reais, configure o token Meta Ads nas configurações do app.</p>
+        <p style="margin:2px 0 0;color:#94A3B8;font-size:12px">Os dados exibidos são <strong style="color:#E2E8F0">simulados</strong> para fins de demonstração. Configure o token Meta Ads para dados reais.</p>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1292,11 +1298,23 @@ with tab2:
             apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         if df_camp["Video Views"].sum() > 0:
-            fig = go.Figure(layout=dict(template=CHART_THEME))
-            fig.add_trace(go.Bar(name="Video Views", x=df_camp["Campanha"], y=df_camp["Video Views"], marker_color="#FB923C"))
-            fig.add_trace(go.Bar(name="ThruPlays", x=df_camp["Campanha"], y=df_camp["ThruPlays"], marker_color="#38BDF8"))
-            fig.update_layout(barmode="group", height=350, xaxis=dict(tickangle=-30), title="Video Views vs ThruPlays")
-            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            # Hook Rate = ThruPlays / Video Views * 100
+            df_camp_v = df_camp[df_camp["Video Views"] > 0].copy()
+            df_camp_v["Hook Rate (%)"] = (df_camp_v["ThruPlays"] / df_camp_v["Video Views"] * 100).round(1)
+            _col_v1, _col_v2 = st.columns(2)
+            with _col_v1:
+                fig = go.Figure(layout=dict(template=CHART_THEME))
+                fig.add_trace(go.Bar(name="Video Views", x=df_camp_v["Campanha"], y=df_camp_v["Video Views"], marker_color="#FB923C"))
+                fig.add_trace(go.Bar(name="ThruPlays", x=df_camp_v["Campanha"], y=df_camp_v["ThruPlays"], marker_color="#38BDF8"))
+                fig.update_layout(barmode="group", height=350, xaxis=dict(tickangle=-30), title="Video Views vs ThruPlays")
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            with _col_v2:
+                fig = px.bar(df_camp_v.sort_values("Hook Rate (%)"), x="Hook Rate (%)", y="Campanha",
+                             orientation="h", color="Hook Rate (%)",
+                             color_continuous_scale="Oranges", text_auto=".1f",
+                             title="Hook Rate (%) — ThruPlays / Views", template=CHART_THEME)
+                fig.update_layout(coloraxis_showscale=False, height=350)
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         if total_leads > 0:
             df_l = df_camp[df_camp["Leads"] > 0]
@@ -1319,6 +1337,16 @@ with tab2:
             apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         st.divider()
+        # ── Frequência — alerta de fadiga ────────────────────────────────────
+        camp_high_freq = df_camp[df_camp["Frequência"] > 3.0]
+        if not camp_high_freq.empty:
+            _freq_names = ", ".join(camp_high_freq["Campanha"].str[:30].tolist())
+            st.markdown(f"""
+            <div style="background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.25);border-left:3px solid #F87171;border-radius:12px;padding:12px 18px;margin:12px 0">
+              <div style="color:#F87171;font-size:10px;font-weight:700;letter-spacing:2px;font-family:'DM Mono',monospace;margin-bottom:4px">⚡ ALERTA — FADIGA DE CRIATIVO</div>
+              <div style="color:#CBD5E1;font-size:12px">Frequência acima de 3,0x detectada em: <strong style="color:#FCA5A5">{_freq_names}</strong>. Considere novos criativos ou ajuste de público.</div>
+            </div>""", unsafe_allow_html=True)
+
         slabel("Tabela Completa — Campanhas")
         cols_show = ["Campanha", "Objetivo", "Gasto", "Alcance", "Impressões", "Cliques",
                      "CTR (%)", "CPC", "CPM", "Frequência", "Leads", "CPL", "Compras", "CPP Compra",
@@ -1329,6 +1357,14 @@ with tab2:
         })
         _styled_camp = _styled_camp.background_gradient(subset=["Gasto"], cmap="Blues")
         _styled_camp = _styled_camp.background_gradient(subset=["CTR (%)"], cmap="Greens")
+        def _color_freq(v):
+            try:
+                f = float(v)
+                if f > 3.5: return "color:#F87171;font-weight:700"
+                if f > 2.5: return "color:#FBBF24;font-weight:600"
+                return "color:#34D399"
+            except Exception: return ""
+        _styled_camp = _styled_camp.applymap(_color_freq, subset=["Frequência"])
         st.dataframe(_styled_camp, use_container_width=True, height=400)
         csv = df_camp.drop(columns=["Todas Ações"]).to_csv(index=False).encode("utf-8")
         st.download_button("⬇️ Exportar Campanhas CSV", csv, "campanhas.csv", "text/csv")
@@ -1956,6 +1992,24 @@ with tab6:
             fig = px.bar(df_place, x="Plataforma", y="CPC", color="Posição",
                          barmode="group", title="CPC por Plataforma e Posição", template=CHART_THEME)
             apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+
+        # ── Radar chart: CTR e CPM por placement ─────────────────────────────
+        if len(df_place) >= 3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            slabel("Radar — CTR e CPM por Posicionamento")
+            df_place["PlaceName"] = df_place["Plataforma"].str.capitalize() + " / " + df_place["Posição"].str.replace("_", " ").str.title()
+            _categories = df_place["PlaceName"].tolist()
+            _ctr_vals = df_place["CTR (%)"].tolist()
+            _cpm_vals = (df_place["CPM"] / df_place["CPM"].max() * df_place["CTR (%)"].max()).tolist() if df_place["CPM"].max() > 0 else df_place["CTR (%)"].tolist()
+            _fig_radar = go.Figure()
+            _fig_radar.add_trace(go.Scatterpolar(r=_ctr_vals + [_ctr_vals[0]], theta=_categories + [_categories[0]],
+                fill="toself", name="CTR (%)", line_color="#38BDF8", fillcolor="rgba(56,189,248,.1)"))
+            _fig_radar.add_trace(go.Scatterpolar(r=_cpm_vals + [_cpm_vals[0]], theta=_categories + [_categories[0]],
+                fill="toself", name="CPM (normalizado)", line_color="#F87171", fillcolor="rgba(248,113,113,.08)"))
+            _fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, color="#334155"),
+                angularaxis=dict(color="#475569")), height=420, showlegend=True)
+            apply_fig(_fig_radar)
+            st.plotly_chart(_fig_radar, use_container_width=True)
 
         st.subheader("Tabela Completa — Posicionamento")
         st.dataframe(
