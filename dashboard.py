@@ -378,6 +378,44 @@ hr { border-color: rgba(255,255,255,.055) !important; }
 .action-impact { font-size:.68rem; font-family:'DM Mono',monospace;
   color:#38BDF8; margin-top:4px; }
 
+/* ── MSG BENCHMARK CARDS ── */
+.bench-card {
+  background: rgba(255,255,255,.022); border: 1px solid rgba(255,255,255,.07);
+  border-radius: 16px; padding: 18px 20px; position: relative; overflow: hidden;
+  transition: transform .25s, border-color .25s;
+}
+.bench-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.13); }
+.bench-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; border-radius:16px 16px 0 0; }
+.bench-card.good::before { background: linear-gradient(90deg,#34D399,#10B981); }
+.bench-card.warn::before { background: linear-gradient(90deg,#FBBF24,#F59E0B); }
+.bench-card.bad::before  { background: linear-gradient(90deg,#F87171,#EF4444); }
+.bench-label { font-size:.58rem; color:#334155; letter-spacing:.12em; text-transform:uppercase; font-family:'DM Mono',monospace; margin-bottom:6px; }
+.bench-value { font-size:1.6rem; font-weight:900; line-height:1; margin:4px 0 6px; }
+.bench-ref { font-size:.68rem; color:#475569; margin-bottom:4px; }
+.bench-pill { display:inline-block; padding:2px 9px; border-radius:20px; font-size:.62rem; font-weight:700;
+  font-family:'DM Mono',monospace; letter-spacing:.04em; }
+.bench-pill.good { background:rgba(52,211,153,.15); color:#34D399; }
+.bench-pill.warn { background:rgba(251,191,36,.15);  color:#FBBF24; }
+.bench-pill.bad  { background:rgba(248,113,113,.15); color:#F87171; }
+
+/* ── MSG SCORE ── */
+.msg-score-wrap {
+  background: linear-gradient(135deg, rgba(37,211,102,.06), rgba(52,211,153,.03));
+  border: 1px solid rgba(37,211,102,.2); border-radius: 20px; padding: 24px 28px;
+  display: flex; align-items: center; gap: 24px; margin-bottom: 20px;
+}
+.msg-score-num { font-size: 3.5rem; font-weight: 900; line-height: 1; }
+.msg-score-label { font-size: .65rem; letter-spacing: .14em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; color: #334155; }
+.msg-score-title { font-size: 1.1rem; font-weight: 800; color: #F8FAFC; margin: 4px 0 2px; }
+.msg-score-sub { font-size: .78rem; color: #64748B; }
+
+/* ── TIMELINE ANNOTATION ── */
+.timeline-tip {
+  background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px; padding: 10px 14px; font-size: .78rem; color: #94A3B8;
+}
+
 /* ── ANIMATIONS ── */
 @keyframes pulse-ring { 0%{transform:scale(1);opacity:.6} 100%{transform:scale(1.5);opacity:0} }
 @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
@@ -2116,23 +2154,121 @@ with tab_msg:
     else:
         df_msg_camp = df_msg[df_msg["Conversas"] > 0].copy()
 
-        # ── KPIs Principais ──────────────────────────────────────────────────
-        slabel("KPIs de Mensagens")
+        # ── Métricas base ────────────────────────────────────────────────────
         total_conv     = int(df_msg_camp["Conversas"].sum())
         total_pr       = int(df_msg_camp["Primeiras Respostas"].sum())
         total_bloq     = int(df_msg_camp["Bloqueios"].sum()) if "Bloqueios" in df_msg_camp.columns else 0
+        total_conexoes = int(df_msg_camp["Conexões Msg"].sum()) if "Conexões Msg" in df_msg_camp.columns else 0
         total_gasto_m  = df_msg_camp["Gasto"].sum()
+        total_imp_m    = int(df_msg_camp["Impressões"].sum())
+        total_cliques_m = int(df_msg_camp["Cliques"].sum())
         custo_conv_m   = total_gasto_m / total_conv if total_conv else 0
         taxa_resp_m    = total_pr / total_conv * 100 if total_conv else 0
         taxa_bloq_m    = total_bloq / total_conv * 100 if total_conv else 0
+        taxa_conv_clique = total_conv / total_cliques_m * 100 if total_cliques_m else 0
+        cpm_m          = total_gasto_m / total_imp_m * 1000 if total_imp_m else 0
 
+        # ── Score de Saúde de Mensagens ──────────────────────────────────────
+        msg_score = 100
+        if taxa_resp_m < 50:   msg_score -= 30
+        elif taxa_resp_m < 70: msg_score -= 15
+        if taxa_bloq_m > 7:    msg_score -= 25
+        elif taxa_bloq_m > 3:  msg_score -= 10
+        if custo_conv_m > 30:  msg_score -= 20
+        elif custo_conv_m > 18: msg_score -= 8
+        if taxa_conv_clique < 15: msg_score -= 10
+        elif taxa_conv_clique < 25: msg_score -= 5
+        msg_score = max(0, min(100, msg_score))
+
+        if msg_score >= 80:   ms_c = "#34D399"; ms_l = "SAUDÁVEL";  ms_icon = "✅"; ms_bg = "rgba(52,211,153,.06)"; ms_border = "rgba(52,211,153,.2)"
+        elif msg_score >= 55: ms_c = "#FBBF24"; ms_l = "ATENÇÃO";   ms_icon = "⚠️"; ms_bg = "rgba(251,191,36,.06)"; ms_border = "rgba(251,191,36,.2)"
+        else:                 ms_c = "#F87171"; ms_l = "CRÍTICO";   ms_icon = "🚨"; ms_bg = "rgba(248,113,113,.06)"; ms_border = "rgba(248,113,113,.2)"
+
+        st.markdown(f"""
+        <div style="background:{ms_bg};border:1px solid {ms_border};border-radius:20px;padding:22px 28px;display:flex;align-items:center;gap:28px;margin-bottom:20px">
+          <div style="text-align:center;flex-shrink:0">
+            <div style="font-size:.55rem;color:#334155;letter-spacing:.14em;text-transform:uppercase;font-family:'DM Mono',monospace">Score</div>
+            <div style="font-size:3.2rem;font-weight:900;color:{ms_c};line-height:1.05">{msg_score}</div>
+            <div style="font-size:.7rem;font-weight:700;color:{ms_c}">{ms_icon} {ms_l}</div>
+          </div>
+          <div style="width:1px;height:60px;background:rgba(255,255,255,.07);flex-shrink:0"></div>
+          <div style="flex:1">
+            <div style="font-size:1rem;font-weight:800;color:#F8FAFC;margin-bottom:6px">💬 Canal de Mensagens — Visão Geral</div>
+            <div style="display:flex;gap:24px;flex-wrap:wrap">
+              <span style="font-size:.82rem;color:#94A3B8"><span style="color:#25D366;font-weight:700">{total_conv:,}</span> conversas iniciadas</span>
+              <span style="font-size:.82rem;color:#94A3B8"><span style="color:#34D399;font-weight:700">{taxa_resp_m:.1f}%</span> taxa de resposta</span>
+              <span style="font-size:.82rem;color:#94A3B8"><span style="color:#{'F87171' if taxa_bloq_m>5 else '34D399'};font-weight:700">{taxa_bloq_m:.1f}%</span> de bloqueios</span>
+              <span style="font-size:.82rem;color:#94A3B8"><span style="color:#38BDF8;font-weight:700">{fmt(custo_conv_m, currency)}</span> custo/conversa</span>
+            </div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # ── KPIs Principais ──────────────────────────────────────────────────
+        slabel("KPIs de Mensagens")
         c1, c2, c3, c4, c5, c6 = st.columns(6)
         with c1: kpi("Conversas Iniciadas",  f"{total_conv:,}",          icon="💬", color="#25D366")
-        with c2: kpi("Custo / Conversa",     fmt(custo_conv_m, currency), icon="💰", color="#25D366")
+        with c2: kpi("Custo / Conversa",     fmt(custo_conv_m, currency), icon="💰", color="#25D366" if custo_conv_m < 18 else "#FBBF24" if custo_conv_m < 30 else "#F87171")
         with c3: kpi("Primeiras Respostas",  f"{total_pr:,}",             icon="↩️", color="#34D399")
-        with c4: kpi("Taxa de Resposta",     f"{taxa_resp_m:.1f}%",       icon="📊", color="#34D399" if taxa_resp_m >= 70 else "#FBBF24")
+        with c4: kpi("Taxa de Resposta",     f"{taxa_resp_m:.1f}%",       icon="📊", color="#34D399" if taxa_resp_m >= 70 else "#FBBF24" if taxa_resp_m >= 50 else "#F87171")
         with c5: kpi("Bloqueios",            f"{total_bloq:,}",           icon="🚫", color="#F87171" if total_bloq > 0 else "#94A3B8")
-        with c6: kpi("Taxa de Bloqueio",     f"{taxa_bloq_m:.1f}%",       icon="⚠️", color="#F87171" if taxa_bloq_m > 5 else "#34D399")
+        with c6: kpi("Taxa de Bloqueio",     f"{taxa_bloq_m:.1f}%",       icon="⚠️", color="#F87171" if taxa_bloq_m > 5 else "#FBBF24" if taxa_bloq_m > 2 else "#34D399")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        c7, c8, c9, c10 = st.columns(4)
+        with c7: kpi("Taxa Conv./Clique",    f"{taxa_conv_clique:.1f}%",  icon="🎯", color="#818CF8" if taxa_conv_clique >= 20 else "#FBBF24")
+        with c8: kpi("Conexões de Msg",      f"{total_conexoes:,}",       icon="🔗", color="#38BDF8")
+        with c9: kpi("CPM Mensagens",        fmt(cpm_m, currency),        icon="📢", color="#A78BFA")
+        with c10: kpi("Campanhas Ativas",    str(len(df_msg_camp)),        icon="📣", color="#F472B6")
+
+        # ── Benchmarks de Mercado ─────────────────────────────────────────────
+        st.markdown("<br>", unsafe_allow_html=True)
+        slabel("Benchmarks vs Mercado Brasil (Meta Ads · MESSAGES)")
+
+        def _bench_status(val, good_thresh, warn_thresh, reverse=False):
+            if not reverse:
+                if val <= good_thresh: return "good", "▲ ACIMA DO BENCHMARK"
+                if val <= warn_thresh: return "warn", "→ DENTRO DO MERCADO"
+                return "bad", "▼ ABAIXO DO BENCHMARK"
+            else:
+                if val >= good_thresh: return "good", "▲ ACIMA DO BENCHMARK"
+                if val >= warn_thresh: return "warn", "→ DENTRO DO MERCADO"
+                return "bad", "▼ ABAIXO DO BENCHMARK"
+
+        bc1, bc2, bc3, bc4 = st.columns(4)
+        _s1, _p1 = _bench_status(custo_conv_m, 15, 28)
+        _s2, _p2 = _bench_status(taxa_resp_m, 70, 50, reverse=True)
+        _s3, _p3 = _bench_status(taxa_bloq_m, 3, 6)
+        _s4, _p4 = _bench_status(taxa_conv_clique, 20, 12, reverse=True)
+        _color_map = {"good": "#34D399", "warn": "#FBBF24", "bad": "#F87171"}
+        with bc1:
+            st.markdown(f"""<div class="bench-card {_s1}">
+              <div class="bench-label">Custo / Conversa</div>
+              <div class="bench-value" style="color:{_color_map[_s1]}">{fmt(custo_conv_m, currency)}</div>
+              <div class="bench-ref">Referência: &lt; R$15 (ótimo) · R$15-28 (ok)</div>
+              <span class="bench-pill {_s1}">{_p1}</span>
+            </div>""", unsafe_allow_html=True)
+        with bc2:
+            st.markdown(f"""<div class="bench-card {_s2}">
+              <div class="bench-label">Taxa de Resposta</div>
+              <div class="bench-value" style="color:{_color_map[_s2]}">{taxa_resp_m:.1f}%</div>
+              <div class="bench-ref">Referência: &gt; 70% (ótimo) · 50-70% (ok)</div>
+              <span class="bench-pill {_s2}">{_p2}</span>
+            </div>""", unsafe_allow_html=True)
+        with bc3:
+            st.markdown(f"""<div class="bench-card {_s3}">
+              <div class="bench-label">Taxa de Bloqueio</div>
+              <div class="bench-value" style="color:{_color_map[_s3]}">{taxa_bloq_m:.1f}%</div>
+              <div class="bench-ref">Referência: &lt; 3% (ótimo) · 3-6% (ok)</div>
+              <span class="bench-pill {_s3}">{_p3}</span>
+            </div>""", unsafe_allow_html=True)
+        with bc4:
+            st.markdown(f"""<div class="bench-card {_s4}">
+              <div class="bench-label">Taxa Conv / Clique</div>
+              <div class="bench-value" style="color:{_color_map[_s4]}">{taxa_conv_clique:.1f}%</div>
+              <div class="bench-ref">Referência: &gt; 20% (ótimo) · 12-20% (ok)</div>
+              <span class="bench-pill {_s4}">{_p4}</span>
+            </div>""", unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -2308,6 +2444,120 @@ with tab_msg:
                 insight("good", "🏆", "Melhor Campanha por Custo/Conversa",
                         f"<strong>{melhor['Campanha']}</strong> com custo de {fmt(melhor['Custo/Conversa'], currency)}/conversa e {int(melhor['Conversas'])} conversas. Priorize esta campanha.")
 
+        # ── Timeline de Conversas ────────────────────────────────────────────
+        try:
+            _df_daily_msg = load_daily(selected_id, date_preset)
+        except Exception:
+            _df_daily_msg = pd.DataFrame()
+
+        if not _df_daily_msg.empty:
+            st.divider()
+            slabel("Evolução Diária — Conversas & Gasto")
+            _t1, _t2 = st.columns(2)
+            with _t1:
+                fig_tl = go.Figure()
+                fig_tl.add_trace(go.Scatter(
+                    x=_df_daily_msg["Data"], y=_df_daily_msg["Gasto"],
+                    mode="lines+markers", name="Gasto Diário",
+                    line=dict(color="#25D366", width=2),
+                    fill="tozeroy", fillcolor="rgba(37,211,102,.07)",
+                ))
+                fig_tl.update_layout(height=280, title="Gasto Diário no Período")
+                apply_fig(fig_tl); st.plotly_chart(fig_tl, use_container_width=True)
+            with _t2:
+                fig_tl2 = go.Figure()
+                fig_tl2.add_trace(go.Bar(
+                    x=_df_daily_msg["Data"], y=_df_daily_msg["Leads"],
+                    name="Leads/dia", marker_color="#34D399",
+                ))
+                fig_tl2.update_layout(height=280, title="Leads por Dia")
+                apply_fig(fig_tl2); st.plotly_chart(fig_tl2, use_container_width=True)
+            # Tendência
+            if len(_df_daily_msg) >= 6:
+                _mid = len(_df_daily_msg) // 2
+                _g1 = _df_daily_msg.iloc[:_mid]["Gasto"].mean()
+                _g2 = _df_daily_msg.iloc[_mid:]["Gasto"].mean()
+                _trend_pct = (_g2 - _g1) / _g1 * 100 if _g1 > 0 else 0
+                _trend_icon = "📈" if _trend_pct > 5 else "📉" if _trend_pct < -5 else "➡️"
+                _trend_col = "#34D399" if _trend_pct > 5 else "#F87171" if _trend_pct < -5 else "#94A3B8"
+                st.markdown(f"""<div class="timeline-tip">
+                  {_trend_icon} Tendência de gasto: <strong style="color:{_trend_col}">{_trend_pct:+.1f}%</strong> na segunda metade do período
+                  &nbsp;·&nbsp; Média diária: <strong style="color:#38BDF8">{fmt(_df_daily_msg['Gasto'].mean(), currency)}</strong>
+                  &nbsp;·&nbsp; Pico: <strong style="color:#818CF8">{fmt(_df_daily_msg['Gasto'].max(), currency)}</strong>
+                </div>""", unsafe_allow_html=True)
+
+        # ── Plano de Ação — Mensagens ─────────────────────────────────────────
+        st.divider()
+        slabel("Plano de Ação — Mensagens")
+        _acoes_msg = []
+
+        if taxa_bloq_m > 5:
+            _acoes_msg.append(("high", "🚫 Revisar Fluxo de Mensagens Urgente",
+                f"Taxa de bloqueio de <strong>{taxa_bloq_m:.1f}%</strong> está acima de 5%. O Meta pode penalizar sua conta.",
+                "1) Reescreva a mensagem automática de boas-vindas — evite tom comercial agressivo<br>"
+                "2) Reduza o intervalo entre mensagens automatizadas<br>"
+                "3) Adicione opção de 'não tenho interesse' no fluxo para evitar bloqueios<br>"
+                "4) Revise se o público-alvo está bem qualificado (interesse x intenção)",
+                f"↓ Bloqueios estimado -50% em 7 dias"))
+        if taxa_resp_m < 60:
+            _acoes_msg.append(("high", "📩 Otimizar Mensagem de Boas-Vindas",
+                f"Taxa de resposta de <strong>{taxa_resp_m:.1f}%</strong> está abaixo do benchmark de 70%.",
+                "1) Teste 3 variações de mensagem de boas-vindas com abordagens diferentes (pergunta aberta / benefício direto / urgência)<br>"
+                "2) Use o nome do usuário na primeira mensagem<br>"
+                "3) Envie a mensagem em até 5 minutos após a conversa ser iniciada<br>"
+                "4) Inclua uma pergunta direta e simples para gerar resposta",
+                f"↑ Taxa de resposta de {taxa_resp_m:.0f}% para 70%+ em 2 semanas"))
+        if custo_conv_m > 25:
+            _acoes_msg.append(("high", "💸 Reduzir Custo por Conversa",
+                f"Custo de <strong>{fmt(custo_conv_m, currency)}</strong>/conversa está acima do benchmark de R$25.",
+                "1) Teste criativos com CTA mais direto (ex: 'Fale agora pelo WhatsApp')<br>"
+                "2) Restrinja o público para segmentos de maior intenção (visitantes do site, engajados)<br>"
+                "3) Pause anúncios com Custo/Conversa acima de 2x a média<br>"
+                "4) Teste horários de menor concorrência (07h-09h ou 19h-21h)",
+                f"↓ Custo/Conversa de {fmt(custo_conv_m, currency)} para abaixo de R$20"))
+        if taxa_conv_clique < 15:
+            _acoes_msg.append(("medium", "🎯 Melhorar Taxa de Conversão Clique→Conversa",
+                f"Apenas <strong>{taxa_conv_clique:.1f}%</strong> dos cliques viram conversas. Alinhamento criativo-destino pode estar ruim.",
+                "1) Verifique se o botão de CTA do anúncio está levando diretamente para o WhatsApp (não para uma landing page)<br>"
+                "2) Alinhe o copy do anúncio com a primeira mensagem — sem surpresas<br>"
+                "3) Reduza a fricção: evite formulários antes da conversa<br>"
+                "4) Teste o objetivo 'Mensagens' com destino WhatsApp vs Instagram Direct",
+                "↑ Taxa Conv/Clique para +20% | ↓ CPM efetivo"))
+        if taxa_resp_m >= 70 and custo_conv_m < 18:
+            _acoes_msg.append(("low", "🚀 Escalar Canal — Condições Ideais",
+                f"Taxa de resposta <strong>{taxa_resp_m:.1f}%</strong> e custo <strong>{fmt(custo_conv_m, currency)}</strong>/conversa indicam canal maduro.",
+                "1) Aumente o orçamento diário em 20-30% por semana (evite escalar >50% de uma vez)<br>"
+                "2) Duplique os conjuntos de melhor desempenho com novos públicos semelhantes (lookalike 1-3%)<br>"
+                "3) Expanda para faixas etárias adjacentes às que já convertem<br>"
+                "4) Crie campanhas de retargeting para quem iniciou conversa mas não converteu",
+                f"Potencial: +{int(total_conv * 0.35):,} conversas adicionais mantendo o CAC atual"))
+        _acoes_msg.append(("low", "🧪 Implementar Testes A/B em Criativos de Mensagem",
+            "Criativos com copy de alta intenção geram até 2x mais conversas pelo mesmo CPM.",
+            "1) Teste headline com benefício direto vs. headline com pergunta<br>"
+            "2) Vídeo 8-15s mostrando o produto/serviço vs. imagem estática com depoimento<br>"
+            "3) CTA 'Saiba mais' vs 'Quero saber o preço' vs 'Fale com consultor'<br>"
+            "4) Use naming convention no Ad Manager: [Formato]-[CTA]-[Público]-[Data]",
+            "Identifica vencedores em 5-7 dias | ↑ CTR 15-30%"))
+
+        _prio_colors = {"high": ("#F87171","rgba(248,113,113,.08)","rgba(248,113,113,.25)","🔴 URGENTE"),
+                        "medium": ("#FBBF24","rgba(251,191,36,.06)","rgba(251,191,36,.2)","🟡 IMPORTANTE"),
+                        "low": ("#34D399","rgba(52,211,153,.05)","rgba(52,211,153,.18)","🟢 OPORTUNIDADE")}
+        for _prio, _titulo, _why, _como, _impacto in _acoes_msg:
+            _fc, _bg, _bord, _plabel = _prio_colors[_prio]
+            st.markdown(f"""
+            <div style="background:{_bg};border:1px solid {_bord};border-left:3px solid {_fc};border-radius:14px;padding:18px 22px;margin-bottom:10px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <span style="font-size:.6rem;font-weight:700;color:{_fc};font-family:'DM Mono',monospace;letter-spacing:.1em;background:{_bord};padding:2px 8px;border-radius:20px">{_plabel}</span>
+                <span style="font-size:.9rem;font-weight:700;color:#F8FAFC">{_titulo}</span>
+              </div>
+              <div style="font-size:.8rem;color:#94A3B8;margin-bottom:10px">{_why}</div>
+              <div style="background:rgba(255,255,255,.03);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+                <div style="font-size:.65rem;color:#334155;letter-spacing:.1em;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:6px">Como Fazer</div>
+                <div style="font-size:.78rem;color:#CBD5E1;line-height:1.7">{_como}</div>
+              </div>
+              <div style="font-size:.7rem;font-family:'DM Mono',monospace;color:#38BDF8">💡 {_impacto}</div>
+            </div>""", unsafe_allow_html=True)
+
         # ── Tabela completa ─────────────────────────────────────────────────
         st.divider()
         slabel("Tabela Detalhada — Mensagens por Campanha")
@@ -2320,9 +2570,26 @@ with tab_msg:
         _styled_msg = _styled_msg.background_gradient(subset=["Conversas"], cmap="Greens")
         if "Custo/Conversa" in msg_cols_avail:
             _styled_msg = _styled_msg.background_gradient(subset=["Custo/Conversa"], cmap="RdYlGn_r")
+        if "Taxa Resposta (%)" in msg_cols_avail:
+            def _color_taxa(v):
+                try:
+                    f = float(v)
+                    if f >= 70: return "color:#34D399;font-weight:700"
+                    if f >= 50: return "color:#FBBF24;font-weight:600"
+                    return "color:#F87171;font-weight:700"
+                except Exception: return ""
+            _styled_msg = _styled_msg.applymap(_color_taxa, subset=["Taxa Resposta (%)"])
+        if "Bloqueios" in msg_cols_avail:
+            def _color_bloq(v):
+                try:
+                    return "color:#F87171;font-weight:700" if int(v) > 0 else "color:#34D399"
+                except Exception: return ""
+            _styled_msg = _styled_msg.applymap(_color_bloq, subset=["Bloqueios"])
         st.dataframe(_styled_msg, use_container_width=True, height=380)
-        csv_msg = df_msg_camp[msg_cols_avail].to_csv(index=False).encode("utf-8")
-        st.download_button("⬇️ Exportar Mensagens CSV", csv_msg, "mensagens.csv", "text/csv")
+        _dl1, _dl2 = st.columns([1, 4])
+        with _dl1:
+            csv_msg = df_msg_camp[msg_cols_avail].to_csv(index=False).encode("utf-8")
+            st.download_button("⬇️ Exportar CSV", csv_msg, "mensagens.csv", "text/csv")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TAB 9 — INSIGHTS & RECOMENDAÇÕES (PROFESSIONAL)
