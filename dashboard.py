@@ -736,9 +736,14 @@ def load_ads(account_id, date_preset):
             "actions", "cost_per_action_type",
             "unique_clicks", "unique_ctr",
             "video_play_actions", "video_thruplay_watched_actions",
+            "video_p25_watched_actions", "video_p50_watched_actions",
+            "video_p75_watched_actions", "video_p100_watched_actions",
+            "quality_ranking", "engagement_rate_ranking", "conversion_rate_ranking",
         ],
         params={"date_preset": date_preset, "level": "ad", "sort": ["spend_descending"]},
     )
+    _rank_map = {"UNKNOWN": None, "BELOW_AVERAGE_10": 1, "BELOW_AVERAGE_20": 2,
+                 "BELOW_AVERAGE_35": 3, "AVERAGE": 4, "ABOVE_AVERAGE": 5}
     rows = []
     for c in insights:
         actions = c.get("actions", [])
@@ -751,6 +756,9 @@ def load_ads(account_id, date_preset):
         thruplays = 0
         if c.get("video_thruplay_watched_actions"):
             thruplays = sum(safe_int(v.get("value", 0)) for v in c["video_thruplay_watched_actions"])
+        def _vq(field):
+            lst = c.get(field, [])
+            return sum(safe_int(v.get("value", 0)) for v in lst) if lst else 0
         spend = safe_float(c.get("spend", 0))
         conversas = extract_action(actions, "onsite_conversion.messaging_conversation_started_7d")
         primeiras_resp = extract_action(actions, "onsite_conversion.messaging_first_reply")
@@ -776,11 +784,20 @@ def load_ads(account_id, date_preset):
             "CPP": extract_cpa(cpa_list, "purchase"),
             "Video Views": video_plays,
             "ThruPlays": thruplays,
+            "Video 25%": _vq("video_p25_watched_actions"),
+            "Video 50%": _vq("video_p50_watched_actions"),
+            "Video 75%": _vq("video_p75_watched_actions"),
+            "Video 100%": _vq("video_p100_watched_actions"),
             "Conversas": conversas,
             "Custo/Conversa": custo_conversa,
             "Primeiras Respostas": primeiras_resp,
             "Bloqueios": bloqueios,
             "Taxa Resposta (%)": round(primeiras_resp / conversas * 100, 1) if conversas > 0 else 0.0,
+            "Quality Rank": _rank_map.get(c.get("quality_ranking", "UNKNOWN")),
+            "Engagement Rank": _rank_map.get(c.get("engagement_rate_ranking", "UNKNOWN")),
+            "Conversion Rank": _rank_map.get(c.get("conversion_rate_ranking", "UNKNOWN")),
+            "Quality Rank Raw": c.get("quality_ranking", ""),
+            "Engagement Rank Raw": c.get("engagement_rate_ranking", ""),
         })
     return pd.DataFrame(rows)
 
@@ -850,6 +867,60 @@ def load_placement(account_id, date_preset):
             "Leads": leads,
         })
     return pd.DataFrame(result)
+
+@st.cache_data(ttl=600, show_spinner="Buscando breakdown geográfico...")
+def load_geo(account_id, date_preset):
+    account = AdAccount(account_id)
+    try:
+        rows = account.get_insights(
+            fields=["impressions", "clicks", "spend", "reach", "ctr", "cpc", "cpm", "actions"],
+            params={"date_preset": date_preset, "level": "account", "breakdowns": ["region"]},
+        )
+        result = []
+        for r in list(rows):
+            leads = extract_action(r.get("actions", []), "lead") or extract_action(r.get("actions", []), "onsite_conversion.lead_grouped")
+            conversas = extract_action(r.get("actions", []), "onsite_conversion.messaging_conversation_started_7d")
+            result.append({
+                "Região": r.get("region", ""),
+                "Impressões": safe_int(r.get("impressions", 0)),
+                "Alcance": safe_int(r.get("reach", 0)),
+                "Cliques": safe_int(r.get("clicks", 0)),
+                "Gasto": safe_float(r.get("spend", 0)),
+                "CTR (%)": safe_float(r.get("ctr", 0)),
+                "CPC": safe_float(r.get("cpc", 0)),
+                "CPM": safe_float(r.get("cpm", 0)),
+                "Leads": leads,
+                "Conversas": conversas,
+            })
+        return pd.DataFrame(result)
+    except Exception:
+        return pd.DataFrame()
+
+@st.cache_data(ttl=600, show_spinner="Buscando breakdown por dispositivo...")
+def load_device(account_id, date_preset):
+    account = AdAccount(account_id)
+    try:
+        rows = account.get_insights(
+            fields=["impressions", "clicks", "spend", "reach", "ctr", "cpc", "cpm", "actions"],
+            params={"date_preset": date_preset, "level": "account", "breakdowns": ["device_platform"]},
+        )
+        result = []
+        for r in list(rows):
+            leads = extract_action(r.get("actions", []), "lead") or extract_action(r.get("actions", []), "onsite_conversion.lead_grouped")
+            result.append({
+                "Dispositivo": r.get("device_platform", ""),
+                "Impressões": safe_int(r.get("impressions", 0)),
+                "Alcance": safe_int(r.get("reach", 0)),
+                "Cliques": safe_int(r.get("clicks", 0)),
+                "Gasto": safe_float(r.get("spend", 0)),
+                "CTR (%)": safe_float(r.get("ctr", 0)),
+                "CPC": safe_float(r.get("cpc", 0)),
+                "CPM": safe_float(r.get("cpm", 0)),
+                "Leads": leads,
+            })
+        return pd.DataFrame(result)
+    except Exception:
+        return pd.DataFrame()
 
 @st.cache_data(ttl=300, show_spinner="Buscando evolução diária...")
 def load_daily(account_id, date_preset):
@@ -1022,9 +1093,18 @@ if DEMO_MODE:
                 "Leads": leads, "CPL": cpl, "Compras": purchases,
                 "CPP": round(spend/purchases,2) if purchases else 0,
                 "Video Views": vid, "ThruPlays": thru,
+                "Video 25%": int(vid * 0.72) if vid else 0,
+                "Video 50%": int(vid * 0.51) if vid else 0,
+                "Video 75%": int(vid * 0.34) if vid else 0,
+                "Video 100%": int(vid * 0.22) if vid else 0,
                 "Conversas": conversas, "Custo/Conversa": custo_conv,
                 "Primeiras Respostas": prim_resp, "Bloqueios": bloqueios,
                 "Taxa Resposta (%)": round(prim_resp / conversas * 100, 1) if conversas > 0 else 0.0,
+                "Quality Rank": random.choice([4, 4, 5, 3, 5]),
+                "Engagement Rank": random.choice([4, 5, 4, 3, 5]),
+                "Conversion Rank": random.choice([4, 5, 5, 4, 3]),
+                "Quality Rank Raw": random.choice(["ABOVE_AVERAGE","AVERAGE","AVERAGE","BELOW_AVERAGE_10"]),
+                "Engagement Rank Raw": random.choice(["ABOVE_AVERAGE","AVERAGE","ABOVE_AVERAGE"]),
             })
         return pd.DataFrame(rows)
 
@@ -1119,6 +1199,34 @@ if DEMO_MODE:
             df["CPM"] = (df["CPM"] * random.uniform(0.88, 1.08)).round(2)
         return df
 
+    def _demo_geo(account_id, date_preset):
+        _estados = [
+            ("São Paulo", 145000, 128000, 8200, 4850.0, 3.21, 0.59, 33.45, 182),
+            ("Rio de Janeiro", 62000, 55000, 3100, 1920.0, 2.84, 0.62, 30.97, 74),
+            ("Minas Gerais", 48000, 43000, 2400, 1450.0, 2.67, 0.60, 30.21, 58),
+            ("Paraná", 28000, 25000, 1350, 820.0, 2.73, 0.61, 29.29, 31),
+            ("Santa Catarina", 22000, 19500, 1100, 680.0, 2.86, 0.62, 30.91, 25),
+            ("Rio Grande do Sul", 19000, 17000, 920, 570.0, 2.75, 0.62, 30.0, 21),
+            ("Bahia", 15000, 13500, 680, 420.0, 2.40, 0.62, 28.0, 15),
+            ("Goiás", 12000, 10800, 540, 330.0, 2.40, 0.61, 27.5, 12),
+            ("Pernambuco", 9000, 8100, 390, 240.0, 2.33, 0.62, 26.7, 9),
+            ("Ceará", 7500, 6750, 310, 190.0, 2.22, 0.61, 25.3, 7),
+        ]
+        rows = []
+        for est, imp, alc, cli, gas, ctr, cpc, cpm, leads in _estados:
+            rows.append({"Região": est, "Impressões": imp, "Alcance": alc, "Cliques": cli,
+                         "Gasto": gas, "CTR (%)": ctr, "CPC": cpc, "CPM": cpm,
+                         "Leads": leads, "Conversas": int(leads * 0.35)})
+        return pd.DataFrame(rows)
+
+    def _demo_device(account_id, date_preset):
+        return pd.DataFrame([
+            {"Dispositivo": "mobile_android", "Impressões": 198000, "Alcance": 175000, "Cliques": 7200, "Gasto": 4200.0, "CTR (%)": 3.64, "CPC": 0.58, "CPM": 21.21, "Leads": 285},
+            {"Dispositivo": "mobile_iphone",  "Impressões": 112000, "Alcance": 99000,  "Cliques": 3800, "Gasto": 2600.0, "CTR (%)": 3.39, "CPC": 0.68, "CPM": 23.21, "Leads": 148},
+            {"Dispositivo": "desktop",        "Impressões": 58000,  "Alcance": 52000,  "Cliques": 1200, "Gasto": 1150.0, "CTR (%)": 2.07, "CPC": 0.96, "CPM": 19.83, "Leads": 42},
+            {"Dispositivo": "tablet",         "Impressões": 18000,  "Alcance": 16200,  "Cliques": 360,  "Gasto": 350.0,  "CTR (%)": 2.0,  "CPC": 0.97, "CPM": 19.44, "Leads": 11},
+        ])
+
     # Patch das funções de carregamento para usar dados demo
     load_campaigns = _demo_campaigns
     load_adsets = _demo_adsets
@@ -1128,6 +1236,8 @@ if DEMO_MODE:
     load_daily = _demo_daily
     load_creatives = _demo_creatives
     load_campaigns_prev = _demo_campaigns_prev
+    load_geo = _demo_geo
+    load_device = _demo_device
 
 account_labels = {
     acc["id"]: f"{acc.get('name', 'Sem nome')} ({STATUS_MAP.get(acc.get('account_status'), '?')})"
@@ -1635,6 +1745,76 @@ with tab2:
             fig_ob.update_layout(coloraxis_showscale=False, height=360, yaxis=dict(tickfont=dict(size=9)))
             apply_fig(fig_ob); st.plotly_chart(fig_ob, use_container_width=True)
 
+        # ── Pareto 80/20 ────────────────────────────────────────────────────
+        if len(df_camp) >= 3:
+            st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+            slabel("Análise Pareto — 20% das campanhas que geram 80% dos resultados")
+            _metric_pareto = "Leads" if df_camp["Leads"].sum() > 0 else ("Conversas" if df_camp.get("Conversas", pd.Series(dtype=float)).sum() > 0 else "Cliques")
+            df_pareto = df_camp.sort_values(_metric_pareto, ascending=False).copy()
+            df_pareto["_cum_pct"] = df_pareto[_metric_pareto].cumsum() / df_pareto[_metric_pareto].sum() * 100
+            df_pareto["_spend_cum_pct"] = df_pareto["Gasto"].cumsum() / df_pareto["Gasto"].sum() * 100
+            df_pareto["_pareto_80"] = df_pareto["_cum_pct"] <= 80
+            n_pareto = df_pareto["_pareto_80"].sum()
+            pct_camps = n_pareto / len(df_pareto) * 100
+
+            p1, p2 = st.columns([2, 1])
+            with p1:
+                fig_p = go.Figure()
+                fig_p.add_trace(go.Bar(x=df_pareto["Campanha"].apply(lambda x: str(x)[:25]),
+                                       y=df_pareto[_metric_pareto],
+                                       marker_color=["#38BDF8" if v else "#334155" for v in df_pareto["_pareto_80"]],
+                                       name=_metric_pareto))
+                fig_p.add_trace(go.Scatter(x=df_pareto["Campanha"].apply(lambda x: str(x)[:25]),
+                                           y=df_pareto["_cum_pct"], mode="lines+markers",
+                                           line=dict(color="#F472B6", width=2), yaxis="y2",
+                                           name="% Acumulado"))
+                fig_p.update_layout(
+                    title=f"Pareto — {_metric_pareto} por Campanha (azul = top {pct_camps:.0f}% → 80% dos resultados)",
+                    yaxis2=dict(overlaying="y", side="right", range=[0, 105], ticksuffix="%"),
+                    xaxis=dict(tickangle=-25), height=400, template=CHART_THEME,
+                    legend=dict(orientation="h", y=1.08)
+                )
+                apply_fig(fig_p); st.plotly_chart(fig_p, use_container_width=True)
+            with p2:
+                st.markdown(f"""
+<div style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.2);border-radius:14px;padding:20px;text-align:center;margin-top:40px">
+  <div style="font-size:2.5rem;font-weight:900;color:#38BDF8">{n_pareto}</div>
+  <div style="font-size:.8rem;color:#94A3B8;margin-top:4px">de {len(df_pareto)} campanhas geram<br><strong style="color:#F8FAFC">80%</strong> dos {_metric_pareto.lower()}</div>
+  <div style="margin-top:12px;font-size:.7rem;color:#64748B">{pct_camps:.0f}% das campanhas</div>
+</div>
+<div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:14px;padding:14px;text-align:center;margin-top:10px">
+  <div style="font-size:.7rem;color:#F87171;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Ineficientes</div>
+  <div style="font-size:1.4rem;font-weight:800;color:#F8FAFC">{len(df_pareto) - n_pareto}</div>
+  <div style="font-size:.7rem;color:#94A3B8">campanhas com apenas 20% dos resultados</div>
+</div>""", unsafe_allow_html=True)
+
+        # ── Treemap hierárquico ──────────────────────────────────────────────
+        try:
+            df_ads_tree = load_ads(selected_id, date_preset)
+            df_ads_tree = apply_camp_filter(df_ads_tree)
+            if not df_ads_tree.empty:
+                st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+                slabel("Treemap — Distribuição Hierárquica de Gasto")
+                tm_metric = st.radio("Métrica", ["Gasto", "Impressões", "Leads"],
+                                     horizontal=True, key="treemap_metric",
+                                     label_visibility="collapsed")
+                df_tree = df_ads_tree[df_ads_tree[tm_metric] > 0].copy()
+                if not df_tree.empty:
+                    fig_tm = px.treemap(
+                        df_tree,
+                        path=["Campanha", "Conjunto", "Anúncio"],
+                        values=tm_metric,
+                        color="CTR (%)",
+                        color_continuous_scale="RdYlGn",
+                        hover_data=["Gasto", "CTR (%)", "Leads", "CPL"],
+                        title=f"Treemap de {tm_metric} — Campanha → Conjunto → Anúncio (cor = CTR)",
+                    )
+                    fig_tm.update_traces(textinfo="label+value+percent parent")
+                    fig_tm.update_layout(height=500, template=CHART_THEME, margin=dict(t=30, l=10, r=10, b=10))
+                    apply_fig(fig_tm); st.plotly_chart(fig_tm, use_container_width=True)
+        except Exception:
+            pass
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # TAB 3 — CONJUNTOS
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1952,6 +2132,44 @@ with tab4:
                     fig.update_layout(coloraxis_showscale=False)
                     apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
+                # ── Quartis de retenção de vídeo ──────────────────────────
+                if "Video 25%" in df_vid.columns and df_vid["Video 25%"].sum() > 0:
+                    slabel("Retenção de Vídeo — Quartis de Conclusão")
+                    df_q = df_vid[df_vid["Video Views"] > 0].copy()
+                    df_q["25% concluído"]  = (df_q["Video 25%"]  / df_q["Video Views"] * 100).round(1)
+                    df_q["50% concluído"]  = (df_q["Video 50%"]  / df_q["Video Views"] * 100).round(1)
+                    df_q["75% concluído"]  = (df_q["Video 75%"]  / df_q["Video Views"] * 100).round(1)
+                    df_q["100% concluído"] = (df_q["Video 100%"] / df_q["Video Views"] * 100).round(1)
+                    df_q["Nome"] = df_q["Anúncio"].apply(lambda x: str(x)[:28] + "…" if len(str(x)) > 28 else str(x))
+
+                    # Gráfico de barras agrupadas por quartil
+                    df_melt = df_q[["Nome","25% concluído","50% concluído","75% concluído","100% concluído"]].melt(
+                        id_vars="Nome", var_name="Quartil", value_name="% Views"
+                    )
+                    fig_q = px.bar(df_melt, x="Nome", y="% Views", color="Quartil",
+                                   barmode="group",
+                                   color_discrete_sequence=["#38BDF8","#818CF8","#F472B6","#34D399"],
+                                   title="Retenção por Quartil (% dos Views que chegaram até aqui)",
+                                   template=CHART_THEME)
+                    fig_q.update_layout(xaxis=dict(tickangle=-25, tickfont=dict(size=9)),
+                                        height=400, legend=dict(orientation="h", y=1.08))
+                    apply_fig(fig_q); st.plotly_chart(fig_q, use_container_width=True)
+
+                    # Funil médio de retenção
+                    avg_q25  = df_q["25% concluído"].mean()
+                    avg_q50  = df_q["50% concluído"].mean()
+                    avg_q75  = df_q["75% concluído"].mean()
+                    avg_q100 = df_q["100% concluído"].mean()
+                    fig_funnel_v = go.Figure(go.Funnel(
+                        y=["Iniciou (100%)", "25% assistido", "50% assistido", "75% assistido", "Concluído (100%)"],
+                        x=[100, avg_q25, avg_q50, avg_q75, avg_q100],
+                        textinfo="value+percent initial",
+                        marker={"color": ["#38BDF8","#818CF8","#F472B6","#FBBF24","#34D399"]},
+                    ))
+                    fig_funnel_v.update_layout(title="Funil Médio de Retenção de Vídeo (%)",
+                                               height=300, template=CHART_THEME, margin=dict(t=30, b=10))
+                    apply_fig(fig_funnel_v); st.plotly_chart(fig_funnel_v, use_container_width=True)
+
             if df_filtered["Leads"].sum() > 0:
                 df_leads_ad = df_filtered[df_filtered["Leads"] > 0].sort_values("CPL")
                 fig = px.bar(df_leads_ad.head(15), x="Anúncio", y="CPL",
@@ -2142,9 +2360,33 @@ with tab4:
 
                 if row["Gasto"] > df_t10["Gasto"].mean() * 1.5: diag.append(("blue", "Alto investimento — anúncio com maior alocação de verba"))
 
+                # Quality Ranking badges
+                _qrank_labels = {1:"Abaixo da média (10%)", 2:"Abaixo da média (20%)",
+                                 3:"Abaixo da média (35%)", 4:"Na média", 5:"Acima da média"}
+                qr = row.get("Quality Rank")
+                er = row.get("Engagement Rank")
+                if qr:
+                    qr_cls = "good" if qr == 5 else "warn" if qr == 4 else "bad"
+                    diag.append((qr_cls, f"Qualidade do anúncio: {_qrank_labels.get(qr, '?')}"))
+                if er:
+                    er_cls = "good" if er == 5 else "warn" if er == 4 else "bad"
+                    diag.append((er_cls, f"Engajamento: {_qrank_labels.get(er, '?')}"))
+
+                # Video quartile insights
+                vviews = int(row.get("Video Views", 0))
+                if vviews > 0:
+                    v25  = int(row.get("Video 25%", 0))
+                    v50  = int(row.get("Video 50%", 0))
+                    v75  = int(row.get("Video 75%", 0))
+                    v100 = int(row.get("Video 100%", 0))
+                    v100pct = v100 / vviews * 100 if vviews else 0
+                    v50pct  = v50  / vviews * 100 if vviews else 0
+                    if v100pct >= 30: diag.append(("good", f"Vídeo: {v100pct:.0f}% assistiram até o fim — alto engajamento"))
+                    elif v100pct > 0: diag.append(("warn", f"Vídeo: apenas {v100pct:.0f}% assistiram até o fim (50%: {v50pct:.0f}%)"))
+
                 # insights narrativos
                 insights_html = ""
-                for badge_cls, badge_txt in diag[:4]:
+                for badge_cls, badge_txt in diag[:6]:
                     icon = "✅" if badge_cls == "good" else "⚠️" if badge_cls == "warn" else "❌" if badge_cls == "bad" else "ℹ️"
                     insights_html += f'<div class="t10-ins-row"><span class="t10-ins-icon">{icon}</span><span>{badge_txt}</span></div>'
 
@@ -2403,10 +2645,10 @@ with tab4:
                 sc    = row["_score"]
 
                 # rank badge style
-                if rank == 1:   rk_cls = "gold";  rk_lbl = f"🏆 #{rank}"
-                elif rank <= 3: rk_cls = "blue";  rk_lbl = f"⭐ #{rank}"
-                elif rank == n_total: rk_cls = "red"; rk_lbl = f"⚠ #{rank}"
-                else:           rk_cls = "gray";  rk_lbl = f"#{rank}"
+                if rank == 1:                       rk_cls = "gold";  rk_lbl = f"🏆 #{rank}"
+                elif rank <= 3:                     rk_cls = "blue";  rk_lbl = f"⭐ #{rank}"
+                elif rank == n_total and rank != 1: rk_cls = "red";   rk_lbl = f"⚠ #{rank}"
+                else:                               rk_cls = "gray";  rk_lbl = f"#{rank}"
 
                 card_cls = "cr-card winner" if rank == 1 else ("cr-card loser" if rank == n_total else "cr-card")
                 sc_c = "#34D399" if sc >= 70 else "#FBBF24" if sc >= 45 else "#F87171"
@@ -2803,6 +3045,81 @@ with tab5:
                         title="Gasto por Faixa Etária × Gênero", template=CHART_THEME)
         apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
+    # ── Breakdown por Dispositivo ──────────────────────────────────────
+    st.divider()
+    st.subheader("Por Dispositivo")
+    try:
+        df_dev = load_device(selected_id, date_preset)
+    except Exception:
+        df_dev = pd.DataFrame()
+    if not df_dev.empty:
+        _dev_labels = {"mobile_android": "Android 📱", "mobile_iphone": "iPhone 🍎",
+                       "desktop": "Desktop 🖥️", "tablet": "Tablet 📟"}
+        df_dev["Dispositivo"] = df_dev["Dispositivo"].map(_dev_labels).fillna(df_dev["Dispositivo"])
+        dv1, dv2, dv3 = st.columns(3)
+        with dv1:
+            fig = px.pie(df_dev, values="Gasto", names="Dispositivo", hole=0.45,
+                         title="Gasto por Dispositivo", template=CHART_THEME,
+                         color_discrete_sequence=["#38BDF8","#818CF8","#34D399","#F472B6"])
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+        with dv2:
+            fig = px.bar(df_dev, x="Dispositivo", y="CTR (%)", color="CTR (%)",
+                         color_continuous_scale="RdYlGn",
+                         title="CTR por Dispositivo", template=CHART_THEME)
+            fig.update_layout(coloraxis_showscale=False)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+        with dv3:
+            fig = px.bar(df_dev, x="Dispositivo", y="CPC", color="CPC",
+                         color_continuous_scale="RdYlGn_r",
+                         title="CPC por Dispositivo (menor = melhor)", template=CHART_THEME)
+            fig.update_layout(coloraxis_showscale=False)
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(df_dev.style.format({"Gasto":"{:.2f}","CTR (%)":"{:.2f}","CPC":"{:.2f}","CPM":"{:.2f}"}),
+                     use_container_width=True, hide_index=True)
+    else:
+        st.info("Dados de dispositivo não disponíveis para este período.")
+
+    # ── Breakdown Geográfico ──────────────────────────────────────────────
+    st.divider()
+    st.subheader("Por Região (Estado / País)")
+    try:
+        df_geo = load_geo(selected_id, date_preset)
+    except Exception:
+        df_geo = pd.DataFrame()
+    if not df_geo.empty:
+        df_geo = df_geo.sort_values("Gasto", ascending=False)
+        ga1, ga2 = st.columns(2)
+        with ga1:
+            fig = px.bar(df_geo.head(15).sort_values("Gasto", ascending=True),
+                         x="Gasto", y="Região", orientation="h",
+                         color="CTR (%)", color_continuous_scale="RdYlGn",
+                         title="Gasto por Região (cor = CTR)", template=CHART_THEME)
+            fig.update_layout(coloraxis_showscale=True, height=450, yaxis=dict(tickfont=dict(size=9)))
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+        with ga2:
+            if df_geo["Leads"].sum() > 0:
+                df_geo_l = df_geo[df_geo["Leads"] > 0].copy()
+                df_geo_l["CPL"] = df_geo_l["Gasto"] / df_geo_l["Leads"]
+                fig = px.bar(df_geo_l.sort_values("Leads", ascending=True).head(15),
+                             x="Leads", y="Região", orientation="h",
+                             color="CPL", color_continuous_scale="RdYlGn_r",
+                             title="Leads por Região (cor = CPL)", template=CHART_THEME)
+                fig.update_layout(coloraxis_showscale=True, height=450, yaxis=dict(tickfont=dict(size=9)))
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+            else:
+                fig = px.bar(df_geo.head(15).sort_values("CTR (%)", ascending=True),
+                             x="CTR (%)", y="Região", orientation="h",
+                             color="CTR (%)", color_continuous_scale="Greens",
+                             title="CTR por Região", template=CHART_THEME)
+                fig.update_layout(coloraxis_showscale=False, height=450, yaxis=dict(tickfont=dict(size=9)))
+                apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(df_geo.style.format({"Gasto":"{:.2f}","CTR (%)":"{:.2f}","CPC":"{:.2f}","CPM":"{:.2f}"}),
+                     use_container_width=True, hide_index=True)
+        csv_geo = df_geo.to_csv(index=False).encode("utf-8")
+        st.download_button("⬇️ Exportar Geográfico CSV", csv_geo, "geografico.csv", "text/csv")
+    else:
+        st.info("Dados geográficos não disponíveis. A Meta pode não retornar breakdown por região para todas as configurações de conta.")
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # TAB 6 — POSICIONAMENTO
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2889,11 +3206,63 @@ with tab7:
         with c2: kpi("Pico de gasto diário", fmt(df_daily["Gasto"].max(), currency))
         with c3: kpi("Média diária", fmt(df_daily["Gasto"].mean(), currency))
 
+        # ── Projeção fim do mês ──────────────────────────────────────────
+        try:
+            _today_d = _datetime_mod.date.today()
+            _days_in_month = (_today_d.replace(month=_today_d.month % 12 + 1, day=1) - _datetime_mod.timedelta(days=1)).day
+            _days_remaining = _days_in_month - _today_d.day
+            _burn3 = df_daily["Gasto"].tail(3).mean()
+            if _burn3 > 0 and _days_remaining > 0:
+                _proj_eom   = df_daily["Gasto"].sum() + _burn3 * _days_remaining
+                _proj_leads = int(df_daily["Leads"].sum() + (df_daily["Leads"].tail(3).mean() * _days_remaining))
+                _meta_input  = st.number_input("🎯 Meta de gasto mensal (opcional)", min_value=0.0, value=0.0,
+                                               step=100.0, format="%.0f", key="meta_mensal",
+                                               help="Informe sua meta para ver % de atingimento")
+                pc1, pc2, pc3, pc4 = st.columns(4)
+                with pc1: kpi("Gasto até hoje", fmt(df_daily["Gasto"].sum(), currency), icon="💸", color="#818CF8")
+                with pc2: kpi("Projeção fim do mês", fmt(_proj_eom, currency), icon="📅", color="#38BDF8")
+                with pc3: kpi("Leads projetados", f"{_proj_leads:,}", icon="🎯", color="#34D399")
+                with pc4:
+                    if _meta_input > 0:
+                        _pace_pct = df_daily["Gasto"].sum() / (_meta_input * (_today_d.day / _days_in_month)) * 100
+                        _p_color = "#34D399" if 90 <= _pace_pct <= 110 else "#FBBF24" if 75 <= _pace_pct <= 125 else "#F87171"
+                        kpi("Pacing", f"{_pace_pct:.0f}%", icon="⏱️", color=_p_color)
+                    else:
+                        kpi("Dias restantes", str(_days_remaining), icon="⏳", color="#FBBF24")
+                if _meta_input > 0 and _proj_eom > _meta_input * 1.1:
+                    st.warning(f"⚠️ Projeção ({fmt(_proj_eom, currency)}) está {((_proj_eom/_meta_input)-1)*100:.0f}% acima da meta. Considere reduzir o orçamento diário.")
+                elif _meta_input > 0 and _proj_eom < _meta_input * 0.85:
+                    st.info(f"ℹ️ Projeção ({fmt(_proj_eom, currency)}) está abaixo da meta. Há espaço para aumentar o orçamento.")
+        except Exception:
+            pass
+
         st.markdown("<br>", unsafe_allow_html=True)
-        fig = px.area(df_daily, x="Data", y="Gasto", markers=True,
-                      title="Evolução do Gasto Diário", template=CHART_THEME)
-        fig.update_traces(fill="tozeroy", line_color="#636EFA", fillcolor="rgba(99,110,250,0.15)")
-        apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+
+        # ── Gráfico com médias móveis ────────────────────────────────────
+        if len(df_daily) >= 3:
+            df_ma = df_daily.copy()
+            df_ma = df_ma.sort_values("Data")
+            df_ma["MA3"] = df_ma["Gasto"].rolling(3, min_periods=1).mean()
+            if len(df_ma) >= 7:
+                df_ma["MA7"] = df_ma["Gasto"].rolling(7, min_periods=1).mean()
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=df_ma["Data"], y=df_ma["Gasto"], mode="lines+markers",
+                                     name="Gasto Diário", line=dict(color="#636EFA", width=1.5),
+                                     fill="tozeroy", fillcolor="rgba(99,110,250,0.08)"))
+            fig.add_trace(go.Scatter(x=df_ma["Data"], y=df_ma["MA3"], mode="lines",
+                                     name="Média 3 dias", line=dict(color="#F472B6", width=2, dash="dot")))
+            if "MA7" in df_ma.columns:
+                fig.add_trace(go.Scatter(x=df_ma["Data"], y=df_ma["MA7"], mode="lines",
+                                         name="Média 7 dias", line=dict(color="#34D399", width=2.5)))
+            fig.update_layout(title="Evolução do Gasto com Médias Móveis", template=CHART_THEME,
+                               height=350, legend=dict(orientation="h", y=1.08))
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+        else:
+            fig = px.area(df_daily, x="Data", y="Gasto", markers=True,
+                          title="Evolução do Gasto Diário", template=CHART_THEME)
+            fig.update_traces(fill="tozeroy", line_color="#636EFA", fillcolor="rgba(99,110,250,0.15)")
+            apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
         col_a, col_b = st.columns(2)
         with col_a:
@@ -2926,6 +3295,52 @@ with tab7:
                          color="Leads", color_continuous_scale="Purples", template=CHART_THEME)
             fig.update_layout(coloraxis_showscale=False)
             apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+
+        # ── Detecção de anomalias ────────────────────────────────────────
+        if len(df_daily) >= 5:
+            slabel("🔍 Detecção de Anomalias")
+            try:
+                df_an = df_daily.copy().sort_values("Data")
+                _roll_mean = df_an["Gasto"].rolling(5, min_periods=3, center=True).mean()
+                _roll_std  = df_an["Gasto"].rolling(5, min_periods=3, center=True).std().fillna(df_an["Gasto"].std())
+                df_an["_upper"] = _roll_mean + 2 * _roll_std
+                df_an["_lower"] = (_roll_mean - 2 * _roll_std).clip(lower=0)
+                df_an["_anomaly"] = (df_an["Gasto"] > df_an["_upper"]) | (df_an["Gasto"] < df_an["_lower"])
+                anomalies = df_an[df_an["_anomaly"]]
+
+                fig_an = go.Figure()
+                fig_an.add_trace(go.Scatter(x=df_an["Data"], y=df_an["_upper"], mode="lines",
+                                            line=dict(color="rgba(248,113,113,0.3)", width=1, dash="dot"),
+                                            name="Limite superior (2σ)", showlegend=True))
+                fig_an.add_trace(go.Scatter(x=df_an["Data"], y=df_an["_lower"], mode="lines",
+                                            line=dict(color="rgba(248,113,113,0.3)", width=1, dash="dot"),
+                                            fill="tonexty", fillcolor="rgba(248,113,113,0.04)",
+                                            name="Limite inferior (2σ)", showlegend=True))
+                fig_an.add_trace(go.Scatter(x=df_an["Data"], y=df_an["Gasto"], mode="lines+markers",
+                                            line=dict(color="#38BDF8", width=2), name="Gasto Diário"))
+                if not anomalies.empty:
+                    fig_an.add_trace(go.Scatter(x=anomalies["Data"], y=anomalies["Gasto"],
+                                                mode="markers", marker=dict(color="#F87171", size=12, symbol="x"),
+                                                name=f"Anomalia ({len(anomalies)} dias)"))
+                fig_an.update_layout(title="Gasto Diário com Detecção de Anomalias (±2σ)",
+                                     height=320, template=CHART_THEME,
+                                     legend=dict(orientation="h", y=1.08))
+                apply_fig(fig_an); st.plotly_chart(fig_an, use_container_width=True)
+
+                # CTR anomaly
+                df_an_ctr = df_daily.copy().sort_values("Data")
+                _ctr_mean = df_an_ctr["CTR (%)"].rolling(5, min_periods=3, center=True).mean()
+                _ctr_std  = df_an_ctr["CTR (%)"].rolling(5, min_periods=3, center=True).std().fillna(df_an_ctr["CTR (%)"].std())
+                df_an_ctr["_anomaly_ctr"] = (df_an_ctr["CTR (%)"] > _ctr_mean + 2*_ctr_std) | (df_an_ctr["CTR (%)"] < _ctr_mean - 2*_ctr_std)
+                anomalies_ctr = df_an_ctr[df_an_ctr["_anomaly_ctr"]]
+
+                if not anomalies.empty or not anomalies_ctr.empty:
+                    total_anom = len(anomalies) + len(anomalies_ctr)
+                    st.warning(f"⚠️ {total_anom} anomalia(s) detectada(s): {len(anomalies)} no gasto e {len(anomalies_ctr)} no CTR. Verifique esses dias no calendário.")
+                else:
+                    st.success("✅ Nenhuma anomalia detectada no período — entrega estável dentro de ±2 desvios padrões.")
+            except Exception:
+                pass
 
         # ── Análise por dia da semana ────────────────────────────────────
         if len(df_daily) >= 7:
@@ -3612,6 +4027,59 @@ with tab_ins:
 
     st.divider()
 
+    # ── Sankey — Funil completo de conversão ──────────────────────────────────
+    slabel("Sankey — Fluxo Completo: Alcance → Impressões → Cliques → Resultado")
+    try:
+        _s_reach  = int(total_reach_i)
+        _s_imp    = int(total_imp_i)
+        _s_clicks = int(total_clicks_i)
+        _s_leads  = int(total_leads_i)
+        _s_conv   = int(total_conv_i)
+        _s_result = _s_leads or _s_conv
+
+        if _s_imp > 0:
+            # Nodes: 0=Alcance, 1=Impressões, 2=Cliques, 3=Resultado, 4=Perdas cada etapa
+            node_labels = ["Alcance", "Impressões", "Cliques",
+                           "Leads" if _s_leads > 0 else ("Conversas" if _s_conv > 0 else "Resultado"),
+                           "Freq. duplicada", "Não clicou", "Não converteu"]
+            node_colors = ["#38BDF8","#818CF8","#34D399","#F472B6","#334155","#334155","#334155"]
+            _freq_dup   = max(0, _s_imp - _s_reach)
+            _no_click   = max(0, _s_imp - _s_clicks)
+            _no_convert = max(0, _s_clicks - _s_result)
+
+            sources = [0, 1, 1, 2, 2]
+            targets = [1, 2, 5, 3, 6]
+            values  = [_s_reach, _s_clicks, _no_click, _s_result, _no_convert]
+            if _freq_dup > 0:
+                sources.append(0); targets.append(4); values.append(_freq_dup)
+
+            fig_sk = go.Figure(go.Sankey(
+                node=dict(pad=20, thickness=18, line=dict(color="rgba(255,255,255,0.1)", width=0.5),
+                          label=node_labels, color=node_colors),
+                link=dict(source=sources, target=targets, value=values,
+                          color=["rgba(56,189,248,.25)","rgba(52,211,153,.25)","rgba(51,65,85,.4)",
+                                 "rgba(244,114,182,.3)","rgba(51,65,85,.4)","rgba(51,65,85,.3)"][:len(sources)]),
+            ))
+            fig_sk.update_layout(title_text="Funil Sankey — Cada linha representa volume de usuários",
+                                 height=380, template=CHART_THEME,
+                                 font=dict(size=11, color="#94A3B8"))
+            apply_fig(fig_sk); st.plotly_chart(fig_sk, use_container_width=True)
+
+            # Taxas de conversão entre etapas
+            skc1, skc2, skc3, skc4 = st.columns(4)
+            with skc1: kpi("Imp/Alcance", f"{_s_imp/_s_reach:.1f}×" if _s_reach else "–", icon="👁️", color="#818CF8")
+            with skc2: kpi("CTR", f"{_s_clicks/_s_imp*100:.2f}%" if _s_imp else "–", icon="🖱️", color="#38BDF8")
+            with skc3:
+                rate = _s_result / _s_clicks * 100 if _s_clicks else 0
+                kpi("Conv. Rate", f"{rate:.2f}%", icon="🎯", color="#34D399")
+            with skc4:
+                overall = _s_result / _s_reach * 100 if _s_reach else 0
+                kpi("Alcance→Result.", f"{overall:.3f}%", icon="🏁", color="#F472B6")
+    except Exception:
+        pass
+
+    st.divider()
+
     # ── Inteligência de Criativos ──────────────────────────────────────────────
     slabel("Inteligência de Criativos")
     if not df_ads_i.empty:
@@ -3852,7 +4320,7 @@ with tab_ins:
                 insight("warn", "💸", f"CPM subindo +{cpm_trend:.1f}",
                         f"Leilão ficou mais competitivo na 2ª metade. <strong>Ações:</strong> 1) Teste horários alternativos; "
                         f"2) Expanda o público para reduzir sobreposição; 3) Verifique datas sazonais (feriados, concorrência).")
-            elif cpm_trend < -avg_cpm_i * 0.1:
+            elif cpm_trend < -(abs(avg_cpm_i) * 0.1):
                 insight("good", "💰", f"CPM caindo {abs(cpm_trend):.1f}",
                         "Custo de impressão melhorou. Boa oportunidade para aumentar investimento e capturar mais alcance.")
             else:
@@ -3950,7 +4418,7 @@ with tab_ins:
         acoes_exec.append(("medium", f"Realocação de Orçamento: -{worst_c['Campanha'][:35]} → +{best_c['Campanha'][:35]}",
             f"Transfira {fmt(redirecionar, currency)} (30% da campanha menos eficiente) para a de menor CPL.",
             f"Estimativa: +{leads_ganhos} leads sem aumentar o budget total"))
-    if not df_age_i.empty and not df_age_i.empty:
+    if not df_age_i.empty:
         best_age_row = df_age_i.loc[df_age_i["CTR (%)"].idxmax()]
         acoes_exec.append(("medium", f"Campanha Dedicada: Faixa {best_age_row['age']} anos",
             f"Esta faixa tem CTR de {best_age_row['CTR (%)']:.2f}% — crie um conjunto separado com bid otimizado e criativos personalizados para esta audiência.",
