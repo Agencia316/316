@@ -1520,7 +1520,7 @@ with tab4:
         # ── Modo de visualização ────────────────────────────────────────────
         view_mode = st.radio(
             "Visualização",
-            ["📊 Gráficos", "🖼️ Criativos", "🃏 Cards", "🌳 Hierarquia", "📋 Tabela"],
+            ["📊 Gráficos", "🏆 Top 10", "🖼️ Criativos", "🃏 Cards", "🌳 Hierarquia", "📋 Tabela"],
             horizontal=True,
             label_visibility="collapsed",
         )
@@ -1573,6 +1573,325 @@ with tab4:
                              title="CPL por Anúncio (top 15)", template=CHART_THEME)
                 fig.update_layout(xaxis=dict(tickangle=-30))
                 apply_fig(fig); st.plotly_chart(fig, use_container_width=True)
+
+        # ── TOP 10 ──────────────────────────────────────────────────────────
+        elif view_mode == "🏆 Top 10":
+            try:
+                creatives_map_t10 = load_creatives(selected_id)
+            except Exception:
+                creatives_map_t10 = {}
+
+            df_t10 = df_filtered.copy()
+            df_t10["_cre"] = df_t10["ID"].apply(
+                lambda x: creatives_map_t10.get(x) or creatives_map_t10.get(f"ad_{x}") or {}
+            )
+
+            # Score composto (mesmo cálculo do modo Criativos)
+            def _t10_score(row):
+                ctr_rank = df_t10["CTR (%)"].rank(pct=True).loc[row.name]
+                spend_safe = max(row["Gasto"], 0.01)
+                lr_series = (df_t10.get("Leads", pd.Series(0, index=df_t10.index)).fillna(0) +
+                             df_t10.get("Conversas", pd.Series(0, index=df_t10.index)).fillna(0)) / df_t10["Gasto"].replace(0, 0.01)
+                lr_rank = lr_series.rank(pct=True).loc[row.name]
+                cpm_rank = (1 / df_t10["CPM"].replace(0, 9999)).rank(pct=True).loc[row.name]
+                return round(ctr_rank * 40 + lr_rank * 35 + cpm_rank * 25, 1)
+
+            df_t10["_score"] = df_t10.apply(_t10_score, axis=1)
+            top10 = df_t10.sort_values("_score", ascending=False).head(10).reset_index(drop=True)
+
+            # métricas médias de todos os anúncios (para comparação)
+            avg_ctr  = df_t10["CTR (%)"].mean() or 1
+            avg_cpm  = df_t10["CPM"].mean() or 1
+            avg_cpc  = df_t10["CPC"].mean() or 1
+            avg_cpl  = df_t10["CPL"].replace(0, float("nan")).mean() or 1
+            avg_freq = df_t10.get("Frequência", pd.Series(dtype=float)).mean() or 1
+
+            slabel("🏆 Top 10 Melhores Anúncios — Análise Profunda")
+
+            # ── CSS extra para os cards top10 ──────────────────────────────
+            st.markdown("""
+<style>
+.t10-card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 32px;
+  transition: box-shadow .25s;
+}
+.t10-card:hover { box-shadow: 0 0 32px rgba(56,189,248,.12); }
+.t10-card.gold  { border-color: rgba(251,191,36,.35); box-shadow: 0 0 24px rgba(251,191,36,.08); }
+.t10-card.silver{ border-color: rgba(148,163,184,.3); }
+.t10-card.bronze{ border-color: rgba(180,120,60,.3); }
+
+.t10-header {
+  display:flex; align-items:center; gap:12px;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.02);
+}
+.t10-rank-badge {
+  font-size:1.1rem; font-weight:900;
+  font-family:'DM Mono',monospace;
+  min-width:42px; text-align:center;
+  line-height:1;
+}
+.t10-ad-name {
+  font-size:.88rem; font-weight:700; color:#E2E8F0;
+  flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.t10-score-badge {
+  font-size:.75rem; font-weight:700;
+  padding:4px 10px; border-radius:20px;
+  font-family:'DM Mono',monospace;
+  background:rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+}
+.t10-body { display:flex; gap:0; }
+.t10-thumb-col {
+  width: 280px; min-width: 220px; flex-shrink:0;
+  background:#0F172A;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; border-right:1px solid rgba(255,255,255,.06);
+}
+.t10-thumb-col img {
+  width:100%; height:100%; object-fit:cover; display:block;
+  min-height:180px; max-height:280px;
+}
+.t10-no-img {
+  font-size:3rem; opacity:.18;
+  min-height:180px; display:flex; align-items:center; justify-content:center;
+  width:100%;
+}
+.t10-metrics-col { flex:1; padding:16px 20px; }
+.t10-kpis {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px;
+}
+.t10-kpi {
+  background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06);
+  border-radius:10px; padding:10px 12px; text-align:center;
+}
+.t10-kpi-lbl { font-size:.58rem; color:#64748B; text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; }
+.t10-kpi-val { font-size:.95rem; font-weight:700; font-family:'DM Mono',monospace; color:#F8FAFC; }
+.t10-bars { margin-bottom:12px; }
+.t10-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.t10-bar-lbl { font-size:.65rem; color:#64748B; width:60px; text-align:right; flex-shrink:0; }
+.t10-bar-track {
+  flex:1; height:6px; background:rgba(255,255,255,.07); border-radius:4px; overflow:hidden;
+}
+.t10-bar-fill { height:100%; border-radius:4px; transition:width .6s ease; }
+.t10-bar-val { font-size:.65rem; font-family:'DM Mono',monospace; color:#94A3B8; width:52px; }
+.t10-copy {
+  font-size:.75rem; color:#94A3B8; line-height:1.55;
+  background:rgba(255,255,255,.025); border-left:2px solid rgba(56,189,248,.3);
+  padding:8px 10px; border-radius:0 8px 8px 0; margin-bottom:10px;
+  font-style:italic;
+}
+.t10-pills { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+.t10-pill {
+  font-size:.62rem; padding:3px 9px; border-radius:12px;
+  font-weight:600; letter-spacing:.02em;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); color:#94A3B8;
+}
+.t10-pill.good { background:rgba(52,211,153,.1); border-color:rgba(52,211,153,.3); color:#34D399; }
+.t10-pill.warn { background:rgba(251,191,36,.1); border-color:rgba(251,191,36,.3); color:#FBBF24; }
+.t10-pill.bad  { background:rgba(248,113,113,.1); border-color:rgba(248,113,113,.3); color:#F87171; }
+.t10-pill.blue { background:rgba(56,189,248,.1); border-color:rgba(56,189,248,.3); color:#38BDF8; }
+.t10-insights { margin-top:10px; }
+.t10-ins-row {
+  display:flex; align-items:flex-start; gap:8px;
+  font-size:.72rem; color:#94A3B8; margin-bottom:5px; line-height:1.45;
+}
+.t10-ins-icon { font-size:.85rem; flex-shrink:0; }
+.t10-cta-tag {
+  display:inline-block; font-size:.6rem; font-weight:700; letter-spacing:.08em;
+  padding:3px 10px; border-radius:10px; text-transform:uppercase;
+  background:rgba(129,140,248,.15); border:1px solid rgba(129,140,248,.3); color:#818CF8;
+  margin-top:4px;
+}
+</style>""", unsafe_allow_html=True)
+
+            for rank_i, (_, row) in enumerate(top10.iterrows()):
+                pos = rank_i + 1
+                cre = row.get("_cre") or {}
+                thumb = cre.get("thumbnail_url") or cre.get("image_url") or ""
+                body  = (cre.get("body") or "")[:160]
+                cta   = (cre.get("cta") or "").replace("_", " ").title()
+
+                sc   = row["_score"]
+                sc_c = "#34D399" if sc >= 70 else "#FBBF24" if sc >= 45 else "#F87171"
+                card_cls = "gold" if pos == 1 else "silver" if pos == 2 else "bronze" if pos == 3 else ""
+                rank_emoji = {1:"🥇",2:"🥈",3:"🥉"}.get(pos, f"#{pos}")
+
+                leads_v = int(row.get("Leads", 0))
+                conv_v  = int(row.get("Conversas", 0))
+                res_v   = leads_v or conv_v
+                res_lbl = "Leads" if leads_v > 0 else "Conv."
+                cpl_v   = fmt(row["CPL"], currency) if row.get("CPL", 0) > 0 else "–"
+                freq_v  = row.get("Frequência", 0) or 0
+
+                # barras de comparação vs média
+                def _bar(val, avg, reverse=False):
+                    if avg == 0: avg = 0.001
+                    pct = min(100, (val / avg) * 50) if not reverse else min(100, (avg / max(val, 0.001)) * 50)
+                    color = "#34D399" if pct >= 55 else "#FBBF24" if pct >= 35 else "#F87171"
+                    return pct, color
+
+                ctr_pct, ctr_c = _bar(row["CTR (%)"], avg_ctr)
+                cpm_pct, cpm_c = _bar(row["CPM"], avg_cpm, reverse=True)
+                cpc_pct, cpc_c = _bar(row["CPC"], avg_cpc, reverse=True)
+                cpl_pct, cpl_c = _bar(row["CPL"] if row.get("CPL",0)>0 else avg_cpl, avg_cpl, reverse=True)
+
+                # badges de diagnóstico
+                diag = []
+                if row["CTR (%)"] >= avg_ctr * 1.5:  diag.append(("good", f"CTR {row['CTR (%)']:.2f}% — {row['CTR (%)'] / avg_ctr:.1f}× acima da média"))
+                elif row["CTR (%)"] < avg_ctr * 0.7: diag.append(("bad", f"CTR baixo {row['CTR (%)']:.2f}% vs média {avg_ctr:.2f}%"))
+                else:                                  diag.append(("blue", f"CTR {row['CTR (%)']:.2f}% próximo da média"))
+
+                if row["CPM"] < avg_cpm * 0.8:       diag.append(("good", f"CPM eficiente: {fmt(row['CPM'],currency)} vs média {fmt(avg_cpm,currency)}"))
+                elif row["CPM"] > avg_cpm * 1.3:      diag.append(("warn", f"CPM alto: {fmt(row['CPM'],currency)} vs média {fmt(avg_cpm,currency)}"))
+
+                if freq_v > 4:                         diag.append(("warn", f"Frequência {freq_v:.1f}× — risco de fadiga"))
+                elif freq_v > 0:                       diag.append(("good", f"Frequência saudável: {freq_v:.1f}×"))
+
+                if row["Gasto"] > df_t10["Gasto"].mean() * 1.5: diag.append(("blue", "Alto investimento — anúncio com maior alocação de verba"))
+
+                # insights narrativos
+                insights_html = ""
+                for badge_cls, badge_txt in diag[:4]:
+                    icon = "✅" if badge_cls == "good" else "⚠️" if badge_cls == "warn" else "❌" if badge_cls == "bad" else "ℹ️"
+                    insights_html += f'<div class="t10-ins-row"><span class="t10-ins-icon">{icon}</span><span>{badge_txt}</span></div>'
+
+                # imagem
+                img_html = (f'<img src="{thumb}" />'
+                            if thumb else '<div class="t10-no-img">🖼️</div>')
+
+                cta_html = f'<span class="t10-cta-tag">▶ {cta}</span>' if cta else ""
+                copy_html = f'<div class="t10-copy">"{body}"</div>' if body else ""
+
+                name_full = str(row["Anúncio"])
+
+                st.markdown(f"""
+<div class="t10-card {card_cls}">
+  <div class="t10-header">
+    <div class="t10-rank-badge">{rank_emoji}</div>
+    <div class="t10-ad-name" title="{name_full}">{name_full[:90]}</div>
+    <div class="t10-score-badge" style="color:{sc_c};border-color:{sc_c}40">Score {sc:.0f}/100</div>
+  </div>
+  <div class="t10-body">
+    <div class="t10-thumb-col">{img_html}</div>
+    <div class="t10-metrics-col">
+      <div class="t10-kpis">
+        <div class="t10-kpi">
+          <div class="t10-kpi-lbl">CTR</div>
+          <div class="t10-kpi-val" style="color:#38BDF8">{row['CTR (%)']:.2f}%</div>
+        </div>
+        <div class="t10-kpi">
+          <div class="t10-kpi-lbl">{res_lbl}</div>
+          <div class="t10-kpi-val" style="color:#34D399">{res_v if res_v > 0 else "–"}</div>
+        </div>
+        <div class="t10-kpi">
+          <div class="t10-kpi-lbl">CPL</div>
+          <div class="t10-kpi-val" style="color:#F472B6">{cpl_v}</div>
+        </div>
+        <div class="t10-kpi">
+          <div class="t10-kpi-lbl">Gasto</div>
+          <div class="t10-kpi-val">{fmt(row['Gasto'],currency)}</div>
+        </div>
+        <div class="t10-kpi">
+          <div class="t10-kpi-lbl">CPM</div>
+          <div class="t10-kpi-val">{fmt(row['CPM'],currency)}</div>
+        </div>
+        <div class="t10-kpi">
+          <div class="t10-kpi-lbl">CPC</div>
+          <div class="t10-kpi-val">{fmt(row['CPC'],currency)}</div>
+        </div>
+        <div class="t10-kpi">
+          <div class="t10-kpi-lbl">Impressões</div>
+          <div class="t10-kpi-val">{int(row['Impressões']):,}</div>
+        </div>
+        <div class="t10-kpi">
+          <div class="t10-kpi-lbl">Frequência</div>
+          <div class="t10-kpi-val">{freq_v:.1f}×</div>
+        </div>
+      </div>
+
+      <div class="t10-bars">
+        <div class="t10-bar-row">
+          <span class="t10-bar-lbl">CTR vs média</span>
+          <div class="t10-bar-track"><div class="t10-bar-fill" style="width:{ctr_pct:.0f}%;background:{ctr_c}"></div></div>
+          <span class="t10-bar-val">{row['CTR (%)']:.2f}% / {avg_ctr:.2f}%</span>
+        </div>
+        <div class="t10-bar-row">
+          <span class="t10-bar-lbl">CPM efic.</span>
+          <div class="t10-bar-track"><div class="t10-bar-fill" style="width:{cpm_pct:.0f}%;background:{cpm_c}"></div></div>
+          <span class="t10-bar-val">{fmt(row['CPM'],currency)} / {fmt(avg_cpm,currency)}</span>
+        </div>
+        <div class="t10-bar-row">
+          <span class="t10-bar-lbl">CPC efic.</span>
+          <div class="t10-bar-track"><div class="t10-bar-fill" style="width:{cpc_pct:.0f}%;background:{cpc_c}"></div></div>
+          <span class="t10-bar-val">{fmt(row['CPC'],currency)} / {fmt(avg_cpc,currency)}</span>
+        </div>
+        {"" if row.get("CPL",0) == 0 else f'''<div class="t10-bar-row">
+          <span class="t10-bar-lbl">CPL efic.</span>
+          <div class="t10-bar-track"><div class="t10-bar-fill" style="width:{cpl_pct:.0f}%;background:{cpl_c}"></div></div>
+          <span class="t10-bar-val">{cpl_v} / {fmt(avg_cpl,currency)}</span>
+        </div>'''}
+      </div>
+
+      {copy_html}
+      {cta_html}
+
+      <div class="t10-insights">{insights_html}</div>
+
+      <div class="t10-pills">
+        <span class="t10-pill">📣 {str(row['Campanha'])[:40]}</span>
+        <span class="t10-pill">🗂 {str(row['Conjunto'])[:35]}</span>
+      </div>
+    </div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+            # ── Gráfico radar comparativo Top 10 ──────────────────────────
+            if len(top10) >= 3:
+                st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+                slabel("Comparativo — Top 10 em radar e barras")
+                r1, r2 = st.columns(2)
+                with r1:
+                    top10_short = top10.copy()
+                    top10_short["Nome"] = top10_short["Anúncio"].apply(lambda x: str(x)[:30] + "…" if len(str(x)) > 30 else str(x))
+                    fig_r = go.Figure()
+                    fig_r.add_trace(go.Bar(
+                        x=top10_short["Nome"], y=top10_short["CTR (%)"],
+                        marker_color=[f"rgba(56,189,248,{0.4 + 0.06*i})" for i in range(len(top10_short))],
+                        name="CTR (%)"
+                    ))
+                    fig_r.update_layout(title="CTR (%) — Top 10", height=350,
+                                        xaxis=dict(tickangle=-30, tickfont=dict(size=8)),
+                                        template=CHART_THEME, showlegend=False)
+                    apply_fig(fig_r); st.plotly_chart(fig_r, use_container_width=True)
+                with r2:
+                    m_col = "Leads" if top10["Leads"].sum() > 0 else ("Conversas" if top10.get("Conversas", pd.Series(dtype=float)).sum() > 0 else "Cliques")
+                    fig_l = go.Figure()
+                    fig_l.add_trace(go.Bar(
+                        x=top10_short["Nome"], y=top10_short[m_col],
+                        marker_color=[f"rgba(52,211,153,{0.4 + 0.06*i})" for i in range(len(top10_short))],
+                        name=m_col
+                    ))
+                    fig_l.update_layout(title=f"{m_col} — Top 10", height=350,
+                                        xaxis=dict(tickangle=-30, tickfont=dict(size=8)),
+                                        template=CHART_THEME, showlegend=False)
+                    apply_fig(fig_l); st.plotly_chart(fig_l, use_container_width=True)
+
+                # Scatter: Gasto × Score
+                fig_sc = px.scatter(top10_short, x="Gasto", y="CTR (%)",
+                                    size="Impressões", color="_score",
+                                    hover_name="Nome",
+                                    color_continuous_scale="RdYlGn",
+                                    title="Gasto × CTR — Top 10 (tamanho = impressões | cor = score)",
+                                    template=CHART_THEME)
+                fig_sc.update_layout(height=380, coloraxis_showscale=True)
+                apply_fig(fig_sc); st.plotly_chart(fig_sc, use_container_width=True)
 
         # ── CRIATIVOS ───────────────────────────────────────────────────────
         elif view_mode == "🖼️ Criativos":
