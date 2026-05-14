@@ -1309,11 +1309,17 @@ with st.sidebar:
         if st.button("🔄 Atualizar", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
-    st.markdown("""
+    _now_str = _datetime_mod.datetime.now().strftime("%H:%M")
+    st.markdown(f"""
     <div style="text-align:center;margin-top:8px">
-      <span style="font-size:9px;color:#1E293B;font-family:'DM Mono',monospace;letter-spacing:1px">AUTO-REFRESH · 5 MIN</span>
+      <span style="font-size:9px;color:#1E293B;font-family:'DM Mono',monospace;letter-spacing:1px">CACHE 5 MIN · {_now_str}</span>
     </div>
     """, unsafe_allow_html=True)
+    if selected_campaigns:
+        st.markdown(f"""
+        <div style="background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:.72rem;color:#38BDF8;font-family:'DM Mono',monospace">
+          🎯 {len(selected_campaigns)} campanha(s) filtrada(s)
+        </div>""", unsafe_allow_html=True)
 
 acc_info = account_map[selected_id]
 currency = acc_info.get("currency", "BRL")
@@ -1795,9 +1801,8 @@ with tab2:
             if not df_ads_tree.empty:
                 st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
                 slabel("Treemap — Distribuição Hierárquica de Gasto")
-                tm_metric = st.radio("Métrica", ["Gasto", "Impressões", "Leads"],
-                                     horizontal=True, key="treemap_metric",
-                                     label_visibility="collapsed")
+                tm_metric = st.radio("📊 Métrica do Treemap", ["Gasto", "Impressões", "Leads"],
+                                     horizontal=True, key="treemap_metric")
                 df_tree = df_ads_tree[df_ads_tree[tm_metric] > 0].copy()
                 if not df_tree.empty:
                     fig_tm = px.treemap(
@@ -2045,6 +2050,8 @@ with tab4:
     if df_ads.empty:
         st.warning("Nenhum anúncio no período.")
     else:
+        if selected_campaigns:
+            st.info(f"🎯 Filtro da sidebar ativo: **{', '.join(selected_campaigns)}**")
         # ── Filtros inline ──────────────────────────────────────────────────
         st.markdown('<div class="filter-bar">', unsafe_allow_html=True)
         fcol1, fcol2 = st.columns(2)
@@ -2084,11 +2091,13 @@ with tab4:
         st.markdown("<br>", unsafe_allow_html=True)
 
         # ── Modo de visualização ────────────────────────────────────────────
+        st.markdown('<div style="font-size:.7rem;color:#475569;font-family:DM Mono,monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Modo de Visualização</div>', unsafe_allow_html=True)
         view_mode = st.radio(
             "Visualização",
             ["📊 Gráficos", "🏆 Top 10", "🖼️ Criativos", "🃏 Cards", "🌳 Hierarquia", "📋 Tabela"],
             horizontal=True,
             label_visibility="collapsed",
+            help="📊 Gráficos: visão analítica com charts | 🏆 Top 10: melhores anúncios com análise profunda | 🖼️ Criativos: galeria visual com thumbnails | 🃏 Cards: cards compactos por anúncio | 🌳 Hierarquia: expandível por Campanha → Conjunto → Anúncio | 📋 Tabela: dados brutos exportáveis",
         )
         st.markdown("---")
 
@@ -2765,9 +2774,9 @@ with tab4:
   <div style="font-size:.7rem;color:#64748B;margin-bottom:8px">{int(fmt_row.Anuncios)} anúncios</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
     <div><div style="font-size:.58rem;color:#64748B">CTR</div><div style="font-size:.9rem;font-weight:700;color:#38BDF8">{fmt_row.CTR:.2f}%</div></div>
-    <div><div style="font-size:.58rem;color:#64748B">CPM</div><div style="font-size:.9rem;font-weight:700;color:#FBBF24">{fmt_row.CPM:.2f}</div></div>
+    <div><div style="font-size:.58rem;color:#64748B">CPM</div><div style="font-size:.9rem;font-weight:700;color:#FBBF24">{fmt(fmt_row.CPM, currency)}</div></div>
     <div><div style="font-size:.58rem;color:#64748B">Leads</div><div style="font-size:.9rem;font-weight:700;color:#34D399">{int(fmt_row.Leads)}</div></div>
-    <div><div style="font-size:.58rem;color:#64748B">Gasto</div><div style="font-size:.9rem;font-weight:700">{fmt_row.Gasto:.0f}</div></div>
+    <div><div style="font-size:.58rem;color:#64748B">Gasto</div><div style="font-size:.9rem;font-weight:700">{fmt(fmt_row.Gasto, currency)}</div></div>
   </div>
 </div>""", unsafe_allow_html=True)
                     with [fm1,fm2,fm3,fm4][col_idx+1]:
@@ -2930,27 +2939,32 @@ with tab4:
   <h5>🗂️ {adset_name} &nbsp;·&nbsp; {fmt(adset_spend, currency)} &nbsp;·&nbsp; {adset_leads} leads &nbsp;·&nbsp; {len(adset_group)} anúncios</h5>
 </div>""", unsafe_allow_html=True)
 
-                        df_hier_show = adset_group[["Anúncio", "Gasto", "Impressões", "Cliques",
-                                                      "CTR (%)", "CPC", "CPM", "Frequência",
-                                                      "Leads", "CPL", "Video Views"]].copy()
+                        _hier_cols_want = ["Anúncio", "Gasto", "Impressões", "Cliques",
+                                           "CTR (%)", "CPC", "CPM", "Frequência",
+                                           "Leads", "CPL", "Video Views", "ThruPlays"]
+                        _hier_cols = [c for c in _hier_cols_want if c in adset_group.columns]
+                        df_hier_show = adset_group[_hier_cols].copy()
+                        _hier_fmt = {k: v for k, v in {
+                            "Gasto": "{:.2f}", "CPC": "{:.2f}", "CPM": "{:.2f}",
+                            "CTR (%)": "{:.2f}", "Frequência": "{:.1f}", "CPL": "{:.2f}",
+                        }.items() if k in _hier_cols}
                         st.dataframe(
-                            df_hier_show.style.format({
-                                "Gasto": "{:.2f}", "CPC": "{:.2f}", "CPM": "{:.2f}",
-                                "CTR (%)": "{:.2f}", "Frequência": "{:.1f}", "CPL": "{:.2f}",
-                            }).background_gradient(subset=["CTR (%)"], cmap="RdYlGn"),
+                            df_hier_show.style.format(_hier_fmt).background_gradient(subset=["CTR (%)"], cmap="RdYlGn"),
                             use_container_width=True,
                             hide_index=True,
                         )
 
         # ── TABELA ──────────────────────────────────────────────────────────
         else:
-            cols_show_ads = ["Campanha", "Conjunto", "Anúncio", "Gasto", "Impressões",
-                             "Alcance", "Cliques", "CTR (%)", "CPC", "CPM", "Frequência",
-                             "Leads", "CPL", "Compras", "Video Views", "ThruPlays"]
-            _styled_ads = df_filtered[cols_show_ads].style.format({
+            _cols_ads_want = ["Campanha", "Conjunto", "Anúncio", "Gasto", "Impressões",
+                              "Alcance", "Cliques", "CTR (%)", "CPC", "CPM", "Frequência",
+                              "Leads", "CPL", "Compras", "Video Views", "ThruPlays"]
+            cols_show_ads = [c for c in _cols_ads_want if c in df_filtered.columns]
+            _ads_fmt = {k: v for k, v in {
                 "Gasto": "{:.2f}", "CPC": "{:.2f}", "CPM": "{:.2f}",
-                "CTR (%)": "{:.2f}", "Frequência": "{:.1f}", "CPL": "{:.2f}", "CPP": "{:.2f}",
-            })
+                "CTR (%)": "{:.2f}", "Frequência": "{:.1f}", "CPL": "{:.2f}",
+            }.items() if k in cols_show_ads}
+            _styled_ads = df_filtered[cols_show_ads].style.format(_ads_fmt)
             _styled_ads = _styled_ads.background_gradient(subset=["Gasto"], cmap="Oranges")
             _styled_ads = _styled_ads.background_gradient(subset=["CTR (%)"], cmap="RdYlGn")
             st.dataframe(_styled_ads, use_container_width=True, height=520)
@@ -2983,7 +2997,7 @@ with tab5:
         st.error(f"Erro ao carregar dados demográficos: {e}")
         df_age, df_gender, df_ag = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
-    st.subheader("Por Faixa Etária")
+    slabel("👥 Público por Faixa Etária")
     if not df_age.empty:
         col_a, col_b = st.columns(2)
         with col_a:
@@ -3016,7 +3030,7 @@ with tab5:
         st.dataframe(df_age, use_container_width=True, hide_index=True)
 
     st.divider()
-    st.subheader("Por Gênero")
+    slabel("⚧ Por Gênero")
     if not df_gender.empty:
         gender_label = {"male": "Masculino", "female": "Feminino", "unknown": "Desconhecido"}
         df_gender["Gênero"] = df_gender["gender"].map(gender_label).fillna(df_gender["gender"])
@@ -3036,7 +3050,7 @@ with tab5:
         st.dataframe(df_gender.drop(columns=["gender"]), use_container_width=True, hide_index=True)
 
     st.divider()
-    st.subheader("Mapa de Calor — Gasto por Idade × Gênero")
+    slabel("🌡️ Mapa de Calor — Gasto por Idade × Gênero")
     if not df_ag.empty:
         gender_label = {"male": "Masculino", "female": "Feminino", "unknown": "Desconhecido"}
         df_ag["gender"] = df_ag["gender"].map(gender_label).fillna(df_ag["gender"])
@@ -3047,7 +3061,7 @@ with tab5:
 
     # ── Breakdown por Dispositivo ──────────────────────────────────────
     st.divider()
-    st.subheader("Por Dispositivo")
+    slabel("📱 Por Dispositivo")
     try:
         df_dev = load_device(selected_id, date_preset)
     except Exception:
@@ -3081,7 +3095,7 @@ with tab5:
 
     # ── Breakdown Geográfico ──────────────────────────────────────────────
     st.divider()
-    st.subheader("Por Região (Estado / País)")
+    slabel("🗺️ Por Região (Estado / País)")
     try:
         df_geo = load_geo(selected_id, date_preset)
     except Exception:
@@ -3133,6 +3147,16 @@ with tab6:
     if df_place.empty:
         st.warning("Nenhum dado de posicionamento.")
     else:
+        # KPI summary
+        _pl_spend = df_place["Gasto"].sum()
+        _pl_top = df_place.loc[df_place["CTR (%)"].idxmax()]
+        _pl_plats = df_place["Plataforma"].nunique()
+        pk1, pk2, pk3, pk4 = st.columns(4)
+        with pk1: kpi("Total Gasto", fmt(_pl_spend, currency), icon="💸", color="#818CF8")
+        with pk2: kpi("Plataformas", str(_pl_plats), icon="📍", color="#38BDF8")
+        with pk3: kpi("Posicionamentos", str(len(df_place)), icon="🗂️", color="#A78BFA")
+        with pk4: kpi("Melhor CTR", f"{_pl_top['CTR (%)']:.2f}%", icon="🏆", color="#34D399")
+        st.markdown("<br>", unsafe_allow_html=True)
         col_a, col_b = st.columns(2)
         with col_a:
             fig = px.pie(df_place, values="Gasto", names="Plataforma",
@@ -3178,7 +3202,7 @@ with tab6:
             apply_fig(_fig_radar)
             st.plotly_chart(_fig_radar, use_container_width=True)
 
-        st.subheader("Tabela Completa — Posicionamento")
+        slabel("Tabela Completa — Posicionamento")
         st.dataframe(
             df_place.style.format({
                 "Gasto": "{:.2f}", "CPC": "{:.2f}", "CPM": "{:.2f}", "CTR (%)": "{:.2f}",
@@ -3453,13 +3477,15 @@ with tab7:
 # TAB 8 — MENSAGENS
 # ═══════════════════════════════════════════════════════════════════════════════
 with tab_msg:
+    df_msg = pd.DataFrame()
+    df_msg_adset = pd.DataFrame()
+    df_msg_ads = pd.DataFrame()
     try:
         df_msg = load_campaigns(selected_id, date_preset)
         df_msg_adset = load_adsets(selected_id, date_preset)
         df_msg_ads = load_ads(selected_id, date_preset)
     except Exception as e:
         st.error(f"Erro ao carregar dados de mensagens: {e}")
-        df_msg = pd.DataFrame()
 
     df_msg = apply_camp_filter(df_msg)
     df_msg_adset = apply_camp_filter(df_msg_adset)
