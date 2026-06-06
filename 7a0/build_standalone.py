@@ -7,11 +7,11 @@ import re
 html = open("index.html", encoding="utf-8").read()
 css = open("styles.css", encoding="utf-8").read()
 bundle = "\n".join(open(f, encoding="utf-8").read()
-                   for f in ("players.js", "formations.js", "game.js"))
+                   for f in ("squads.js", "formations.js", "game.js"))
 
 html = re.sub(r'\s*<link rel="stylesheet" href="styles.css" />',
               "\n  <style>\n" + css + "\n  </style>", html)
-html = re.sub(r'\s*<script src="players.js"></script>\s*'
+html = re.sub(r'\s*<script src="squads.js"></script>\s*'
               r'<script src="formations.js"></script>\s*'
               r'<script src="game.js"></script>',
               "\n  <script>\n" + bundle + "\n  </script>", html)

@@ -4,16 +4,20 @@ Recriação (projeto de estudo) do conceito do jogo [7a0.com.br](https://7a0.com
 você é o técnico, escolhe um esquema tático e monta a seleção dos sonhos
 selecionando craques de todas as eras do futebol. O objetivo é ganhar de **7 a 0**.
 
-## Como jogar
+## Como jogar (igual ao 7a0 original)
 
 1. **Escolha o modo:**
    - **Clássico** — você vê o *overall* (força) de cada jogador.
    - **Almanaque** — o overall fica escondido; você escala de memória.
 2. **Escolha o esquema tático:** 3-4-3, 4-3-3, 4-4-2, 3-5-2, 4-2-3-1 ou 5-3-2.
-3. **Escale os 11:** para cada posição, o jogo sorteia alguns craques compatíveis.
-   Escolha um para cada vaga (cada craque só pode ser usado uma vez).
-4. **Finalize:** o overall médio do time define o placar — quanto melhor o
-   elenco, maior a goleada. Será que dá pra cravar o 7 a 0?
+3. **Monte os 11:** o jogo **sorteia uma seleção + uma Copa** (ex.: *Brasil 1970*) e
+   mostra aquele elenco real. Escolha um jogador para preencher uma vaga em aberto.
+   - **🎲 Trocar seleção / Copa** sorteia outra seleção, caso não goste da atual.
+   - Clique num jogador já no campo para **trocá-lo** (a posição reabre e um novo
+     elenco é sorteado).
+   - Cada jogador só pode entrar uma vez.
+4. **Finalize:** o overall médio do time define o placar — quanto melhor a
+   escalação, maior a goleada. Será que dá pra cravar o 7 a 0?
 
 ## Como rodar
 
@@ -34,23 +38,26 @@ cd 7a0 && python3 -m http.server 8000
 
 | Arquivo          | Descrição                                              |
 |------------------|--------------------------------------------------------|
-| `index.html`     | Telas (início, jogo, resultado) e layout               |
-| `styles.css`     | Estilo: campo, cards, animações                        |
-| `players.js`     | Base de craques (nome, posição, overall, país, era)    |
-| `formations.js`  | Coordenadas das posições de cada esquema tático         |
-| `game.js`        | Lógica do jogo: draft, escalação e cálculo do resultado |
+| `index.html`     | Telas (início, jogo, resultado) e layout                |
+| `styles.css`     | Estilo: campo, cards, animações                         |
+| `squads.js`      | **Elencos** reais (seleção × Copa) — base usada pelo jogo |
+| `players.js`     | Lista achatada de jogadores (auxiliar; não usada pelo jogo) |
+| `formations.js`  | Coordenadas das posições de cada esquema tático          |
+| `game.js`        | Lógica: sorteio de seleção/Copa, escalação e resultado   |
+| `7a0-completo.html` | Versão single-file (tudo embutido), gerada por `build_standalone.py` |
 
 ## Base de jogadores
 
-`players.js` é **gerado** por `build_players.py` e contém **mais de 6.000 jogadores
-reais** de todas as Copas do Mundo de **1970 a 2022** (nome, posição, seleção,
-edições e overall). Cada objeto tem o formato:
+`squads.js` é **gerado** por `build_players.py` e preserva os **elencos reais**
+(cada seleção de cada Copa, 1970–2022) — é a base que o jogo sorteia. Formato:
 
 ```js
-{ name: "Lionel Messi", cat: "FWD", ovr: 96, flag: "🇦🇷", nat: "Argentina", era: "2010–2022" }
+{ team: "Argentina", year: 2022, flag: "🇦🇷",
+  players: [ { n: "Lionel Messi", c: "FWD", o: 96 }, /* ... */ ] }
 ```
 
-`cat`: `GK` (goleiro), `DEF` (defensor), `MID` (meio-campo) ou `FWD` (ataque).
+`c`: `GK` (goleiro), `DEF` (defensor), `MID` (meio-campo) ou `FWD` (ataque);
+`o`: overall. São **368 elencos / 8.381 jogadores** de 14 Copas (1970 a 2022).
 
 ### Fontes dos dados (domínio público)
 
@@ -68,8 +75,14 @@ Não existe um rating oficial válido para jogadores de todas as eras, então o
 - ajuste curado para **lendas reconhecidas** (faixa 91–99);
 - demais jogadores têm teto 90.
 
+> **2026:** o 7a0 original anuncia ir até 2026, mas os convocados da Copa de 2026
+> ainda não existem como dado aberto utilizável (a Copa é em jun/jul 2026 e as
+> listas só saem na véspera). O `build_players.py` está pronto para incluí-la
+> assim que houver uma fonte estática.
+
 Para regenerar a base (precisa clonar as duas fontes em `/tmp`):
 
 ```bash
-python3 build_players.py   # reescreve players.js
+python3 build_players.py     # reescreve squads.js (e players.js)
+python3 build_standalone.py  # reembrulha o 7a0-completo.html
 ```

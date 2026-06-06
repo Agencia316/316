@@ -63,18 +63,20 @@
         </div>
 
         <div class="side">
-          <h2 id="sideTitle">Escolha um goleiro</h2>
-          <div class="sub" id="sideSub">Toque numa posição do campo para escalar.</div>
+          <h2 id="sideTitle">Sorteando seleção…</h2>
+          <div class="sub" id="sideSub">O jogo sorteia uma seleção e uma Copa. Escolha um jogador daquele elenco.</div>
           <div class="progress"><i id="progBar"></i></div>
           <div id="picker">
-            <div class="picker-empty">Toque numa posição vazia do campo para ver os craques disponíveis.</div>
+            <div class="picker-empty">Sorteando o primeiro elenco…</div>
           </div>
           <div style="margin-top:16px; display:flex; gap:8px">
             <button class="btn green" id="btnFinish" disabled style="flex:1">Finalizar escalação</button>
           </div>
           <div class="hint">
-            Cada craque só pode ser escalado uma vez. Quanto melhor o elenco,
-            maior a goleada. Será que dá pra cravar o <b>7 a 0</b>? 🏆
+            A cada vez o jogo sorteia uma <b>seleção + Copa</b> (ex.: Brasil 1970).
+            Escolha um jogador do elenco para uma vaga. Use <b>🎲</b> para sortear outra
+            seleção e clique num jogador já no campo para <b>trocá-lo</b>.
+            Cada jogador entra uma vez só. Dá pra cravar o <b>7 a 0</b>? 🏆
           </div>
         </div>
       </div>
@@ -109,7 +111,7 @@
     </footer>
   </div>
 
-  <script src="players.js"></script>
+  <script src="squads.js"></script>
   <script src="formations.js"></script>
   <script src="game.js"></script>
 </body>

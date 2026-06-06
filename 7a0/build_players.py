@@ -161,7 +161,7 @@ def parse_wiki(path, year, records):
             if s.startswith("===") and not s.startswith("===="):
                 nation = parse_nation_header(s)
                 continue
-            if "nat fs player" not in s:
+            if "nat fs player" not in s and "National football squad player" not in s:
                 continue
             if nation is None:
                 continue
@@ -277,6 +277,56 @@ def main():
         f.write("   cat: GK (goleiro), DEF (defensor), MID (meio-campo), FWD (atacante). */\n")
         f.write(f"const PLAYERS = {json.dumps(players, ensure_ascii=False)};\n")
     sys.stderr.write(f"Escrito: {out}\n")
+
+    # ---------- squads.js: elencos preservados (seleção + Copa) ----------
+    # score canônico por jogador (mesmo overall em todas as Copas que disputou)
+    score_map, disp_map = {}, {}
+    for (name_c, nation), a in agg.items():
+        cat = max(a["pos"].items(), key=lambda kv: kv[1])[0]
+        score_map[(name_c, nation)] = compute_score(cat, a["caps"], len(a["years"]), name_c)
+
+    # agrupa por (nação, ano), dedup jogador dentro do elenco
+    squads = {}
+    for r in records:
+        nation, year = r["nation"], r["year"]
+        key = (nation, year)
+        sq = squads.setdefault(key, {})
+        pc = canon(r["name"])
+        if pc in sq:
+            continue
+        # nome de exibição mais completo visto p/ esse jogador
+        cur = disp_map.get((pc, nation))
+        if not cur or len(r["name"]) > len(cur):
+            disp_map[(pc, nation)] = r["name"]
+        sq[pc] = {"c": r["pos"], "raw": r["name"]}
+
+    squad_list = []
+    for (nation, year), sq in squads.items():
+        flag = FLAG.get(nation, "🏳️")
+        plist = []
+        for pc, info in sq.items():
+            name = disp_map.get((pc, nation), info["raw"])
+            ovr = score_map.get((pc, nation), 70)
+            plist.append({"n": name, "c": info["c"], "o": ovr})
+        # ordena por posição (GK,DEF,MID,FWD) e overall desc
+        order = {"GK": 0, "DEF": 1, "MID": 2, "FWD": 3}
+        plist.sort(key=lambda p: (order[p["c"]], -p["o"], p["n"]))
+        squad_list.append({"team": nation, "year": year, "flag": flag, "players": plist})
+
+    squad_list.sort(key=lambda s: (s["year"], s["team"]))
+    sys.stderr.write(f"Elencos (seleção×Copa): {len(squad_list)} | "
+                     f"jogadores totais: {sum(len(s['players']) for s in squad_list)}\n")
+
+    out2 = "/home/user/316/7a0/squads.js"
+    with open(out2, "w", encoding="utf-8") as f:
+        f.write("/* GERADO por build_players.py — NÃO editar à mão.\n")
+        f.write("   Elencos reais das Copas do Mundo (1970–2022), preservando seleção × edição.\n")
+        f.write("   Fontes: wikiscript/football.json (1970–2014) e openfootball/world-cup (2018–2022).\n")
+        f.write("   Cada item: { team, year, flag, players:[{n:nome, c:posição, o:overall}] }.\n")
+        f.write("   'o' (overall) é estimativa derivada (caps + Copas + ajuste de lendas), não oficial.\n")
+        f.write("   c: GK (goleiro), DEF (defensor), MID (meio-campo), FWD (atacante). */\n")
+        f.write(f"const SQUADS = {json.dumps(squad_list, ensure_ascii=False)};\n")
+    sys.stderr.write(f"Escrito: {out2}\n")
 
 if __name__ == "__main__":
     main()
