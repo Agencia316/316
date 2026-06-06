@@ -40,12 +40,36 @@ cd 7a0 && python3 -m http.server 8000
 | `formations.js`  | Coordenadas das posições de cada esquema tático         |
 | `game.js`        | Lógica do jogo: draft, escalação e cálculo do resultado |
 
-## Como adicionar jogadores
+## Base de jogadores
 
-Edite `players.js` e inclua um objeto na lista `PLAYERS`:
+`players.js` é **gerado** por `build_players.py` e contém **mais de 6.000 jogadores
+reais** de todas as Copas do Mundo de **1970 a 2022** (nome, posição, seleção,
+edições e overall). Cada objeto tem o formato:
 
 ```js
-{ name: "Nome",  cat: "MID", ovr: 90, flag: "🇧🇷", era: "2000–10" }
+{ name: "Lionel Messi", cat: "FWD", ovr: 96, flag: "🇦🇷", nat: "Argentina", era: "2010–2022" }
 ```
 
-`cat` pode ser `GK` (goleiro), `DEF` (defensor), `MID` (meio-campo) ou `FWD` (ataque).
+`cat`: `GK` (goleiro), `DEF` (defensor), `MID` (meio-campo) ou `FWD` (ataque).
+
+### Fontes dos dados (domínio público)
+
+- **1970–2014:** [`wikiscript/football.json`](https://github.com/wikiscript/football.json) — elencos da Wikipédia (inclui *caps*, jogos pela seleção).
+- **2018, 2022:** [`openfootball/world-cup`](https://github.com/openfootball/world-cup).
+
+### Sobre o "score" (overall)
+
+Não existe um rating oficial válido para jogadores de todas as eras, então o
+`ovr` é uma **estimativa derivada**, calculada em `build_players.py`:
+
+- base por posição;
+- **jogos pela seleção (caps)** — dado real, principal diferenciador;
+- bônus por disputar **várias Copas** (durabilidade);
+- ajuste curado para **lendas reconhecidas** (faixa 91–99);
+- demais jogadores têm teto 90.
+
+Para regenerar a base (precisa clonar as duas fontes em `/tmp`):
+
+```bash
+python3 build_players.py   # reescreve players.js
+```

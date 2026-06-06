@@ -10,6 +10,21 @@ const state = {
 const $ = (sel) => document.querySelector(sel);
 const shuffle = (arr) => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(p => p[1]);
 
+// amostra n jogadores sem repetição, com viés para overall mais alto
+// (assim craques aparecem mais, mas qualquer um dos milhares pode surgir)
+function weightedSample(pool, n) {
+  const items = pool.slice();
+  const out = [];
+  while (items.length && out.length < n) {
+    let total = 0;
+    const w = items.map(p => { const x = Math.pow(Math.max(1, p.ovr - 62), 3.2); total += x; return x; });
+    let r = Math.random() * total, i = 0;
+    while (i < items.length && (r -= w[i]) > 0) i++;
+    out.push(items.splice(Math.min(i, items.length - 1), 1)[0]);
+  }
+  return out;
+}
+
 /* ============ Telas ============ */
 function show(screenId) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
@@ -95,7 +110,7 @@ function selectSlot(i) {
   // gera candidatos se ainda não há (mantém estável ao reabrir o slot)
   if (!slot.candidates) {
     const pool = PLAYERS.filter(p => p.cat === slot.cat && !state.usedNames.has(p.name));
-    slot.candidates = shuffle(pool).slice(0, 4);
+    slot.candidates = weightedSample(pool, 5);
   }
 
   renderPitch();
@@ -122,7 +137,7 @@ function renderPicker(slot) {
       <span class="flag">${p.flag}</span>
       <div class="info">
         <b>${p.name}</b>
-        <small>${CAT_NAMES[p.cat]} · ${p.era}</small>
+        <small>${p.nat || CAT_NAMES[p.cat]} · ${CAT_NAMES[p.cat]} · Copa ${p.era}</small>
       </div>
       <div class="ovr ${showOvr ? "" : "hidden"}">${showOvr ? p.ovr : "?"}</div>
     </div>`).join("") + `</div>`;
