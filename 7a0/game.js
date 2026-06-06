@@ -347,8 +347,9 @@ function playCup(yourRating) {
       if (a.isYou || b.isYou) {
         const gf = a.isYou ? r.ga : r.gb, ga = a.isYou ? r.gb : r.ga;
         const pen = r.pen ? (a.isYou ? `${r.pen[0]}-${r.pen[1]}` : `${r.pen[1]}-${r.pen[0]}`) : null;
-        path.push({ round: name, opp: a.isYou ? b : a, gf, ga, pen, won: r.winner.isYou });
-        if (!r.winner.isYou) eliminatedAt = name;
+        const won = r.winner.isYou === true;
+        path.push({ round: name, opp: a.isYou ? b : a, gf, ga, pen, won });
+        if (!won) eliminatedAt = name;
       }
     }
     teams = next;
@@ -357,56 +358,92 @@ function playCup(yourRating) {
            path, champion: teams[0], eliminatedAt };
 }
 
-function renderCup(res) {
-  const g = res.group;
-  let html = "";
-
-  // desfecho
-  let banner;
-  if (g.advanced && res.champion.isYou)
-    banner = `<div class="cup-out champ"><div class="big">CAMPEÃ! 🏆</div><p>Sua seleção dos sonhos é campeã da Copa 2026 — rumo ao 7 a 0!</p></div>`;
-  else if (!g.advanced)
-    banner = `<div class="cup-out elim"><div class="big">Eliminada na fase de grupos 😞</div><p>Terminou em ${g.rank + 1}º do grupo. Campeã: ${res.champion.flag} ${res.champion.team}.</p></div>`;
-  else if (res.eliminatedAt === "Final")
-    banner = `<div class="cup-out vice"><div class="big">Vice-campeã 🥈</div><p>Chegou à final! Campeã: ${res.champion.flag} ${res.champion.team}.</p></div>`;
-  else
-    banner = `<div class="cup-out elim"><div class="big">Eliminada — ${res.eliminatedAt}</div><p>Campeã do torneio: ${res.champion.flag} ${res.champion.team}.</p></div>`;
-
-  // grupo
-  html += `<div class="cup-block"><h3>Fase de grupos · Grupo ${String.fromCharCode(65 + g.idx)}</h3>`;
-  html += `<table class="grp-table"><thead><tr><th>#</th><th>Seleção</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th></tr></thead><tbody>`;
-  g.table.forEach((s, i) => {
-    html += `<tr class="${s.t.isYou ? "me" : ""} ${i < 2 ? "adv" : ""}"><td>${i + 1}</td>` +
-            `<td>${s.t.flag} ${s.t.isYou ? "Sua Seleção" : s.t.team}</td>` +
-            `<td><b>${s.pts}</b></td><td>${s.j}</td><td>${s.v}</td><td>${s.e}</td><td>${s.d}</td>` +
-            `<td>${s.gd > 0 ? "+" : ""}${s.gd}</td></tr>`;
+function groupTableHtml(group) {
+  let h = `<table class="grp-table"><thead><tr><th>#</th><th>Seleção</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th></tr></thead><tbody>`;
+  group.table.forEach((s, i) => {
+    h += `<tr class="${s.t.isYou ? "me" : ""} ${i < 2 ? "adv" : ""}"><td>${i + 1}</td>` +
+         `<td>${s.t.flag} ${s.t.isYou ? "Sua Seleção" : s.t.team}</td>` +
+         `<td><b>${s.pts}</b></td><td>${s.j}</td><td>${s.v}</td><td>${s.e}</td><td>${s.d}</td>` +
+         `<td>${s.gd > 0 ? "+" : ""}${s.gd}</td></tr>`;
   });
-  html += `</tbody></table><div class="cup-matches">`;
-  g.matches.filter(m => m.a.isYou || m.b.isYou).forEach(m => {
+  return h + `</tbody></table>`;
+}
+
+function cupBanner(c) {
+  if (c.group.advanced && c.champion.isYou)
+    return `<div class="cup-out champ"><div class="big">CAMPEÃ! 🏆</div><p>Sua seleção dos sonhos é campeã da Copa 2026 — rumo ao 7 a 0!</p></div>`;
+  if (!c.group.advanced)
+    return `<div class="cup-out elim"><div class="big">Eliminada na fase de grupos 😞</div><p>Terminou em ${c.group.rank + 1}º do grupo. Campeã: ${c.champion.flag} ${c.champion.team}.</p></div>`;
+  if (c.eliminatedAt === "Final")
+    return `<div class="cup-out vice"><div class="big">Vice-campeã 🥈</div><p>Chegou à final! Campeã: ${c.champion.flag} ${c.champion.team}.</p></div>`;
+  return `<div class="cup-out elim"><div class="big">Eliminada — ${c.eliminatedAt}</div><p>Campeã do torneio: ${c.champion.flag} ${c.champion.team}.</p></div>`;
+}
+
+// lista ordenada dos SEUS jogos: 3 da fase de grupos + (se classificar) o mata-mata
+function cupEvents(c) {
+  const gm = c.group.matches.filter(m => m.a.isYou || m.b.isYou).map((m, i) => {
     const opp = m.a.isYou ? m.b : m.a, gf = m.a.isYou ? m.ga : m.gb, ga = m.a.isYou ? m.gb : m.ga;
-    const r = gf > ga ? "w" : gf < ga ? "l" : "d";
-    html += `<div class="cup-m ${r}"><span>⭐ Sua Seleção</span><b>${gf} - ${ga}</b><span>${opp.flag} ${opp.team}</span></div>`;
+    return { type: "group", n: i + 1, opp, gf, ga };
   });
-  html += `</div></div>`;
+  const ko = c.group.advanced ? c.path.map(p => ({ type: "ko", ...p })) : [];
+  return { gm, ko, total: gm.length + ko.length };
+}
 
-  // mata-mata
-  if (g.advanced) {
+const matchRow = (e, label, won) =>
+  `<div class="cup-m ${won}"><span class="rd">${label}</span><span>⭐ Sua Seleção</span>` +
+  `<b>${e.gf} - ${e.ga}${e.pen ? ` <small>(${e.pen} pên)</small>` : ""}</b>` +
+  `<span>${e.opp.flag} ${e.opp.team}</span></div>`;
+
+function renderCupStep() {
+  const c = state.cup;
+  const { gm, ko, total } = cupEvents(c);
+  const rev = state.cupReveal;
+  const done = rev >= total;
+  let html = done ? cupBanner(c) : "";
+
+  // ---- fase de grupos ----
+  html += `<div class="cup-block"><h3>Fase de grupos · Grupo ${String.fromCharCode(65 + c.group.idx)}</h3><div class="cup-matches">`;
+  const gShown = Math.min(rev, gm.length);
+  for (let i = 0; i < gShown; i++) {
+    const e = gm[i];
+    html += matchRow(e, `Jogo ${e.n}`, e.gf > e.ga ? "w" : e.gf < e.ga ? "l" : "d");
+  }
+  html += `</div>`;
+  if (gShown >= gm.length) {
+    html += groupTableHtml(c.group);
+    html += c.group.advanced
+      ? `<p class="cup-note ok">Classificada em ${c.group.rank + 1}º — avança ao mata-mata! ✅</p>`
+      : `<p class="cup-note no">Terminou em ${c.group.rank + 1}º e não avançou. 😞</p>`;
+  }
+  html += `</div>`;
+
+  // ---- mata-mata ----
+  if (c.group.advanced && rev > gm.length) {
     html += `<div class="cup-block"><h3>Mata-mata</h3><div class="cup-matches">`;
-    res.path.forEach(p => {
-      html += `<div class="cup-m ${p.won ? "w" : "l"}"><span class="rd">${p.round}</span>` +
-              `<span>⭐ Sua Seleção</span><b>${p.gf} - ${p.ga}${p.pen ? ` <small>(${p.pen} pên)</small>` : ""}</b>` +
-              `<span>${p.opp.flag} ${p.opp.team}</span></div>`;
-    });
+    const kShown = Math.min(rev - gm.length, ko.length);
+    for (let i = 0; i < kShown; i++) html += matchRow(ko[i], ko[i].round, ko[i].won ? "w" : "l");
     html += `</div></div>`;
   }
 
-  $("#cupBody").innerHTML = banner + html;
-  $("#cupRating").textContent = res.you.rating.toFixed(1);
+  // ---- botão "jogar próximo jogo" ----
+  if (!done) {
+    let label;
+    if (rev < gm.length) label = `▶ Jogar jogo ${rev + 1} da fase de grupos`;
+    else label = `▶ Jogar a ${ko[rev - gm.length].round}`;
+    html += `<div class="cup-next"><button class="btn green big-btn" id="btnCupNext">${label}</button></div>`;
+  }
+
+  $("#cupBody").innerHTML = html;
+  const next = $("#btnCupNext");
+  if (next) next.onclick = () => { state.cupReveal++; renderCupStep(); };
 }
 
 function playAndShowCup() {
-  renderCup(playCup(state.teamAvg));
+  state.cup = playCup(state.teamAvg);
+  state.cupReveal = 0;
+  $("#cupRating").textContent = state.cup.you.rating.toFixed(1);
   show("screen-cup");
+  renderCupStep();
 }
 
 /* ============ Eventos ============ */

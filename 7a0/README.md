@@ -18,12 +18,15 @@ selecionando craques de todas as eras do futebol. O objetivo é ganhar de **7 a 
    - Cada jogador só pode entrar uma vez.
 4. **Finalize:** o overall médio do time define o placar — quanto melhor a
    escalação, maior a goleada. Será que dá pra cravar o 7 a 0?
-5. **Dispute a Copa 2026:** na tela de resultado, clique em **🏆 Disputar a Copa
-   2026** para levar sua escalação a um torneio completo no formato oficial — 48
-   seleções em 12 grupos, depois mata-mata (16-avos → oitavas → quartas → semi →
-   final). Os adversários são seleções reais da base, com a força do melhor
-   elenco histórico de cada uma. Os jogos são simulados (gols por distribuição de
-   Poisson conforme a diferença de força; empate no mata-mata vai aos pênaltis).
+5. **Dispute a Copa 2026 (jogo a jogo):** na tela de resultado, clique em
+   **🏆 Disputar a Copa 2026**. Sua escalação entra num torneio no formato oficial
+   — 48 seleções em 12 grupos, depois mata-mata (16-avos → oitavas → quartas →
+   semi → final). Você avança **um jogo por vez** clicando em *Jogar próximo jogo*:
+   cada partida é revelada, a tabela do grupo aparece ao fim da 1ª fase e o caminho
+   no mata-mata vai sendo montado até o título, o vice ou a eliminação. Os
+   adversários são seleções reais da base (força do melhor elenco histórico de
+   cada uma); os gols saem por distribuição de Poisson conforme a diferença de
+   força, e empate no mata-mata vai aos pênaltis.
 
 ## Como rodar
 

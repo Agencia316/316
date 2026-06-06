@@ -229,5 +229,11 @@ body {
 .cup-m.l { border-left-color: #f87171; }
 .cup-m.d { border-left-color: #94a3b8; }
 
+.cup-note { text-align: center; font-weight: 700; margin-top: 10px; padding: 8px; border-radius: 9px; }
+.cup-note.ok { color: #4ade80; background: rgba(22,163,74,.12); }
+.cup-note.no { color: #f87171; background: rgba(248,113,113,.1); }
+.cup-next { text-align: center; margin: 18px 0 4px; }
+.big-btn { font-size: 17px; padding: 14px 28px; animation: pulse 1.5s infinite; }
+
 footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 34px; }
 footer a { color: var(--muted); }
