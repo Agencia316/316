@@ -5,7 +5,8 @@ const state = {
   slots: [],                 // formação + {player}
   currentSquad: null,        // elenco sorteado (seleção × Copa)
   usedKeys: new Set(),       // "nome|seleção" já escalados
-  swapCat: null,             // categoria que está sendo trocada (destaque)
+  activeSlot: null,          // índice do slot que está sendo escalado
+  teamAvg: 0,                // força média do XI (definida ao finalizar)
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -50,35 +51,32 @@ function startGame() {
   state.slots = FORMATIONS[state.formationKey].map(s => ({ ...s, player: null }));
   state.usedKeys = new Set();
   state.currentSquad = null;
-  state.swapCat = null;
+  state.activeSlot = state.slots.findIndex(s => !s.player);   // 1ª vaga
   renderPitch();
   updateProgress();
   drawSquad();
   show("screen-game");
 }
 
-/* ============ Sorteio de seleção × Copa ============ */
-function openCats() {
-  const set = new Set();
-  state.slots.forEach(s => { if (!s.player) set.add(s.cat); });
-  return set;
+/* ============ Sorteio de seleção × Copa (para a posição ativa) ============ */
+function activeCat() {
+  return state.activeSlot != null ? state.slots[state.activeSlot].cat : null;
 }
-
-// um elenco é "útil" se tem algum jogador de categoria ainda aberta e não usado
-function squadIsUseful(sq, cats) {
-  return sq.players.some(p => cats.has(p.c) && !state.usedKeys.has(keyOf(p.n, sq.team)));
+// um elenco serve se tem jogador da posição ativa ainda não escalado
+function squadHasCat(sq, cat) {
+  return sq.players.some(p => p.c === cat && !state.usedKeys.has(keyOf(p.n, sq.team)));
 }
 
 function drawSquad() {
-  const cats = openCats();
-  if (cats.size === 0) { state.currentSquad = null; renderSquadComplete(); return; }
+  const cat = activeCat();
+  if (cat == null) { state.currentSquad = null; renderSquadComplete(); return; }
   let chosen = null;
-  for (let t = 0; t < 60; t++) {
+  for (let t = 0; t < 80; t++) {
     const sq = SQUADS[Math.floor(Math.random() * SQUADS.length)];
-    if (sq !== state.currentSquad && squadIsUseful(sq, cats)) { chosen = sq; break; }
+    if (sq !== state.currentSquad && squadHasCat(sq, cat)) { chosen = sq; break; }
   }
   if (!chosen) {
-    const ok = SQUADS.filter(sq => squadIsUseful(sq, cats));
+    const ok = SQUADS.filter(sq => squadHasCat(sq, cat));
     chosen = ok.length ? ok[Math.floor(Math.random() * ok.length)] : null;
   }
   state.currentSquad = chosen;
@@ -92,8 +90,8 @@ function renderPitch() {
 
   state.slots.forEach((slot, i) => {
     const el = document.createElement("div");
-    const highlight = state.swapCat === null && !slot.player && openCats().has(slot.cat);
-    el.className = "slot" + (slot.player ? " filled" : "") + (highlight ? " open" : "");
+    const active = state.activeSlot === i && !slot.player;
+    el.className = "slot" + (slot.player ? " filled" : "") + (active ? " active" : "");
     el.style.left = slot.x + "%";
     el.style.top = slot.y + "%";
 
@@ -104,9 +102,10 @@ function renderPitch() {
         <div class="nm">${shortName(slot.player.name)}</div>
         ${showOvr ? `<span class="ov">${slot.player.ovr}</span>` : ""}`;
       el.title = `${slot.player.name} — ${slot.player.nat} ${slot.player.year} · clique para trocar`;
-      el.onclick = () => removePlayer(i);
+      el.onclick = () => swapSlot(i);
     } else {
       el.innerHTML = `<div class="badge">${slot.label}</div><div class="nm"></div>`;
+      el.onclick = () => focusSlot(i);
     }
     pitch.appendChild(el);
   });
@@ -117,49 +116,60 @@ function shortName(name) {
   return parts.length > 1 && name.length > 12 ? parts[parts.length - 1] : name;
 }
 
-/* ============ Painel do elenco sorteado ============ */
-const GROUP_ORDER = ["GK", "DEF", "MID", "FWD"];
+// escolher qual posição vazia escalar agora
+function focusSlot(i) {
+  if (state.slots[i].player) return;
+  state.activeSlot = i;
+  drawSquad();
+}
 
+// trocar um jogador já escalado: libera a vaga e sorteia nova seleção
+function swapSlot(i) {
+  const slot = state.slots[i];
+  if (!slot.player) return;
+  state.usedKeys.delete(keyOf(slot.player.name, slot.player.nat));
+  slot.player = null;
+  state.activeSlot = i;
+  updateProgress();
+  drawSquad();
+}
+
+/* ============ Painel: jogadores da seleção sorteada na posição ativa ============ */
 function renderSquadPanel() {
   const sq = state.currentSquad;
-  const cats = openCats();
+  if (state.activeSlot == null || !sq) { renderSquadComplete(); return; }
+  const slot = state.slots[state.activeSlot];
+  const cat = slot.cat;
   const filled = state.slots.filter(s => s.player).length;
 
-  if (!sq) { renderSquadComplete(); return; }
-
   $("#sideTitle").innerHTML = `${sq.flag} ${sq.team} <span class="yr">Copa ${sq.year}</span>`;
-  $("#sideSub").textContent = state.swapCat
-    ? `Trocando ${CAT_NAMES[state.swapCat].toLowerCase()}: escolha um jogador deste elenco (ou sorteie outra seleção).`
-    : `Escolha um jogador deste elenco para uma posição em aberto. Faltam ${state.slots.length - filled}.`;
+  $("#sideSub").innerHTML =
+    `Escalando <b>${slot.label}</b> (${CAT_NAMES[cat].toLowerCase()}) — faltam ${state.slots.length - filled}.<br/>` +
+    `Escolha um jogador desta seleção:`;
 
   const showOvr = state.mode === "classico";
-  let html = `<div class="squad-actions">
-      <button class="btn ghost sm" id="btnReroll">🎲 Trocar seleção / Copa</button>
-    </div><div class="squad-scroll">`;
+  const group = sq.players.filter(p => p.c === cat)
+                  .sort((a, b) => b.o - a.o);
 
-  GROUP_ORDER.forEach(cat => {
-    const group = sq.players.filter(p => p.c === cat);
-    if (!group.length) return;
-    html += `<div class="grp-label">${CAT_NAMES[cat]}</div><div class="cards">`;
-    group.forEach((p) => {
-      const used = state.usedKeys.has(keyOf(p.n, sq.team));
-      const placeable = cats.has(cat) && !used;
-      html += `
-        <div class="pcard ${placeable ? "" : "disabled"}" data-name="${encodeURIComponent(p.n)}" data-cat="${cat}" data-ovr="${p.o}">
-          <span class="flag">${sq.flag}</span>
-          <div class="info">
-            <b>${p.n}</b>
-            <small>${CAT_NAMES[cat]}${used ? " · já escalado" : (placeable ? "" : " · posição cheia")}</small>
-          </div>
-          <div class="ovr ${showOvr ? "" : "hidden"}">${showOvr ? p.o : "?"}</div>
-        </div>`;
-    });
-    html += `</div>`;
+  let html = `<div class="squad-actions">
+      <button class="btn ghost sm" id="btnReroll">🎲 Sortear outra seleção / Copa</button>
+    </div><div class="squad-scroll"><div class="cards">`;
+  group.forEach(p => {
+    const used = state.usedKeys.has(keyOf(p.n, sq.team));
+    html += `
+      <div class="pcard ${used ? "disabled" : ""}" data-name="${encodeURIComponent(p.n)}" data-ovr="${p.o}">
+        <span class="flag">${sq.flag}</span>
+        <div class="info">
+          <b>${p.n}</b>
+          <small>${CAT_NAMES[cat]}${used ? " · já escalado" : ""}</small>
+        </div>
+        <div class="ovr ${showOvr ? "" : "hidden"}">${showOvr ? p.o : "?"}</div>
+      </div>`;
   });
-  html += `</div>`;
+  html += `</div></div>`;
 
   $("#picker").innerHTML = html;
-  $("#btnReroll").onclick = () => { state.swapCat = null; renderPitch(); drawSquad(); };
+  $("#btnReroll").onclick = () => drawSquad();
   $("#picker").querySelectorAll(".pcard:not(.disabled)").forEach(card => {
     card.onclick = () => placeFromCard(card);
   });
@@ -168,32 +178,19 @@ function renderSquadPanel() {
 
 function placeFromCard(card) {
   const name = decodeURIComponent(card.dataset.name);
-  const cat = card.dataset.cat;
   const ovr = parseInt(card.dataset.ovr, 10);
   const sq = state.currentSquad;
+  const slot = state.slots[state.activeSlot];
+  if (!slot || slot.player) return;
 
-  // preenche a vaga: a que está em troca (se for da mesma categoria) ou a 1ª aberta
-  let idx = state.swapCat === cat ? state.slots.findIndex(s => !s.player && s.cat === cat) : -1;
-  if (idx === -1) idx = state.slots.findIndex(s => !s.player && s.cat === cat);
-  if (idx === -1) return;
-
-  state.slots[idx].player = { name, cat, ovr, flag: sq.flag, nat: sq.team, year: sq.year };
+  slot.player = { name, cat: slot.cat, ovr, flag: sq.flag, nat: sq.team, year: sq.year };
   state.usedKeys.add(keyOf(name, sq.team));
-  state.swapCat = null;
   updateProgress();
 
-  if (openCats().size === 0) { state.currentSquad = null; renderPitch(); renderSquadComplete(); }
-  else drawSquad();   // sorteia uma nova seleção para a próxima vaga
-}
-
-function removePlayer(i) {
-  const slot = state.slots[i];
-  if (!slot.player) return;
-  state.usedKeys.delete(keyOf(slot.player.name, slot.player.nat));
-  slot.player = null;
-  state.swapCat = slot.cat;       // foco em recompor essa posição
-  updateProgress();
-  drawSquad();                    // novo sorteio para a posição trocada
+  const next = state.slots.findIndex(s => !s.player);
+  state.activeSlot = next;
+  if (next === -1) { state.currentSquad = null; renderPitch(); renderSquadComplete(); }
+  else drawSquad();   // sorteia uma nova seleção para a próxima posição
 }
 
 function renderSquadComplete() {
