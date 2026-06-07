@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7 a 0 — Monte sua Seleção dos Sonhos</title>
+  <meta name="description" content="Vire técnico, escolha o esquema tático e monte a seleção dos sonhos com craques de todas as eras. Ganhe de 7 a 0!" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="logo">
+        <b>SETE</b><span class="score">7</span><b>a</b><span class="score">0</span>
+        <span>monte sua seleção dos sonhos</span>
+      </div>
+      <div class="right">
+        <button class="btn ghost icon-btn" id="btnTheme" title="Alternar tema claro/escuro">☀️</button>
+        <button class="btn ghost" id="btnRestart" style="display:none">↺ Recomeçar</button>
+      </div>
+    </div>
+
+    <!-- ============ TELA INICIAL ============ -->
+    <section class="screen active" id="screen-start">
+      <div class="hero">
+        <h1>Ganhe de <span class="score">7 a 0</span></h1>
+        <p>Role o dado: sai uma seleção e uma Copa. Escale um craque que esteve lá,<br/>
+           complete os 11 e simule — seu time faz 7 a 0?</p>
+        <p class="hero-counts"><b>83</b> seleções · <b>445</b> elencos · <b>10.069</b> jogadores reais · <b>1950–2022</b></p>
+      </div>
+
+      <div class="panel">
+        <h3>1. Modo de jogo</h3>
+        <div class="opt-grid" id="modeGrid">
+          <button class="opt sel" data-mode="classico">
+            <b>⚽ Clássico</b><small>Você vê o overall de cada craque</small>
+          </button>
+          <button class="opt" data-mode="almanaque">
+            <b>🧠 Almanaque</b><small>Overall escondido — jogue de memória</small>
+          </button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>2. Esquema tático</h3>
+        <div class="opt-grid" id="formGrid"></div>
+      </div>
+
+      <div class="panel">
+        <h3>3. Estilo de jogo</h3>
+        <div class="opt-grid" id="styleGrid">
+          <button class="opt" data-style="defensivo">
+            <b>🛡️ Defensivo</b><small>Marca menos, mas sofre bem menos gols</small>
+          </button>
+          <button class="opt sel" data-style="equilibrado">
+            <b>⚖️ Equilibrado</b><small>Ataque e defesa em equilíbrio</small>
+          </button>
+          <button class="opt" data-style="ofensivo">
+            <b>⚔️ Ofensivo</b><small>Marca mais, mas fica mais exposto</small>
+          </button>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:24px">
+        <button class="btn green" id="btnStart" style="font-size:18px; padding:14px 34px">Começar a escalar →</button>
+      </div>
+    </section>
+
+    <!-- ============ TELA DE JOGO ============ -->
+    <section class="screen" id="screen-game">
+      <div class="game-grid">
+        <div class="pitch-wrap">
+          <div class="pitch" id="pitch">
+            <div class="lines">
+              <div class="circle"></div>
+              <div class="box-top"></div>
+              <div class="box-bot"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="side">
+          <h2 id="sideTitle">Sorteando seleção…</h2>
+          <div class="sub" id="sideSub">O jogo sorteia uma seleção e uma Copa. Escolha um jogador daquele elenco.</div>
+          <div class="progress"><i id="progBar"></i></div>
+          <div id="picker">
+            <div class="picker-empty">Sorteando o primeiro elenco…</div>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:8px">
+            <button class="btn green" id="btnFinish" disabled style="flex:1">Finalizar escalação</button>
+          </div>
+          <div class="hint">
+            Para cada posição, o jogo sorteia uma <b>seleção + Copa</b> (ex.: Brasil 1970)
+            e mostra os jogadores dela <b>naquela posição</b>. Escolha um. Use <b>🎲</b> para
+            sortear outra seleção, clique numa <b>vaga vazia</b> do campo para escalá-la antes
+            das outras, e num <b>jogador já escalado</b> para trocá-lo. Cada jogador entra uma
+            vez só. Dá pra cravar o <b>7 a 0</b>? 🏆
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TELA DE RESULTADO ============ -->
+    <section class="screen" id="screen-result">
+      <div class="result">
+        <div class="big" id="rScore">7 - 0</div>
+        <h2 id="rTitle"></h2>
+        <div class="stars" id="rStars"></div>
+        <p id="rMsg"></p>
+        <div class="stat-row">
+          <div class="s"><b id="rOvr">—</b><span>Overall do time</span></div>
+          <div class="s"><b id="rForm">—</b><span>Esquema</span></div>
+          <div class="s"><b id="rStar">—</b><span>Craque do time</span></div>
+        </div>
+        <div class="lineup-mini" id="rLineup"></div>
+        <div>
+          <button class="btn" id="btnShare">📋 Compartilhar link</button>
+          <button class="btn ghost" id="btnAgain">Nova escalação</button>
+          <button class="btn green" id="btnCup">🏆 Simular a Copa →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TELA DA COPA 2026 ============ -->
+    <section class="screen" id="screen-cup">
+      <div class="cup-head">
+        <h1>🏆 Copa do Mundo 2026</h1>
+        <p>Sua seleção (força <b id="cupRating">—</b>) entre 48 seleções reais. Jogue <b>jogo a jogo</b>: grupos e mata-mata.</p>
+      </div>
+      <div id="cupBody"></div>
+      <div style="text-align:center; margin-top:22px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap">
+        <button class="btn ghost" id="btnCupBack">← Voltar ao resultado</button>
+        <button class="btn ghost" id="btnCupAgain">🎲 Recomeçar a Copa</button>
+        <button class="btn ghost" id="btnCupNew">Nova escalação</button>
+      </div>
+    </section>
+
+    <footer>
+      Recriação do conceito de <a href="https://7a0.com.br" target="_blank" rel="noopener">7a0.com.br</a> — projeto de estudo.<br/>
+      Elencos reais das Copas (1950–2022). Fontes de domínio público:
+      <a href="https://github.com/wikiscript/football.json" target="_blank" rel="noopener">wikiscript/football.json</a> e
+      <a href="https://github.com/openfootball/world-cup" target="_blank" rel="noopener">openfootball/world-cup</a>.
+      O <i>overall</i> é uma estimativa derivada (jogos pela seleção + ajustes), não um rating oficial.
+    </footer>
+  </div>
+
+  <script src="squads.js"></script>
+  <script src="formations.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
