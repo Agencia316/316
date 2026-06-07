@@ -244,3 +244,42 @@ body {
 
 footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 34px; }
 footer a { color: var(--muted); }
+
+/* ---------- Reroll buttons ---------- */
+.squad-actions { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.reroll-btn { flex: 1; min-width: 0; font-size: 12px !important; padding: 7px 10px !important; }
+.reroll-count { font-size: 10px; opacity: .75; display: block; font-weight: 400; }
+
+/* ---------- Theme button ---------- */
+.icon-btn { padding: 8px 12px; font-size: 18px; line-height: 1; }
+
+/* ---------- Light theme ---------- */
+[data-theme="light"] {
+  --bg: #e8f5ee;
+  --bg2: #d4edde;
+  --green: #16a34a;
+  --green-d: #15803d;
+  --gold: #b45309;
+  --line: rgba(0, 0, 0, 0.3);
+  --card: #c8e6d0;
+  --ink: #0a1f12;
+  --muted: #2d6040;
+}
+[data-theme="light"] body {
+  background: radial-gradient(1200px 700px at 50% -10%, #b7dfc7, var(--bg));
+}
+[data-theme="light"] .logo .score { background: rgba(180,83,9,.12); }
+[data-theme="light"] .opt { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.15); }
+[data-theme="light"] .opt.sel { border-color: var(--gold); background: rgba(180,83,9,.1); }
+[data-theme="light"] .panel { background: linear-gradient(180deg, var(--card), #b0d8bc); border-color: rgba(0,0,0,.1); }
+[data-theme="light"] .pcard { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.12); }
+[data-theme="light"] .pcard:hover { border-color: var(--gold); background: rgba(180,83,9,.07); }
+[data-theme="light"] .btn.ghost { color: var(--ink); border-color: rgba(0,0,0,.2); }
+[data-theme="light"] .pitch { background: repeating-linear-gradient(180deg, #3dba6e 0 8.33%, #37b066 8.33% 16.66%); border-color: rgba(0,0,0,.2); }
+[data-theme="light"] .slot .badge { background: rgba(255,255,255,.5); border-color: rgba(0,0,0,.4); }
+[data-theme="light"] .slot.filled .badge { background: radial-gradient(circle at 30% 25%, #2e8a50, #1a5c35); border-color: var(--gold); }
+[data-theme="light"] .cup-block { background: var(--card); border-color: rgba(0,0,0,.1); }
+[data-theme="light"] .cup-m { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.1); }
+[data-theme="light"] .sim-toggle { border-color: rgba(0,0,0,.2); }
+[data-theme="light"] .sim-toggle button { color: var(--muted); }
+[data-theme="light"] .sim-toggle button.on { background: var(--gold); color: #fff; }

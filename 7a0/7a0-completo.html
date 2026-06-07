@@ -253,6 +253,45 @@ body {
 footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 34px; }
 footer a { color: var(--muted); }
 
+/* ---------- Reroll buttons ---------- */
+.squad-actions { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.reroll-btn { flex: 1; min-width: 0; font-size: 12px !important; padding: 7px 10px !important; }
+.reroll-count { font-size: 10px; opacity: .75; display: block; font-weight: 400; }
+
+/* ---------- Theme button ---------- */
+.icon-btn { padding: 8px 12px; font-size: 18px; line-height: 1; }
+
+/* ---------- Light theme ---------- */
+[data-theme="light"] {
+  --bg: #e8f5ee;
+  --bg2: #d4edde;
+  --green: #16a34a;
+  --green-d: #15803d;
+  --gold: #b45309;
+  --line: rgba(0, 0, 0, 0.3);
+  --card: #c8e6d0;
+  --ink: #0a1f12;
+  --muted: #2d6040;
+}
+[data-theme="light"] body {
+  background: radial-gradient(1200px 700px at 50% -10%, #b7dfc7, var(--bg));
+}
+[data-theme="light"] .logo .score { background: rgba(180,83,9,.12); }
+[data-theme="light"] .opt { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.15); }
+[data-theme="light"] .opt.sel { border-color: var(--gold); background: rgba(180,83,9,.1); }
+[data-theme="light"] .panel { background: linear-gradient(180deg, var(--card), #b0d8bc); border-color: rgba(0,0,0,.1); }
+[data-theme="light"] .pcard { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.12); }
+[data-theme="light"] .pcard:hover { border-color: var(--gold); background: rgba(180,83,9,.07); }
+[data-theme="light"] .btn.ghost { color: var(--ink); border-color: rgba(0,0,0,.2); }
+[data-theme="light"] .pitch { background: repeating-linear-gradient(180deg, #3dba6e 0 8.33%, #37b066 8.33% 16.66%); border-color: rgba(0,0,0,.2); }
+[data-theme="light"] .slot .badge { background: rgba(255,255,255,.5); border-color: rgba(0,0,0,.4); }
+[data-theme="light"] .slot.filled .badge { background: radial-gradient(circle at 30% 25%, #2e8a50, #1a5c35); border-color: var(--gold); }
+[data-theme="light"] .cup-block { background: var(--card); border-color: rgba(0,0,0,.1); }
+[data-theme="light"] .cup-m { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.1); }
+[data-theme="light"] .sim-toggle { border-color: rgba(0,0,0,.2); }
+[data-theme="light"] .sim-toggle button { color: var(--muted); }
+[data-theme="light"] .sim-toggle button.on { background: var(--gold); color: #fff; }
+
   </style>
 </head>
 <body>
@@ -263,6 +302,7 @@ footer a { color: var(--muted); }
         <span>monte sua seleção dos sonhos</span>
       </div>
       <div class="right">
+        <button class="btn ghost icon-btn" id="btnTheme" title="Alternar tema claro/escuro">☀️</button>
         <button class="btn ghost" id="btnRestart" style="display:none">↺ Recomeçar</button>
       </div>
     </div>
@@ -361,7 +401,7 @@ footer a { color: var(--muted); }
         </div>
         <div class="lineup-mini" id="rLineup"></div>
         <div>
-          <button class="btn" id="btnShare">📋 Copiar resultado</button>
+          <button class="btn" id="btnShare">📋 Compartilhar link</button>
           <button class="btn ghost" id="btnAgain">Nova escalação</button>
           <button class="btn green" id="btnCup">🏆 Simular a Copa →</button>
         </div>
@@ -488,21 +528,36 @@ const CAT_NAMES = { GK: "Goleiro", DEF: "Defensor", MID: "Meio-campo", FWD: "Ata
 
 /* ============ Estado ============ */
 const state = {
-  mode: "classico",          // "classico" | "almanaque"
+  mode: "classico",
   formationKey: "3-4-3",
-  slots: [],                 // formação + {player}
-  currentSquad: null,        // elenco sorteado (seleção × Copa)
-  usedKeys: new Set(),       // "nome|seleção" já escalados
-  activeSlot: null,          // índice do slot que está sendo escalado
-  teamAvg: 0,                // força média do XI (definida ao finalizar)
-  style: "equilibrado",      // estilo: defensivo | equilibrado | ofensivo
-  cup: null,                 // resultado da Copa
-  cupReveal: 0,              // jogos revelados (modo jogo a jogo)
-  simAuto: false,            // false = jogo a jogo, true = automático
+  slots: [],
+  currentSquad: null,
+  usedKeys: new Set(),
+  activeSlot: null,
+  teamAvg: 0,
+  style: "equilibrado",
+  cup: null,
+  cupReveal: 0,
+  simAuto: false,
+  rerollsLeft: 5,
 };
 
 const $ = (sel) => document.querySelector(sel);
 const keyOf = (name, team) => name + "|" + team;
+
+/* ============ Temas ============ */
+function applyTheme(t) {
+  document.body.dataset.theme = t;
+  const btn = $("#btnTheme");
+  if (btn) btn.textContent = t === "light" ? "🌙" : "☀️";
+  try { localStorage.setItem("7a0-theme", t); } catch {}
+}
+function toggleTheme() {
+  applyTheme(document.body.dataset.theme === "light" ? "dark" : "light");
+}
+(function initTheme() {
+  try { const t = localStorage.getItem("7a0-theme"); if (t) applyTheme(t); } catch {}
+})();
 
 /* ============ Telas ============ */
 function show(screenId) {
@@ -536,6 +591,10 @@ function buildStartScreen() {
       btn.classList.add("sel");
     };
   });
+  // Sync selected state to current mode
+  $("#modeGrid").querySelectorAll(".opt").forEach(btn => {
+    btn.classList.toggle("sel", btn.dataset.mode === state.mode);
+  });
 
   $("#styleGrid").querySelectorAll(".opt").forEach(btn => {
     btn.onclick = () => {
@@ -544,6 +603,10 @@ function buildStartScreen() {
       btn.classList.add("sel");
     };
   });
+  // Sync selected state to current style
+  $("#styleGrid").querySelectorAll(".opt").forEach(btn => {
+    btn.classList.toggle("sel", btn.dataset.style === state.style);
+  });
 }
 
 /* ============ Iniciar partida ============ */
@@ -551,36 +614,52 @@ function startGame() {
   state.slots = FORMATIONS[state.formationKey].map(s => ({ ...s, player: null }));
   state.usedKeys = new Set();
   state.currentSquad = null;
-  state.activeSlot = state.slots.findIndex(s => !s.player);   // 1ª vaga
+  state.rerollsLeft = 5;
+  state.activeSlot = state.slots.findIndex(s => !s.player);
   renderPitch();
   updateProgress();
   drawSquad();
   show("screen-game");
 }
 
-/* ============ Sorteio de seleção × Copa (para a posição ativa) ============ */
+/* ============ Sorteio de seleção × Copa ============ */
 function activeCat() {
   return state.activeSlot != null ? state.slots[state.activeSlot].cat : null;
 }
-// um elenco serve se tem jogador da posição ativa ainda não escalado
 function squadHasCat(sq, cat) {
   return sq.players.some(p => p.c === cat && !state.usedKeys.has(keyOf(p.n, sq.team)));
 }
 
-function drawSquad() {
+function drawSquad(keepYear = false) {
   const cat = activeCat();
   if (cat == null) { state.currentSquad = null; renderSquadComplete(); return; }
+  const currentYear = keepYear && state.currentSquad ? state.currentSquad.year : null;
   let chosen = null;
-  for (let t = 0; t < 80; t++) {
-    const sq = SQUADS[Math.floor(Math.random() * SQUADS.length)];
-    if (sq !== state.currentSquad && squadHasCat(sq, cat)) { chosen = sq; break; }
+
+  if (currentYear) {
+    const sameYear = SQUADS.filter(sq => sq.year === currentYear && sq !== state.currentSquad && squadHasCat(sq, cat));
+    if (sameYear.length) chosen = sameYear[Math.floor(Math.random() * sameYear.length)];
   }
+
   if (!chosen) {
-    const ok = SQUADS.filter(sq => squadHasCat(sq, cat));
-    chosen = ok.length ? ok[Math.floor(Math.random() * ok.length)] : null;
+    for (let t = 0; t < 80; t++) {
+      const sq = SQUADS[Math.floor(Math.random() * SQUADS.length)];
+      if (sq !== state.currentSquad && squadHasCat(sq, cat)) { chosen = sq; break; }
+    }
+    if (!chosen) {
+      const ok = SQUADS.filter(sq => squadHasCat(sq, cat));
+      chosen = ok.length ? ok[Math.floor(Math.random() * ok.length)] : null;
+    }
   }
+
   state.currentSquad = chosen;
   renderSquadPanel();
+}
+
+function doReroll(keepYear) {
+  if (state.rerollsLeft <= 0) return;
+  state.rerollsLeft--;
+  drawSquad(keepYear);
 }
 
 /* ============ Campo ============ */
@@ -616,14 +695,12 @@ function shortName(name) {
   return parts.length > 1 && name.length > 12 ? parts[parts.length - 1] : name;
 }
 
-// escolher qual posição vazia escalar agora
 function focusSlot(i) {
   if (state.slots[i].player) return;
   state.activeSlot = i;
   drawSquad();
 }
 
-// trocar um jogador já escalado: libera a vaga e sorteia nova seleção
 function swapSlot(i) {
   const slot = state.slots[i];
   if (!slot.player) return;
@@ -634,13 +711,16 @@ function swapSlot(i) {
   drawSquad();
 }
 
-/* ============ Painel: jogadores da seleção sorteada na posição ativa ============ */
+/* ============ Painel lateral ============ */
 function renderSquadPanel() {
   const sq = state.currentSquad;
   if (state.activeSlot == null || !sq) { renderSquadComplete(); return; }
   const slot = state.slots[state.activeSlot];
   const cat = slot.cat;
   const filled = state.slots.filter(s => s.player).length;
+  const rerolls = state.rerollsLeft;
+  const noRolls = rerolls <= 0;
+  const rollLabel = `${rerolls} restante${rerolls !== 1 ? "s" : ""}`;
 
   $("#sideTitle").innerHTML = `${sq.flag} ${sq.team} <span class="yr">Copa ${sq.year}</span>`;
   $("#sideSub").innerHTML =
@@ -648,11 +728,11 @@ function renderSquadPanel() {
     `Escolha um jogador desta seleção:`;
 
   const showOvr = state.mode === "classico";
-  const group = sq.players.filter(p => p.c === cat)
-                  .sort((a, b) => b.o - a.o);
+  const group = sq.players.filter(p => p.c === cat).sort((a, b) => b.o - a.o);
 
   let html = `<div class="squad-actions">
-      <button class="btn ghost sm" id="btnReroll">🎲 Sortear outra seleção / Copa</button>
+      <button class="btn ghost sm reroll-btn" id="btnRerollSel" ${noRolls ? "disabled" : ""}>↺ Outra seleção <span class="reroll-count">${rollLabel}</span></button>
+      <button class="btn ghost sm reroll-btn" id="btnRerollCopa" ${noRolls ? "disabled" : ""}>↺ Outra Copa <span class="reroll-count">${rollLabel}</span></button>
     </div><div class="squad-scroll"><div class="cards">`;
   group.forEach(p => {
     const used = state.usedKeys.has(keyOf(p.n, sq.team));
@@ -669,7 +749,8 @@ function renderSquadPanel() {
   html += `</div></div>`;
 
   $("#picker").innerHTML = html;
-  $("#btnReroll").onclick = () => drawSquad();
+  $("#btnRerollSel").onclick = () => doReroll(true);
+  $("#btnRerollCopa").onclick = () => doReroll(false);
   $("#picker").querySelectorAll(".pcard:not(.disabled)").forEach(card => {
     card.onclick = () => placeFromCard(card);
   });
@@ -690,7 +771,7 @@ function placeFromCard(card) {
   const next = state.slots.findIndex(s => !s.player);
   state.activeSlot = next;
   if (next === -1) { state.currentSquad = null; renderPitch(); renderSquadComplete(); }
-  else drawSquad();   // sorteia uma nova seleção para a próxima posição
+  else drawSquad();
 }
 
 function renderSquadComplete() {
@@ -742,18 +823,67 @@ function computeResult(avg) {
   return { gf, ga, title, msg, stars };
 }
 
-/* ============ Compartilhar ============ */
+/* ============ Compartilhar link ============ */
+function encodeLineup() {
+  const data = {
+    m: state.mode === "almanaque" ? "a" : "c",
+    f: state.formationKey,
+    s: state.style[0],
+    p: state.slots.map(s => ({
+      n: s.player.name, t: s.player.nat, y: s.player.year,
+      o: s.player.ovr, g: s.player.flag, c: s.cat,
+    })),
+  };
+  try {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(data))))
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  } catch { return ""; }
+}
+
+function decodeLineup(code) {
+  try {
+    const json = decodeURIComponent(escape(atob(code.replace(/-/g, "+").replace(/_/g, "/"))));
+    return JSON.parse(json);
+  } catch { return null; }
+}
+
+function tryLoadFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const code = params.get("lineup");
+  if (!code) return false;
+  const data = decodeLineup(code);
+  if (!data || !data.p || !FORMATIONS[data.f] || data.p.length !== FORMATIONS[data.f].length) return false;
+
+  state.mode = data.m === "a" ? "almanaque" : "classico";
+  state.formationKey = data.f;
+  state.style = data.s === "o" ? "ofensivo" : data.s === "d" ? "defensivo" : "equilibrado";
+  state.slots = FORMATIONS[data.f].map((s, i) => ({
+    ...s,
+    player: data.p[i] ? {
+      name: data.p[i].n, nat: data.p[i].t, year: data.p[i].y,
+      ovr: data.p[i].o, flag: data.p[i].g, cat: data.p[i].c,
+    } : null,
+  }));
+  state.usedKeys = new Set(state.slots.filter(s => s.player).map(s => keyOf(s.player.name, s.player.nat)));
+
+  if (state.slots.every(s => s.player)) {
+    state.teamAvg = state.slots.reduce((a, s) => a + s.player.ovr, 0) / state.slots.length;
+    buildStartScreen();
+    finish();
+    return true;
+  }
+  return false;
+}
+
 function shareResult() {
-  const txt = `⚽ 7a0 — ${$("#rScore").textContent} (${state.formationKey})
-` +
-              `${$("#rTitle").textContent}
-Overall do time: ${$("#rOvr").textContent}
-` +
-              state.slots.map(s => `${s.player.flag} ${s.player.name} (${s.player.nat} ${s.player.year})`).join(" · ");
-  navigator.clipboard?.writeText(txt).then(
-    () => { const b = $("#btnShare"); b.textContent = "✅ Copiado!"; setTimeout(() => b.textContent = "📋 Copiar resultado", 1600); },
-    () => alert(txt)
+  const code = encodeLineup();
+  const url = location.origin + location.pathname + "?lineup=" + code;
+  const copy = () => navigator.clipboard.writeText(url).then(
+    () => { const b = $("#btnShare"); b.textContent = "✅ Link copiado!"; setTimeout(() => b.textContent = "📋 Compartilhar link", 2000); },
+    () => prompt("Copie o link:", url)
   );
+  if (navigator.clipboard) copy();
+  else prompt("Copie o link:", url);
 }
 
 /* ============ Simulação da Copa 2026 ============ */
@@ -785,7 +915,7 @@ function poisson(l) { const L = Math.exp(-l); let k = 0, p = 1; do { k++; p *= M
 function simMatch(a, b) {
   const d = a.rating - b.rating;
   let la = 1.35 + d * 0.06, lb = 1.35 - d * 0.06;
-  const adj = styleMod();                 // estilo afeta SÓ a sua seleção
+  const adj = styleMod();
   if (a.isYou) { la += adj.atk; lb += adj.def; }
   if (b.isYou) { lb += adj.atk; la += adj.def; }
   la = Math.max(0.12, Math.min(5, la));
@@ -793,11 +923,10 @@ function simMatch(a, b) {
   return { ga: poisson(la), gb: poisson(lb) };
 }
 function styleMod() {
-  if (state.style === "ofensivo")  return { atk: +0.45, def: +0.25 };  // marca mais, sofre mais
-  if (state.style === "defensivo") return { atk: -0.30, def: -0.50 };  // marca menos, sofre bem menos
+  if (state.style === "ofensivo")  return { atk: +0.45, def: +0.25 };
+  if (state.style === "defensivo") return { atk: -0.30, def: -0.50 };
   return { atk: 0, def: 0 };
 }
-// disputa de pênaltis: melhor de 5 + morte súbita
 function shootout(a, b) {
   const pa = Math.max(0.6, Math.min(0.9, 0.75 + (a.rating - b.rating) * 0.006));
   const pb = Math.max(0.6, Math.min(0.9, 0.75 - (a.rating - b.rating) * 0.006));
@@ -838,7 +967,7 @@ function playGroup(teams) {
 function playCup(yourRating) {
   const you = { team: "Sua Seleção", flag: "⭐", rating: yourRating, isYou: true };
   const pool = buildNations().slice(0, 47).map(n => ({ ...n }));
-  const all = [you, ...pool];                         // 48 seleções
+  const all = [you, ...pool];
   const sorted = all.slice().sort((a, b) => b.rating - a.rating);
   const pots = [sorted.slice(0, 12), sorted.slice(12, 24), sorted.slice(24, 36), sorted.slice(36, 48)].map(shuffle);
   const groups = [];
@@ -848,7 +977,7 @@ function playCup(yourRating) {
   const winners = [], runners = [];
   results.forEach(r => { winners.push(r.st[0].t); runners.push(r.st[1]); });
   runners.sort((x, y) => y.pts - x.pts || y.gd - x.gd || y.gf - x.gf || Math.random() - 0.5);
-  const advancers = [...winners, ...runners.slice(0, 4).map(s => s.t)];   // 16: 12 líderes + 4 melhores vices
+  const advancers = [...winners, ...runners.slice(0, 4).map(s => s.t)];
 
   const yourGroupIdx = groups.findIndex(g => g.some(t => t.isYou));
   const yg = results[yourGroupIdx];
@@ -900,7 +1029,6 @@ function cupBanner(c) {
   return `<div class="cup-out elim"><div class="big">Eliminada — ${c.eliminatedAt}</div><p>Campeã do torneio: ${c.champion.flag} ${c.champion.team}.</p></div>`;
 }
 
-// lista ordenada dos SEUS jogos: 3 da fase de grupos + (se classificar) o mata-mata
 function cupEvents(c) {
   const gm = c.group.matches.filter(m => m.a.isYou || m.b.isYou).map((m, i) => {
     const opp = m.a.isYou ? m.b : m.a, gf = m.a.isYou ? m.ga : m.gb, ga = m.a.isYou ? m.gb : m.ga;
@@ -920,17 +1048,15 @@ const penText = (e) => e.pen ? ` <small>(${e.pen} nos pênaltis)</small>` : "";
 function renderCupStep() {
   const c = state.cup;
   const { gm, ko, total } = cupEvents(c);
-  const rev = state.simAuto ? total : state.cupReveal;   // automático revela tudo
+  const rev = state.simAuto ? total : state.cupReveal;
   const done = rev >= total;
 
-  // toggle jogo a jogo / automático
   let html = `<div class="sim-toggle">
       <button class="${!state.simAuto ? "on" : ""}" id="btnSimManual">Jogo a jogo</button>
       <button class="${state.simAuto ? "on" : ""}" id="btnSimAuto">Automático</button>
     </div>`;
   if (done) html += cupBanner(c);
 
-  // ---- fase de grupos ----
   html += `<div class="cup-block"><h3>Fase de grupos · Grupo ${String.fromCharCode(65 + c.group.idx)}</h3><div class="cup-matches">`;
   const gShown = Math.min(rev, gm.length);
   for (let i = 0; i < gShown; i++) {
@@ -946,7 +1072,6 @@ function renderCupStep() {
   }
   html += `</div>`;
 
-  // ---- mata-mata ----
   if (c.group.advanced && rev > gm.length) {
     html += `<div class="cup-block"><h3>Mata-mata</h3><div class="cup-matches">`;
     const kShown = Math.min(rev - gm.length, ko.length);
@@ -959,7 +1084,6 @@ function renderCupStep() {
     html += `</div></div>`;
   }
 
-  // ---- botão "próximo jogo" (só no modo jogo a jogo) ----
   if (!done && !state.simAuto) {
     const label = rev === 0 ? "Revelar 1º jogo →"
                 : rev < gm.length ? `Próximo jogo → (jogo ${rev + 1} dos grupos)`
@@ -983,6 +1107,7 @@ function playAndShowCup() {
 }
 
 /* ============ Eventos ============ */
+$("#btnTheme").onclick = toggleTheme;
 $("#btnStart").onclick = startGame;
 $("#btnFinish").onclick = finish;
 $("#btnAgain").onclick = () => show("screen-start");
@@ -994,6 +1119,7 @@ $("#btnCupBack").onclick = () => show("screen-result");
 $("#btnRestart").onclick = () => { if (confirm("Recomeçar e perder a escalação atual?")) show("screen-start"); };
 
 buildStartScreen();
+if (!tryLoadFromUrl()) { /* normal start */ }
 
   </script>
 </body>
