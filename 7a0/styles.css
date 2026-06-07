@@ -59,6 +59,8 @@ body {
 .hero h1 { font-size: 40px; line-height: 1.05; }
 .hero h1 .score { color: var(--gold); }
 .hero p { color: var(--muted); margin-top: 10px; font-size: 16px; }
+.hero-counts { font-size: 13px; }
+.hero-counts b { color: var(--gold); }
 
 .panel {
   background: linear-gradient(180deg, var(--card), #0c2417);
@@ -229,6 +231,11 @@ body {
 .cup-m.l { border-left-color: #f87171; }
 .cup-m.d { border-left-color: #94a3b8; }
 
+.sim-toggle { display: inline-flex; gap: 0; border: 1px solid rgba(255,255,255,.15); border-radius: 10px; overflow: hidden; margin: 0 auto 16px; }
+.sim-toggle { display: flex; width: max-content; margin-left: auto; margin-right: auto; }
+.sim-toggle button { background: transparent; color: var(--muted); border: 0; padding: 8px 16px; font-weight: 700; cursor: pointer; font-size: 13px; }
+.sim-toggle button.on { background: var(--gold); color: #042; }
+.cup-sub { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 4px 0 8px; }
 .cup-note { text-align: center; font-weight: 700; margin-top: 10px; padding: 8px; border-radius: 9px; }
 .cup-note.ok { color: #4ade80; background: rgba(22,163,74,.12); }
 .cup-note.no { color: #f87171; background: rgba(248,113,113,.1); }

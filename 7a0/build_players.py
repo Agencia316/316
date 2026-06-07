@@ -16,7 +16,7 @@ import os, re, sys, unicodedata, hashlib, json
 
 WIKI_DIR = "/tmp/fb.json/_source/squads/world-cup"
 OF_DIR   = "/tmp/openfootball_world-cup/more"
-WIKI_YEARS = [1970, 1974, 1978, 1982, 1986, 1990, 1994, 1998, 2002, 2006, 2010, 2014]
+WIKI_YEARS = [1950, 1954, 1958, 1962, 1966, 1970, 1974, 1978, 1982, 1986, 1990, 1994, 1998, 2002, 2006, 2010, 2014]
 OF_YEARS   = [2018, 2022]
 
 POS_MAP = {"GK": "GK", "DF": "DEF", "MF": "MID", "FW": "FWD"}

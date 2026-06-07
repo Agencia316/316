@@ -7,6 +7,10 @@ const state = {
   usedKeys: new Set(),       // "nome|seleção" já escalados
   activeSlot: null,          // índice do slot que está sendo escalado
   teamAvg: 0,                // força média do XI (definida ao finalizar)
+  style: "equilibrado",      // estilo: defensivo | equilibrado | ofensivo
+  cup: null,                 // resultado da Copa
+  cupReveal: 0,              // jogos revelados (modo jogo a jogo)
+  simAuto: false,            // false = jogo a jogo, true = automático
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -41,6 +45,14 @@ function buildStartScreen() {
     btn.onclick = () => {
       state.mode = btn.dataset.mode;
       $("#modeGrid").querySelectorAll(".opt").forEach(o => o.classList.remove("sel"));
+      btn.classList.add("sel");
+    };
+  });
+
+  $("#styleGrid").querySelectorAll(".opt").forEach(btn => {
+    btn.onclick = () => {
+      state.style = btn.dataset.style;
+      $("#styleGrid").querySelectorAll(".opt").forEach(o => o.classList.remove("sel"));
       btn.classList.add("sel");
     };
   });
@@ -281,19 +293,37 @@ function poisson(l) { const L = Math.exp(-l); let k = 0, p = 1; do { k++; p *= M
 
 function simMatch(a, b) {
   const d = a.rating - b.rating;
-  const la = Math.max(0.12, Math.min(5, 1.35 + d * 0.06));
-  const lb = Math.max(0.12, Math.min(5, 1.35 - d * 0.06));
+  let la = 1.35 + d * 0.06, lb = 1.35 - d * 0.06;
+  const adj = styleMod();                 // estilo afeta SÓ a sua seleção
+  if (a.isYou) { la += adj.atk; lb += adj.def; }
+  if (b.isYou) { lb += adj.atk; la += adj.def; }
+  la = Math.max(0.12, Math.min(5, la));
+  lb = Math.max(0.12, Math.min(5, lb));
   return { ga: poisson(la), gb: poisson(lb) };
+}
+function styleMod() {
+  if (state.style === "ofensivo")  return { atk: +0.45, def: +0.25 };  // marca mais, sofre mais
+  if (state.style === "defensivo") return { atk: -0.30, def: -0.50 };  // marca menos, sofre bem menos
+  return { atk: 0, def: 0 };
+}
+// disputa de pênaltis: melhor de 5 + morte súbita
+function shootout(a, b) {
+  const pa = Math.max(0.6, Math.min(0.9, 0.75 + (a.rating - b.rating) * 0.006));
+  const pb = Math.max(0.6, Math.min(0.9, 0.75 - (a.rating - b.rating) * 0.006));
+  let sa = 0, sb = 0;
+  for (let i = 0; i < 5; i++) { if (Math.random() < pa) sa++; if (Math.random() < pb) sb++; }
+  while (sa === sb) { if (Math.random() < pa) sa++; if (Math.random() < pb) sb++; }
+  return { sa, sb, winner: sa > sb ? a : b };
 }
 function knockout(a, b) {
   const { ga, gb } = simMatch(a, b);
   if (ga !== gb) return { ga, gb, pen: null, winner: ga > gb ? a : b };
-  const pa = Math.max(0.15, Math.min(0.85, 0.5 + (a.rating - b.rating) * 0.02));
-  return Math.random() < pa ? { ga, gb, pen: [4, 3], winner: a } : { ga, gb, pen: [3, 4], winner: b };
+  const s = shootout(a, b);
+  return { ga, gb, pen: [s.sa, s.sb], winner: s.winner };
 }
 function roundName(n) {
-  return n >= 32 ? "16-avos de final" : n >= 16 ? "Oitavas de final" :
-         n >= 8 ? "Quartas de final" : n >= 4 ? "Semifinal" : "Final";
+  return n >= 16 ? "Oitavas de final" : n >= 8 ? "Quartas de final" :
+         n >= 4 ? "Semifinal" : "Final";
 }
 
 function playGroup(teams) {
@@ -324,10 +354,10 @@ function playCup(yourRating) {
   for (let g = 0; g < 12; g++) groups.push([pots[0][g], pots[1][g], pots[2][g], pots[3][g]]);
 
   const results = groups.map(playGroup);
-  const winners = [], runners = [], thirds = [];
-  results.forEach(r => { winners.push(r.st[0].t); runners.push(r.st[1].t); thirds.push(r.st[2]); });
-  thirds.sort((x, y) => y.pts - x.pts || y.gd - x.gd || y.gf - x.gf || Math.random() - 0.5);
-  const advancers = [...winners, ...runners, ...thirds.slice(0, 8).map(s => s.t)];   // 32
+  const winners = [], runners = [];
+  results.forEach(r => { winners.push(r.st[0].t); runners.push(r.st[1]); });
+  runners.sort((x, y) => y.pts - x.pts || y.gd - x.gd || y.gf - x.gf || Math.random() - 0.5);
+  const advancers = [...winners, ...runners.slice(0, 4).map(s => s.t)];   // 16: 12 líderes + 4 melhores vices
 
   const yourGroupIdx = groups.findIndex(g => g.some(t => t.isYou));
   const yg = results[yourGroupIdx];
@@ -394,12 +424,20 @@ const matchRow = (e, label, won) =>
   `<b>${e.gf} - ${e.ga}${e.pen ? ` <small>(${e.pen} pên)</small>` : ""}</b>` +
   `<span>${e.opp.flag} ${e.opp.team}</span></div>`;
 
+const penText = (e) => e.pen ? ` <small>(${e.pen} nos pênaltis)</small>` : "";
+
 function renderCupStep() {
   const c = state.cup;
   const { gm, ko, total } = cupEvents(c);
-  const rev = state.cupReveal;
+  const rev = state.simAuto ? total : state.cupReveal;   // automático revela tudo
   const done = rev >= total;
-  let html = done ? cupBanner(c) : "";
+
+  // toggle jogo a jogo / automático
+  let html = `<div class="sim-toggle">
+      <button class="${!state.simAuto ? "on" : ""}" id="btnSimManual">Jogo a jogo</button>
+      <button class="${state.simAuto ? "on" : ""}" id="btnSimAuto">Automático</button>
+    </div>`;
+  if (done) html += cupBanner(c);
 
   // ---- fase de grupos ----
   html += `<div class="cup-block"><h3>Fase de grupos · Grupo ${String.fromCharCode(65 + c.group.idx)}</h3><div class="cup-matches">`;
@@ -410,7 +448,7 @@ function renderCupStep() {
   }
   html += `</div>`;
   if (gShown >= gm.length) {
-    html += groupTableHtml(c.group);
+    html += `<h4 class="cup-sub">Grupo · classificação final</h4>` + groupTableHtml(c.group);
     html += c.group.advanced
       ? `<p class="cup-note ok">Classificada em ${c.group.rank + 1}º — avança ao mata-mata! ✅</p>`
       : `<p class="cup-note no">Terminou em ${c.group.rank + 1}º e não avançou. 😞</p>`;
@@ -421,21 +459,28 @@ function renderCupStep() {
   if (c.group.advanced && rev > gm.length) {
     html += `<div class="cup-block"><h3>Mata-mata</h3><div class="cup-matches">`;
     const kShown = Math.min(rev - gm.length, ko.length);
-    for (let i = 0; i < kShown; i++) html += matchRow(ko[i], ko[i].round, ko[i].won ? "w" : "l");
+    for (let i = 0; i < kShown; i++) {
+      const e = ko[i];
+      html += `<div class="cup-m ${e.won ? "w" : "l"}"><span class="rd">${e.round}</span>` +
+              `<span>⭐ Sua Seleção</span><b>${e.gf} - ${e.ga}${penText(e)}</b>` +
+              `<span>${e.opp.flag} ${e.opp.team}</span></div>`;
+    }
     html += `</div></div>`;
   }
 
-  // ---- botão "jogar próximo jogo" ----
-  if (!done) {
-    let label;
-    if (rev < gm.length) label = `▶ Jogar jogo ${rev + 1} da fase de grupos`;
-    else label = `▶ Jogar a ${ko[rev - gm.length].round}`;
+  // ---- botão "próximo jogo" (só no modo jogo a jogo) ----
+  if (!done && !state.simAuto) {
+    const label = rev === 0 ? "Revelar 1º jogo →"
+                : rev < gm.length ? `Próximo jogo → (jogo ${rev + 1} dos grupos)`
+                : `Próximo jogo → (${ko[rev - gm.length].round})`;
     html += `<div class="cup-next"><button class="btn green big-btn" id="btnCupNext">${label}</button></div>`;
   }
 
   $("#cupBody").innerHTML = html;
   const next = $("#btnCupNext");
   if (next) next.onclick = () => { state.cupReveal++; renderCupStep(); };
+  $("#btnSimManual").onclick = () => { state.simAuto = false; renderCupStep(); };
+  $("#btnSimAuto").onclick = () => { state.simAuto = true; renderCupStep(); };
 }
 
 function playAndShowCup() {
