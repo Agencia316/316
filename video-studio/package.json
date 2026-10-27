@@ -1,0 +1,3 @@
+{ "name": "video-studio", "private": true, "type": "module",
+  "scripts": { "render": "node engine/render.mjs", "still": "node engine/render.mjs episodes/exemplo-classico.js --still 12" },
+  "dependencies": { "playwright": "*" } }
