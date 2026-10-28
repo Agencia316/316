@@ -9,7 +9,7 @@
     bg: '#0b0b10', bg2: '#15151d', line: 'rgba(255,255,255,.14)',
     white: '#f4f1ea', dim: 'rgba(244,241,234,.45)', yellow: '#f5b81c',
     red: '#ff4d4d', green: '#35d07f',
-    home: { fill: '#7a2cff', ring: '#c9a4ff' },   // time "nosso" (roxo)
+    home: { fill: '#a50044', stripes: '#004d98', ring: '#ffffff' },   // time que ataca (padrão: blaugrana)
     away: { fill: '#f4f1ea', ring: '#ffffff' },   // adversário (branco)
     display: "'Anton','Impact',sans-serif",
     mono: "'JetBrains Mono','DejaVu Sans Mono',monospace",
@@ -75,6 +75,7 @@
   };
 
   // Jogador (bolinha). team: 'home' | 'away'. opts.ring destaca, opts.label coloca etiqueta.
+  let dotId = 0;
   C.dot = (px, py, team = 'home', { r = 17, ring = false, label = '', t = 0, op = 1, gk = false } = {}) => {
     const c = T[team];
     let s = `<g opacity="${f(op)}">`;
@@ -82,7 +83,10 @@
       const pulse = 1 + .12 * Math.sin(t * 6);
       s += `<circle cx="${f(px)}" cy="${f(py)}" r="${f(r * 2.1 * pulse)}" fill="${T.yellow}" fill-opacity=".12" stroke="${T.yellow}" stroke-width="3"/>`;
     }
-    s += `<circle cx="${f(px)}" cy="${f(py)}" r="${gk ? r * .8 : r}" fill="${gk ? '#ff9f43' : c.fill}" stroke="${ring ? T.yellow : c.ring}" stroke-width="3"/>`;
+    const rr = gk ? r * .8 : r, cid = 'dt' + (dotId++);
+    s += `<circle cx="${f(px)}" cy="${f(py)}" r="${rr}" fill="${gk ? '#ff9f43' : c.fill}"/>`;
+    if (c.stripes && !gk) s += `<clipPath id="${cid}"><circle cx="${f(px)}" cy="${f(py)}" r="${rr}"/></clipPath><g clip-path="url(#${cid})"><rect x="${f(px - rr * .55)}" y="${f(py - rr)}" width="${f(rr * .5)}" height="${rr * 2}" fill="${c.stripes}"/><rect x="${f(px + rr * .05)}" y="${f(py - rr)}" width="${f(rr * .5)}" height="${rr * 2}" fill="${c.stripes}"/></g>`;
+    s += `<circle cx="${f(px)}" cy="${f(py)}" r="${rr}" fill="none" stroke="${ring ? T.yellow : c.ring}" stroke-width="3"/>`;
     if (label) s += C.tag(px + r * 2.4, py + 6, label, { color: T.yellow });
     return s + '</g>';
   };

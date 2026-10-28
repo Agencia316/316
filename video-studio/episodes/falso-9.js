@@ -3,9 +3,9 @@
   const { F, mirror, morph, shift } = Formations;
   const ATK = F['4-2-3-1'], ATK0 = F['4-3-3'];       // time que ataca (roxo, de baixo)
   const DEF = mirror(F['4-4-2']);                     // defesa (branco, de cima)
-  const kit9 = Studio.C.kits.red;
-  const kitDef = { ...Studio.C.kits.realAway, number: null };
-  const kitFalso = { ...Studio.C.kits.red, shirt: '#7a2cff', sleeve: '#7a2cff', shorts: '#7a2cff', socks: '#7a2cff', number: 10, hairStyle: 'long', hair: '#2a1a12' };
+  const kit9 = { ...Studio.C.kits.barca, number: 9 };                      // Barça: camisa 9
+  const kitDef = { ...Studio.C.kits.realAway, number: 4 };                 // Real Madrid (defensor)
+  const kitFalso = { ...Studio.C.kits.barca, number: 10, hair: '#2a1a12' };       // Barça: falso 9
 
   const teams = (a, pitch, home, away, t, hl = {}) => {
     let s = '';
@@ -24,8 +24,8 @@
       // 1 — GANCHO
       { dur: 5, draw: (t, a) => { const { C, T, prog, E } = a;
         return C.title('O gancho', 'O CENTROAVANTE SUMIU.', 'NINGUÉM SABE QUEM MARCAR.', t) + C.floor(1500) +
-          C.figure(300, 1500, kit9, { pose: 'crossed', scale: 1.15, t, label: 'CAMISA 9', op: prog(t, 1.2, .5) }) +
-          C.figure(780, 1500, kitDef, { pose: { a: 'idle', b: 'hands-on-head', k: prog(t, 2.4, .6, E.back) }, scale: 1.15, t, label: 'MARCAR QUEM?', op: prog(t, 1.8, .5) }) +
+          C.figure(300, 1500, kit9, { pose: 'crossed', scale: 1.15, t, label: 'BARÇA: CAMISA 9', op: prog(t, 1.2, .5) }) +
+          C.figure(780, 1500, kitDef, { pose: { a: 'idle', b: 'hands-on-head', k: prog(t, 2.4, .6, E.back) }, scale: 1.15, t, label: 'REAL: MARCAR QUEM?', op: prog(t, 1.8, .5) }) +
           `<g opacity="${prog(t, 2.6, .4, a.E.back)}">${a.text(540, 1150, '?', { size: 260, font: T.display, anchor: 'middle', weight: 400, fill: T.yellow })}</g>`;
       } },
       // 2 — CENÁRIO: 4-3-3 no papel vira 4-2-3-1 no campo
@@ -33,7 +33,7 @@
         const k = prog(t, 2.2, 1.6, E.inOut);
         return C.title('O cenário', '4-3-3 NO PAPEL.', '4-2-3-1 NO CAMPO.', t) + pitch.svg +
           teams(a, pitch, morph(ATK0, ATK, k), DEF, t) +
-          `<g opacity="${prog(t, .8)}">${C.tag(300, 1735, t < 2.2 ? 'NO PAPEL · 4-3-3' : 'NO CAMPO · 4-2-3-1', { size: 18 })}</g>`;
+          `<g opacity="${prog(t, .8)}">${C.tag(330, 1735, t < 2.2 ? 'BARÇA · NO PAPEL · 4-3-3' : 'BARÇA · NO CAMPO · 4-2-3-1', { size: 18 })}</g>`;
       } },
       // 3 — PROBLEMA: zona tracejada sobre a linha de defesa
       { dur: 6, draw: (t, a) => { const { C, T, prog } = a, pitch = C.pitch(), [zx, zy, zw, zh] = zone(pitch);
@@ -71,12 +71,12 @@
           teams(a, pitch, home, cbAt(1), t, { home: { 7: { ring: true, label: 'PONTA', t } } }) +
           C.arrow(am, wg, k, { color: T.yellow, w: 7 }) + `<circle cx="${ball[0]}" cy="${ball[1]}" r="9" fill="#fff"/>` +
           (gol ? `<g opacity="${prog(t, 3, .35, E.back)}" transform="translate(0,${(1 - prog(t, 3, .35, E.back)) * 30})">${a.text(540, 1100, 'GOL', { size: 260, font: T.display, anchor: 'middle', weight: 400, fill: T.yellow })}</g>` : '') +
-          C.score(gol ? 'ATA 1 x 0 DEF' : 'ATA 0 x 0 DEF', gol ? "38'" : "37'", 1010, 440);
+          C.score(gol ? 'BAR 1 x 0 RMA' : 'BAR 0 x 0 RMA', gol ? "38'" : "37'", 1010, 440);
       } },
       // 7 — PROVA: número gigante (placeholder ilustrativo)
       { dur: 7, draw: (t, a) => { const { C, T, prog } = a;
         return C.title('A prova', '3 DE 4 ATAQUES', 'PASSAM POR ELE.', t) + C.floor(1500) +
-          C.figure(300, 1500, kit9, { pose: 'crossed', scale: 1.2, t, label: 'FALSO 9' }) +
+          C.figure(300, 1500, kit9, { pose: 'crossed', scale: 1.2, t, label: 'BARÇA · FALSO 9' }) +
           C.bigNumber(3, t, .8, { x: 740, y: 1180, sub: 'de 4 ataques' }) +
           `<g opacity="${prog(t, 2)}">${C.tag(740, 1330, 'exemplo ilustrativo — troque pelo seu dado', { anchor: 'middle', size: 16, color: T.dim })}</g>`;
       } },
@@ -101,9 +101,9 @@
       // 10 — PERGUNTA + CTA
       { dur: 8, draw: (t, a) => { const { C, T, prog } = a;
         return C.title('A pergunta', 'FALSO 9 FUNCIONA?', 'OU É MODA?', t) + C.floor(1500) +
-          C.figure(280, 1500, kit9, { pose: 'crossed', scale: 1, t, label: 'FUNCIONA', op: prog(t, .8) }) +
+          C.figure(280, 1500, kit9, { pose: 'crossed', scale: 1, t, label: 'BARÇA: FUNCIONA', op: prog(t, .8) }) +
           a.text(540, 1250, 'VS', { size: 90, font: T.display, anchor: 'middle', weight: 400, fill: T.dim, op: prog(t, 1.2) }) +
-          C.figure(800, 1500, kitDef, { pose: 'crossed', scale: 1, t, label: 'É MODA', op: prog(t, 1) }) +
+          C.figure(800, 1500, kitDef, { pose: 'crossed', scale: 1, t, label: 'REAL: É MODA', op: prog(t, 1) }) +
           C.cta(t, 2.2);
       } },
     ],
