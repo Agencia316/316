@@ -193,6 +193,7 @@
     let shirtFill = `<path d="${shirtPath}" fill="${kit.shirt}"/>`;
     const clip = `<clipPath id="${id}b"><path d="${shirtPath}"/></clipPath>`;
     if (kit.stripes) for (let i = -3; i <= 3; i++) if (i % 2 === 0) shirtFill += `<rect x="${i * 24 - 12}" y="-420" width="24" height="170" fill="${kit.stripes}" clip-path="url(#${id}b)"/>`;
+    if (kit.band) shirtFill += `<rect x="-14" y="-420" width="28" height="170" fill="${kit.band}" clip-path="url(#${id}b)"/>`;
     if (kit.hoops) for (let i = 0; i < 6; i++) if (i % 2 === 0) shirtFill += `<rect x="-80" y="${sh + 14 + i * 22}" width="160" height="22" fill="${kit.hoops}" clip-path="url(#${id}b)"/>`;
     shirtFill += dark(0, .08);
     const collarC = kit.collar || skin;
