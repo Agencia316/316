@@ -138,40 +138,105 @@
   C.floor = (y = 1500) =>
     `<rect x="0" y="${y}" width="${W}" height="6" fill="rgba(255,255,255,.12)"/><rect x="0" y="${y + 6}" width="${W}" height="200" fill="url(#floorg)"/>`;
 
-  // Boneco chapado (estilo dos vídeos): cabeça, tronco com camisa, calção, pernas, meias.
-  // kit: {shirt, shirt2?, stripes?, shorts, socks, skin, hair, number}
-  // pose: 'idle' | 'armsUp' | 'crossed' | 'hands-on-head' | 'ball'
-  C.figure = (cx, groundY, kit, { pose = 'idle', scale = 1, t = 0, label = '', bob = true, op = 1, coat = false } = {}) => {
-    const s = scale, by = bob ? Math.sin(t * 3) * 3 * s : 0;
-    const top = groundY - 520 * s + by;
-    const P = (dx, dy) => `${f(cx + dx * s)},${f(top + dy * s)}`;
-    const skin = kit.skin || '#c98f67', arm = (x1, y1, x2, y2, col = kit.sleeve || kit.shirt) =>
-      `<line x1="${f(cx + x1 * s)}" y1="${f(top + y1 * s)}" x2="${f(cx + x2 * s)}" y2="${f(top + y2 * s)}" stroke="${col}" stroke-width="${30 * s}" stroke-linecap="round"/>`;
-    let arms = '';
-    if (pose === 'armsUp') arms = arm(-60, 150, -105, 30) + arm(60, 150, 105, 30);
-    else if (pose === 'crossed') arms = arm(-60, 150, 40, 235) + arm(60, 150, -40, 235);
-    else if (pose === 'hands-on-head') arms = arm(-60, 150, -45, 50) + arm(60, 150, 45, 50);
-    else if (pose === 'ball') arms = arm(-60, 150, -120, 230) + arm(60, 150, 120, 230);
-    else arms = arm(-60, 150, -80, 300) + arm(60, 150, 80, 300);
-    const legs = `<rect x="${f(cx - 52 * s)}" y="${f(top + 330 * s)}" width="${34 * s}" height="${150 * s}" fill="${skin}"/><rect x="${f(cx + 18 * s)}" y="${f(top + 330 * s)}" width="${34 * s}" height="${150 * s}" fill="${skin}"/>` +
-      `<rect x="${f(cx - 52 * s)}" y="${f(top + 420 * s)}" width="${34 * s}" height="${100 * s}" fill="${kit.socks}"/><rect x="${f(cx + 18 * s)}" y="${f(top + 420 * s)}" width="${34 * s}" height="${100 * s}" fill="${kit.socks}"/>`;
-    const stripes = kit.stripes ? [-60, -20, 20, 60].map(d => `<rect x="${f(cx + (d - 10) * s)}" y="${f(top + 130 * s)}" width="${20 * s}" height="${200 * s}" fill="${kit.stripes}"/>`).join('') : '';
-    const body = coat
-      ? `<path d="M${P(-75, 130)} L${P(75, 130)} L${P(95, 480)} L${P(-95, 480)} Z" fill="${kit.shirt}"/>`
-      : `<rect x="${f(cx - 75 * s)}" y="${f(top + 120 * s)}" width="${150 * s}" height="${215 * s}" rx="${22 * s}" fill="${kit.shirt}"/>${stripes}<rect x="${f(cx - 70 * s)}" y="${f(top + 310 * s)}" width="${140 * s}" height="${70 * s}" rx="${10 * s}" fill="${kit.shorts}"/>` +
-        (kit.number ? text(cx, top + 365 * s, String(kit.number), { size: 34 * s, anchor: 'middle', fill: T.yellow, weight: 700 }) : '');
-    const head = `<ellipse cx="${f(cx)}" cy="${f(top + 62 * s)}" rx="${46 * s}" ry="${54 * s}" fill="${skin}"/>` +
-      `<path d="M${P(-48, 50)} Q${P(0, -26)} ${P(48, 50)} Q${P(0, 12)} ${P(-48, 50)} Z" fill="${kit.hair || '#2a1a12'}"/>`;
-    const lab = label ? C.tag(cx, top - 24 * s, label, { color: T.white, anchor: 'middle', size: 20 }) : '';
-    return `<g opacity="${f(op)}">${legs}${body}${arms}${head}${lab}</g>`;
+  // ---------- Boneco v2 (articulado) ----------
+  // Origem nos pés. Braços/pernas são 2 segmentos (ângulo a partir da vertical p/ baixo; + = para fora).
+  // pose: nome | { a:'idle', b:'armsUp', k:0..1 } (transição suave). Poses: idle, armsUp, crossed,
+  // hands-on-head, ball (embaixadinha), point, shrug, cheer, hip.
+  // kit: shirt, sleeve, stripes (vertical), hoops (horizontal), shorts, socks, skin, hair, hairStyle
+  //      ('short'|'long'|'bald'), number, longSleeve, boots, collar.
+  const POSES = {
+    //            braço dir [alto, antebraço]   braço esq          perna dir [coxa, canela]  perna esq
+    idle:           { r: [8, 4],     l: [8, 4],      rl: [2, 0],   ll: [-2, 0] },
+    armsUp:         { r: [150, 172], l: [150, 172],  rl: [4, 0],   ll: [-4, 0] },
+    cheer:          { r: [135, 160], l: [135, 160],  rl: [6, 0],   ll: [-6, 0] },
+    crossed:        { r: [22, -92],  l: [22, -96],   rl: [2, 0],   ll: [-2, 0] },
+    'hands-on-head':{ r: [112, 246], l: [112, 246],  rl: [3, 0],   ll: [-3, 0] },
+    ball:           { r: [58, 40],   l: [64, 50],    rl: [-24, 30], ll: [-2, 0] },
+    point:          { r: [96, 98],   l: [10, 4],     rl: [2, 0],   ll: [-2, 0] },
+    shrug:          { r: [60, 120],  l: [60, 120],   rl: [2, 0],   ll: [-2, 0] },
+    hip:            { r: [50, -60],  l: [50, -60],   rl: [2, 0],   ll: [-2, 0] },
   };
-  // Kits prontos (troque cores = troque de time)
+  const poseVals = (p) => {
+    if (typeof p === 'string') return POSES[p] || POSES.idle;
+    const A = POSES[p.a] || POSES.idle, B = POSES[p.b] || POSES.idle, k = p.k;
+    const m = (x, y) => x.map((v, i) => v + (y[i] - v) * k);
+    return { r: m(A.r, B.r), l: m(A.l, B.l), rl: m(A.rl, B.rl), ll: m(A.ll, B.ll) };
+  };
+  let figId = 0;
+  C.figure = (cx, groundY, kit, { pose = 'idle', scale = 1, t = 0, label = '', bob = true, op = 1, coat = false, flip = false } = {}) => {
+    const s = scale, id = 'fg' + (figId++), P = poseVals(pose);
+    const skin = kit.skin || '#d9a07a', dark = (c, a = .18) => `<rect x="-200" y="-600" width="200" height="620" fill="#000" opacity="${a}" clip-path="url(#${id}b)"/>`;
+    const isCoat = coat || kit.coat;
+    const sway = bob ? Math.sin(t * 2.2) * 2 : 0, breathe = bob ? Math.sin(t * 3) * 2 : 0;
+    const dir = (deg, side) => [side * Math.sin(deg * Math.PI / 180), Math.cos(deg * Math.PI / 180)];
+    const cap = (x1, y1, x2, y2, w, col, extra = '') => `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" ${extra}/>`;
+    const sleeveCol = kit.sleeve || kit.shirt, edge = isCoat ? 'rgba(255,255,255,.22)' : '';
+    // ----- membros -----
+    const limb = (hip, [a1, a2], l1, l2, side) => { const d1 = dir(a1, side), d2 = dir(a2, side); const kx = hip[0] + d1[0] * l1, ky = hip[1] + d1[1] * l1; return { k: [kx, ky], e: [kx + d2[0] * l2, ky + d2[1] * l2] }; };
+    const legR = limb([22, -222], P.rl, 100, 100, 1), legL = limb([-22, -222], P.ll, 100, 100, 1);
+    const sh = -400 + breathe;
+    const armR = limb([62, sh + 6], P.r, 86, 80, 1), armL = limb([-62, sh + 6], P.l, 86, 80, -1);
+    const sockCol = kit.socks || kit.shorts, boot = kit.boots || '#0c0c0f';
+    const legSvg = (hip, L, side) => {
+      const ex = L.e[0], ey = L.e[1], sx = L.k[0] + (ex - L.k[0]) * .22, sy = L.k[1] + (ey - L.k[1]) * .22;
+      if (isCoat) return cap(hip[0], hip[1], L.k[0], L.k[1], 38, '#2b3144') + cap(L.k[0], L.k[1], ex, ey, 34, '#2b3144') +
+        `<ellipse cx="${f(ex + side * 4)}" cy="${f(ey - 6)}" rx="26" ry="13" fill="${boot}"/>`;
+      return cap(hip[0], hip[1], L.k[0], L.k[1], 28, skin) + cap(L.k[0], L.k[1], ex, ey, 26, skin) +
+        cap(sx, sy, ex, ey, 31, sockCol) + `<ellipse cx="${f(ex + side * 5)}" cy="${f(ey - 4)}" rx="25" ry="12" fill="${boot}"/>`;
+    };
+    // ----- tronco -----
+    const shirtPath = `M-66,${sh + 2} Q0,${sh - 12} 66,${sh + 2} L58,-262 Q0,-250 -58,-262 Z`;
+    let shirtFill = `<path d="${shirtPath}" fill="${kit.shirt}"/>`;
+    const clip = `<clipPath id="${id}b"><path d="${shirtPath}"/></clipPath>`;
+    if (kit.stripes) for (let i = -3; i <= 3; i++) if (i % 2 === 0) shirtFill += `<rect x="${i * 24 - 12}" y="-420" width="24" height="170" fill="${kit.stripes}" clip-path="url(#${id}b)"/>`;
+    if (kit.hoops) for (let i = 0; i < 6; i++) if (i % 2 === 0) shirtFill += `<rect x="-80" y="${sh + 14 + i * 22}" width="160" height="22" fill="${kit.hoops}" clip-path="url(#${id}b)"/>`;
+    shirtFill += dark(0, .08);
+    const collarC = kit.collar || skin;
+    const neck = `<rect x="-14" y="${sh - 34}" width="28" height="44" rx="10" fill="${skin}"/>`;
+    const vneck = isCoat
+      ? `<path d="M-26,${sh} L0,${sh + 56} L26,${sh} L16,${sh - 6} L0,${sh + 22} L-16,${sh - 6} Z" fill="#e8e8ee" opacity=".9"/>`
+      : `<path d="M-24,${sh - 2} L0,${sh + 38} L24,${sh - 2} Q0,${sh + 10} -24,${sh - 2} Z" fill="${skin}"/>`;
+    const shorts = isCoat ? '' :
+      `<rect x="-62" y="-270" width="124" height="62" rx="12" fill="${kit.shorts}"/><rect x="-62" y="-270" width="124" height="62" rx="12" fill="#000" opacity=".1"/>` +
+      (kit.number != null ? text(-36, -226, String(kit.number), { size: 34, anchor: 'middle', fill: kit.numColor || T.yellow }) : '');
+    const coatBody = isCoat
+      ? `<path d="M-72,${sh} Q0,${sh - 14} 72,${sh} L96,-70 Q0,-52 -96,-70 Z" fill="${kit.shirt}" stroke="rgba(255,255,255,.28)" stroke-width="3"/>` +
+        `<path d="M0,${sh + 10} L0,-62" stroke="rgba(255,255,255,.18)" stroke-width="3"/><circle cx="0" cy="-250" r="5" fill="rgba(255,255,255,.3)"/><circle cx="0" cy="-190" r="5" fill="rgba(255,255,255,.3)"/>` : '';
+    // ----- braços -----
+    const armSvg = (A, side) => {
+      const sc = kit.longSleeve || isCoat;
+      const sx = side * 62, sy = sh + 6;
+      let out = '';
+      // braço de pele (parte exposta) + manga
+      out += cap(A.k[0], A.k[1], A.e[0], A.e[1], 24, skin);
+      out += cap(sx, sy, A.k[0], A.k[1], 26, skin);
+      if (sc) { out += cap(A.k[0], A.k[1], A.e[0], A.e[1], 30, sleeveCol) + cap(sx, sy, A.k[0], A.k[1], 33, sleeveCol); if (isCoat) out += cap(A.k[0], A.k[1], A.e[0], A.e[1], 30, 'none', 'stroke="rgba(255,255,255,.2)" stroke-width="2"'); }
+      else { out += cap(sx, sy, sx + (A.k[0] - sx) * .55, sy + (A.k[1] - sy) * .55, 31, sleeveCol); }
+      out += `<circle cx="${f(A.e[0])}" cy="${f(A.e[1])}" r="${sc ? 15 : 13}" fill="${skin}"/>`;
+      return out;
+    };
+    // ----- cabeça -----
+    const hy = sh - 70, hairC = kit.hair || '#2a1a12', hs = kit.hairStyle || 'short';
+    let head = `<circle cx="-40" cy="${hy + 8}" r="9" fill="${skin}"/><circle cx="40" cy="${hy + 8}" r="9" fill="${skin}"/><ellipse cx="0" cy="${hy}" rx="38" ry="46" fill="${skin}"/>`;
+    if (hs === 'short') head += `<path d="M-40,${hy - 4} Q-42,${hy - 56} 0,${hy - 56} Q42,${hy - 56} 40,${hy - 4} Q30,${hy - 30} 0,${hy - 28} Q-30,${hy - 30} -40,${hy - 4} Z" fill="${hairC}"/>`;
+    if (hs === 'long') head += `<path d="M-44,${hy + 40} Q-52,${hy - 60} 0,${hy - 58} Q52,${hy - 60} 44,${hy + 40} L32,${hy + 12} Q30,${hy - 26} 0,${hy - 26} Q-30,${hy - 26} -32,${hy + 12} Z" fill="${hairC}"/>`;
+    // ----- composição -----
+    const body = `<ellipse cx="0" cy="2" rx="${isCoat ? 120 : 92}" ry="13" fill="#000" opacity=".4"/>` +
+      legSvg([-22, -222], legL, -1) + legSvg([22, -222], legR, 1) +
+      (isCoat ? coatBody : `<defs>${clip}</defs>${shirtFill}${shorts}`) +
+      (isCoat ? `<defs>${clip}</defs>` : '') + neck + (isCoat ? '' : '') + vneck +
+      armSvg(armL, -1) + armSvg(armR, 1) + head;
+    const lab = label ? C.tag(cx, groundY - 575 * s, label, { color: T.white, anchor: 'middle', size: 20 }) : '';
+    const tf = `translate(${f(cx + sway)},${f(groundY)}) scale(${flip ? -s : s},${s})`;
+    return `<g opacity="${f(op)}"><g transform="${tf}">${body}</g>${lab}</g>`;
+  };
   C.kits = {
-    barca: { shirt: '#a50044', stripes: '#004d98', sleeve: '#004d98', shorts: '#12306b', socks: '#12306b', number: 8, skin: '#d9a07a' },
-    realAway: { shirt: '#f4f1ea', sleeve: '#f4f1ea', shorts: '#f4f1ea', socks: '#f4f1ea', number: 10, skin: '#8a5a3c', hair: '#1a1210' },
-    coach: { shirt: '#1d2230', shorts: '#1d2230', socks: '#1d2230', skin: '#d8c9bd', hair: '#b9bdc4' },
-    gk: { shirt: '#9be52a', sleeve: '#9be52a', shorts: '#222', socks: '#9be52a', skin: '#c98f67' },
-    red: { shirt: '#d4202a', sleeve: '#d4202a', shorts: '#d4202a', socks: '#d4202a', number: 9, skin: '#e0b090' },
+    barca:    { shirt: '#a50044', stripes: '#004d98', sleeve: '#004d98', shorts: '#12306b', socks: '#12306b', number: 8, skin: '#d9a07a', hair: '#4a2c1c', collar: '#d9a07a' },
+    realAway: { shirt: '#f4f1ea', sleeve: '#f4f1ea', shorts: '#f4f1ea', socks: '#f4f1ea', number: 10, numColor: '#444', skin: '#8a5a3c', hair: '#16100e' },
+    coach:    { shirt: '#1d2230', shorts: '#1d2230', socks: '#1d2230', skin: '#e0cdbd', hair: '#b9bdc4', coat: true, longSleeve: true },
+    gk:       { shirt: '#9be52a', sleeve: '#9be52a', shorts: '#1c1c20', socks: '#9be52a', skin: '#d9a07a', hair: '#3a2416', hairStyle: 'long', longSleeve: true, numColor: '#fff' },
+    red:      { shirt: '#d4202a', sleeve: '#d4202a', shorts: '#d4202a', socks: '#d4202a', number: 9, skin: '#e0b090', hair: '#7a4a28', numColor: '#fff' },
+    flamengo: { shirt: '#d4202a', hoops: '#111', sleeve: '#d4202a', shorts: '#f4f1ea', socks: '#111', number: 9, numColor: '#111', skin: '#b87a52', hair: '#1a1210' },
   };
 
   // CTA final: "COMENTA AÍ" + "SEGUE PRA PRÓXIMA ANÁLISE"

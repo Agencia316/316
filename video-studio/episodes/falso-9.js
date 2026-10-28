@@ -3,8 +3,9 @@
   const { F, mirror, morph, shift } = Formations;
   const ATK = F['4-2-3-1'], ATK0 = F['4-3-3'];       // time que ataca (roxo, de baixo)
   const DEF = mirror(F['4-4-2']);                     // defesa (branco, de cima)
-  const kit9 = { shirt: '#d4202a', sleeve: '#d4202a', shorts: '#d4202a', socks: '#d4202a', number: 9, skin: '#e0b090' };
-  const kitDef = { shirt: '#f4f1ea', sleeve: '#f4f1ea', shorts: '#f4f1ea', socks: '#f4f1ea', skin: '#8a5a3c', hair: '#1a1210' };
+  const kit9 = Studio.C.kits.red;
+  const kitDef = { ...Studio.C.kits.realAway, number: null };
+  const kitFalso = { ...Studio.C.kits.red, shirt: '#7a2cff', sleeve: '#7a2cff', shorts: '#7a2cff', socks: '#7a2cff', number: 10, hairStyle: 'long', hair: '#2a1a12' };
 
   const teams = (a, pitch, home, away, t, hl = {}) => {
     let s = '';
@@ -21,10 +22,10 @@
     handle: 'seu.perfil', fade: .25,
     scenes: [
       // 1 — GANCHO
-      { dur: 5, draw: (t, a) => { const { C, T, prog } = a;
+      { dur: 5, draw: (t, a) => { const { C, T, prog, E } = a;
         return C.title('O gancho', 'O CENTROAVANTE SUMIU.', 'NINGUÉM SABE QUEM MARCAR.', t) + C.floor(1500) +
           C.figure(300, 1500, kit9, { pose: 'crossed', scale: 1.15, t, label: 'CAMISA 9', op: prog(t, 1.2, .5) }) +
-          C.figure(780, 1500, kitDef, { pose: 'hands-on-head', scale: 1.15, t, label: 'MARCAR QUEM?', op: prog(t, 1.8, .5) }) +
+          C.figure(780, 1500, kitDef, { pose: { a: 'idle', b: 'hands-on-head', k: prog(t, 2.4, .6, E.back) }, scale: 1.15, t, label: 'MARCAR QUEM?', op: prog(t, 1.8, .5) }) +
           `<g opacity="${prog(t, 2.6, .4, a.E.back)}">${a.text(540, 1150, '?', { size: 260, font: T.display, anchor: 'middle', weight: 400, fill: T.yellow })}</g>`;
       } },
       // 2 — CENÁRIO: 4-3-3 no papel vira 4-2-3-1 no campo
@@ -95,7 +96,7 @@
         return C.title('O contraste', 'PRENDE A DEFESA.', 'OU PERDE A ÁREA.', t) + C.floor(1500) +
           C.figure(280, 1500, kit9, { pose: 'crossed', scale: 1, t, label: 'COM O 9 FIXO', op: prog(t, .8) }) +
           a.text(540, 1250, 'VS', { size: 90, font: T.display, anchor: 'middle', weight: 400, fill: T.dim, op: prog(t, 1.2) }) +
-          C.figure(800, 1500, { ...kit9, shirt: '#7a2cff', sleeve: '#7a2cff', shorts: '#7a2cff', socks: '#7a2cff', number: 10 }, { pose: 'hands-on-head', scale: 1, t, label: 'COM O FALSO 9', op: prog(t, 1) });
+          C.figure(800, 1500, kitFalso, { pose: 'shrug', scale: 1, t, label: 'COM O FALSO 9', op: prog(t, 1) });
       } },
       // 10 — PERGUNTA + CTA
       { dur: 8, draw: (t, a) => { const { C, T, prog } = a;

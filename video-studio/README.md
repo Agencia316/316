@@ -58,3 +58,11 @@ número-prova 5 s · gráfico 5 s · (repita 2–3 evidências) · pergunta+CTA 
 - Áudio: trilha + whoosh/hit nas trocas de cena (ffmpeg `amix`), ou locução (TTS) alinhada por cena.
 - Mais poses/personagens (chutando, comemorando, goleiro caindo) e cena "gol" com trave (vista lateral).
 - Pipeline de dados: ler JSON (placar, minutos, posições) e gerar as cenas automaticamente.
+
+## Bonecos (v2)
+`C.figure(cx, chãoY, kit, {pose, scale, t, label, flip})` — personagem articulado (braços e pernas de 2 segmentos),
+com pescoço, gola em V, mangas, número no calção, chuteiras e sombra no chão.
+- Poses: `idle, armsUp, cheer, crossed, hands-on-head, ball, point, shrug, hip`.
+- Transição suave entre poses: `pose: { a: 'idle', b: 'hands-on-head', k: prog(t, 2, .6, E.back) }`.
+- Kits em `C.kits` (barca, realAway, coach, gk, red, flamengo). Campos: `shirt, stripes, hoops, sleeve, shorts, socks, skin, hair, hairStyle ('short'|'long'|'bald'), number, longSleeve, coat`.
+- Galeria para ver todos: `node engine/render.mjs episodes/_galeria.js --still 1`.
