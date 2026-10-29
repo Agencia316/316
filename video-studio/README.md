@@ -40,6 +40,20 @@ Os 3 episódios analisados: (1) Barça 1×2 Real — "o Barça teve a bola, o Mo
 (3) Flamengo × Estudiantes — "180 minutos, 0 gols; quem decide é o goleiro". Todos seguem o mesmo molde:
 **tese em 1 frase → 5–6 cenas de evidência visual → pergunta aberta para gerar comentário.**
 
+## Como pedir um vídeo novo (modelo)
+O estilo não tem nome oficial: "tática animada", "tactical explainer" ou "infográfico animado vertical".
+Aqui ele se chama **video-studio**. Copie, preencha e envie:
+
+> Faça um vídeo no estilo **video-studio** (tática animada vertical, como `falso-9` e `barca-psg-2025`) sobre **[jogo ou tema]**.
+> - Duração: **[45 s / 70 s]**
+> - Perfil: **@[seu perfil]**
+> - Fatos: **[só confirmados / pode ilustrar]**
+> - Ângulo: **[ex.: "o Barça teve a bola, o PSG teve o jogo"]**
+> - Fecho: **[pergunta para gerar comentário]**
+
+Sem ângulo definido, basta mandar o jogo (com a data) ou o tema: a pesquisa e o roteiro de cenas vêm primeiro, para aprovação, antes da animação.
+Roteiros e fatos verificados ficam em `roteiros/`; vídeos prontos em `videos/`.
+
 ## Como criar um vídeo novo (qualquer tema)
 
 1. Copie `episodes/exemplo-classico.js` para `episodes/meu-tema.js`.
