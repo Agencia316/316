@@ -5,6 +5,6 @@ set -e
 cd "$(dirname "$0")"
 DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 out/video.mp4)
 ffmpeg -v error -y -i out/video.mp4 -i "$1" \
-  -filter_complex "[1:a]aresample=44100,loudnorm=I=-14:TP=-1.5,apad,atrim=0:$DUR[a]" \
+  -filter_complex "[1:a]loudnorm=I=-14:TP=-1.5,aresample=44100,apad,atrim=0:$DUR[a]" \
   -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 160k -shortest out/video_narrado.mp4
-echo ok -> out/video_narrado.mp4
+echo "ok: out/video_narrado.mp4"
