@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Stick explainer</title>
+<style>
+  html,body{margin:0;background:#000}
+  canvas{display:block;width:1080px;height:1920px}
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="script.js"></script>
+<script>
+const W = 1080, H = 1920;
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const S = window.SCRIPT;
+const ORANGE = '#ec4a1c', YELLOW = '#ffd23f', INK = '#111';
+const SANS = '"Inter","Montserrat","Poppins","DejaVu Sans",sans-serif';
+const MONO = '"DejaVu Sans Mono","Courier New",monospace';
+
+// ---------- timeline ----------
+let acc = 0;
+const beats = S.beats.map(b => { const o = Object.assign({}, b, { t0: acc }); acc += b.d; return o; });
+const T_END = acc;
+const TOTAL = acc + S.endDur;
+window.TOTAL = TOTAL;
+
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const easeOut = x => 1 - Math.pow(1 - clamp(x), 3);
+const easeBack = x => { x = clamp(x); const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const hash = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+
+// quantised "boil": redraws wobble at ~9fps like hand-drawn animation
+let boil = 0;
+
+// ---------- hand-drawn primitives ----------
+function wline(x1, y1, x2, y2, seed, w = 9, color = INK) {
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  const off = (hash(seed + boil * 7) - 0.5) * 6;
+  ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(x1, y1);
+  ctx.quadraticCurveTo((x1 + x2) / 2 + nx * off, (y1 + y2) / 2 + ny * off, x2, y2);
+  ctx.stroke();
+}
+function poly(pts, seed, w = 9) { for (let i = 0; i < pts.length - 1; i++) wline(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], seed + i * 3, w); }
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+
+// ---------- icons (local coords, ~120px box, centred) ----------
+function stroke(w = 7) { ctx.strokeStyle = INK; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); }
+const ICONS = {
+  receipt() {
+    ctx.beginPath(); ctx.moveTo(-40, -60); ctx.lineTo(40, -60); ctx.lineTo(40, 60);
+    for (let i = 0; i < 4; i++) { ctx.lineTo(40 - (i + 0.5) * 20, 50); ctx.lineTo(40 - (i + 1) * 20, 60); }
+    ctx.closePath(); ctx.fillStyle = YELLOW; ctx.fill(); stroke(6);
+    for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-22, -34 + i * 22); ctx.lineTo(22, -34 + i * 22); stroke(5); }
+  },
+  check() { ctx.beginPath(); ctx.moveTo(-34, 0); ctx.lineTo(-8, 28); ctx.lineTo(38, -30); ctx.strokeStyle = ORANGE; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); },
+  heart() {
+    ctx.beginPath(); ctx.moveTo(0, 50); ctx.bezierCurveTo(-90, -10, -50, -70, 0, -26); ctx.bezierCurveTo(50, -70, 90, -10, 0, 50);
+    ctx.fillStyle = ORANGE; ctx.fill();
+  },
+  bag() {
+    ctx.beginPath(); ctx.moveTo(-18, -50); ctx.lineTo(18, -50); ctx.lineTo(10, -30); ctx.bezierCurveTo(70, 0, 60, 60, 0, 60); ctx.bezierCurveTo(-60, 60, -70, 0, -10, -30); ctx.closePath();
+    ctx.fillStyle = YELLOW; ctx.fill(); stroke(6);
+    ctx.fillStyle = INK; ctx.font = `900 54px ${SANS}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', 0, 16);
+  },
+  phone() {
+    roundRect(-34, -64, 68, 128, 12); ctx.fillStyle = '#fff'; ctx.fill(); stroke(6);
+    ctx.beginPath(); ctx.arc(0, 46, 5, 0, 7); ctx.fillStyle = INK; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-10, -50); ctx.lineTo(10, -50); stroke(5);
+  },
+  house() {
+    ctx.beginPath(); ctx.moveTo(-55, -5); ctx.lineTo(0, -55); ctx.lineTo(55, -5); ctx.lineTo(55, 55); ctx.lineTo(-55, 55); ctx.closePath(); ctx.fillStyle = '#fff'; ctx.fill(); stroke(6);
+    ctx.beginPath(); ctx.rect(-12, 18, 24, 37); stroke(6);
+  },
+  calendar() {
+    roundRect(-55, -50, 110, 105, 10); ctx.fillStyle = '#fff'; ctx.fill(); stroke(6);
+    ctx.beginPath(); ctx.moveTo(-55, -20); ctx.lineTo(55, -20); stroke(6);
+    ctx.beginPath(); ctx.moveTo(-28, -64); ctx.lineTo(-28, -38); ctx.moveTo(28, -64); ctx.lineTo(28, -38); stroke(7);
+    ctx.beginPath(); ctx.moveTo(-26, 18); ctx.lineTo(-6, 38); ctx.lineTo(28, -2); ctx.strokeStyle = ORANGE; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+  },
+  magnifier() {
+    ctx.beginPath(); ctx.arc(-10, -10, 42, 0, 7); ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fill(); stroke(8);
+    ctx.beginPath(); ctx.moveTo(20, 20); ctx.lineTo(58, 58); stroke(10);
+  },
+  trophy() {
+    ctx.beginPath(); ctx.moveTo(-40, -55); ctx.lineTo(40, -55); ctx.bezierCurveTo(40, 5, 20, 25, 0, 25); ctx.bezierCurveTo(-20, 25, -40, 5, -40, -55); ctx.fillStyle = YELLOW; ctx.fill(); stroke(6);
+    ctx.beginPath(); ctx.moveTo(0, 25); ctx.lineTo(0, 45); stroke(6);
+    ctx.beginPath(); ctx.rect(-26, 45, 52, 14); ctx.fillStyle = YELLOW; ctx.fill(); stroke(6);
+    ctx.beginPath(); ctx.arc(-46, -30, 14, Math.PI * 0.5, Math.PI * 1.5); ctx.moveTo(46, -44); ctx.arc(46, -30, 14, -Math.PI * 0.5, Math.PI * 0.5); stroke(5);
+  }
+};
+
+function drawIcon(name, x, y, s, alpha = 1) {
+  const fn = ICONS[name]; if (!fn) return;
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.globalAlpha *= alpha;
+  ctx.shadowColor = 'rgba(0,0,0,.14)'; ctx.shadowBlur = 8;
+  fn(); ctx.restore();
+}
+
+// ---------- the character ----------
+const GX = 325, GY = 1150; // x of figure, ground y
+const HEAD = { x: GX, y: 790, r: 55 };
+const SH = { x: GX, y: 880 }; // shoulder
+function armPose(pose, t) {
+  const bob = Math.sin(t * 6) * 8;
+  switch (pose) {
+    case 'wave': return { L: [[-35, 50], [-70, 105]], R: [[45, -25], [75 + Math.sin(t * 12) * 18, -75 + bob * 0.4]] };
+    case 'point': return { L: [[-35, 50], [-62, 112]], R: [[90, 15], [195, 25]] };
+    case 'up': return { L: [[-55, -10], [-100, -125 + bob]], R: [[55, -10], [100, -125 + bob]] };
+    case 'shrug': return { L: [[-70, 45], [-105, -10]], R: [[70, 45], [105, -10]] };
+    case 'hold': return { L: [[-35, 50], [-62, 112]], R: [[60, 30], [78, -5]] };
+    case 'hands': return { L: [[-45, 40], [-8, 62]], R: [[45, 40], [8, 62]] };
+    default: return { L: [[-35, 50], [-62, 112]], R: [[35, 50], [62, 112]] };
+  }
+}
+function drawFigure(o) {
+  const { pose, face, acc: accessory, t, pop } = o;
+  ctx.save();
+  ctx.translate(GX, GY); ctx.scale(1 + pop * 0.05, 1 - pop * 0.05); ctx.translate(-GX, -GY);
+  ctx.shadowColor = 'rgba(0,0,0,.16)'; ctx.shadowBlur = 10;
+  const hipY = 1010;
+  // legs, torso
+  wline(GX, HEAD.y + HEAD.r, GX, hipY, 11, 9);
+  wline(GX, hipY, GX - 22, GY, 13, 9);
+  wline(GX, hipY, GX + 22, GY, 17, 9);
+  // arms
+  const a = armPose(pose, t);
+  poly([[SH.x, SH.y], [SH.x + a.L[0][0], SH.y + a.L[0][1]], [SH.x + a.L[1][0], SH.y + a.L[1][1]]], 21, 9);
+  poly([[SH.x, SH.y], [SH.x + a.R[0][0], SH.y + a.R[0][1]], [SH.x + a.R[1][0], SH.y + a.R[1][1]]], 31, 9);
+  // head
+  ctx.beginPath(); ctx.arc(HEAD.x, HEAD.y, HEAD.r, 0, 7); ctx.fillStyle = ORANGE; ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.lineWidth = 8; ctx.strokeStyle = INK; ctx.stroke();
+  drawFace(face);
+  if (accessory === 'crown') {
+    ctx.beginPath(); ctx.moveTo(HEAD.x - 38, HEAD.y - 44); ctx.lineTo(HEAD.x - 42, HEAD.y - 92); ctx.lineTo(HEAD.x - 20, HEAD.y - 68); ctx.lineTo(HEAD.x, HEAD.y - 98);
+    ctx.lineTo(HEAD.x + 20, HEAD.y - 68); ctx.lineTo(HEAD.x + 42, HEAD.y - 92); ctx.lineTo(HEAD.x + 38, HEAD.y - 44); ctx.closePath();
+    ctx.fillStyle = ORANGE; ctx.fill(); ctx.lineWidth = 7; ctx.strokeStyle = INK; ctx.stroke();
+  }
+  if (accessory === 'horns') {
+    wline(HEAD.x - 34, HEAD.y - 44, HEAD.x - 48, HEAD.y - 92, 41, 8);
+    wline(HEAD.x + 34, HEAD.y - 44, HEAD.x + 48, HEAD.y - 92, 43, 8);
+  }
+  ctx.restore();
+}
+function drawFace(f) {
+  const x = HEAD.x, y = HEAD.y;
+  ctx.fillStyle = INK; ctx.strokeStyle = INK; ctx.lineCap = 'round'; ctx.lineWidth = 6;
+  const eye = (dx, dy, r = 6) => { ctx.beginPath(); ctx.arc(x + dx, y + dy, r, 0, 7); ctx.fill(); };
+  if (f === 'angry') {
+    eye(-18, -8, 5); eye(18, -8, 5);
+    ctx.beginPath(); ctx.moveTo(x - 32, y - 26); ctx.lineTo(x - 8, y - 14); ctx.moveTo(x + 32, y - 26); ctx.lineTo(x + 8, y - 14); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y + 32, 16, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+  } else if (f === 'surprised') {
+    eye(-18, -10, 6); eye(18, -10, 6);
+    ctx.beginPath(); ctx.arc(x, y + 22, 11, 0, 7); ctx.fill();
+  } else if (f === 'smirk') {
+    ctx.beginPath(); ctx.moveTo(x - 28, y - 8); ctx.lineTo(x - 8, y - 8); ctx.moveTo(x + 8, y - 12); ctx.lineTo(x + 28, y - 6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - 18, y + 20); ctx.quadraticCurveTo(x + 6, y + 36, x + 24, y + 12); ctx.stroke();
+  } else {
+    eye(-18, -10); eye(18, -10);
+    ctx.beginPath(); ctx.moveTo(x - 24, y + 14); ctx.quadraticCurveTo(x, y + 52, x + 24, y + 14); ctx.closePath(); ctx.fill();
+  }
+}
+
+// ---------- layout helpers ----------
+function wrap(text, font, maxW) {
+  ctx.font = font; const words = text.split(' '); const lines = []; let cur = '';
+  for (const w of words) { const test = cur ? cur + ' ' + w : w; if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; } else cur = test; }
+  if (cur) lines.push(cur); return lines;
+}
+function sameRun(idx, test) { // start time of contiguous run of beats where test(beat) is true
+  let i = idx; while (i > 0 && test(beats[i - 1])) i--; return beats[i].t0;
+}
+function spaced(text, x, y, spacing, align = 'left') {
+  ctx.textAlign = 'left';
+  let w = 0; for (const ch of text) w += ctx.measureText(ch).width + spacing; w -= spacing;
+  let cx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  for (const ch of text) { ctx.fillText(ch, cx, y); cx += ctx.measureText(ch).width + spacing; }
+  return w;
+}
+
+// ---------- draw one frame ----------
+function render(t) {
+  boil = Math.floor(t * 9);
+  const endCard = t >= T_END;
+  const idx = Math.max(0, beats.findIndex((b, i) => t >= b.t0 && (i === beats.length - 1 || t < beats[i + 1].t0)));
+  const b = beats[idx];
+  const tl = t - b.t0;
+
+  // background
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fdfdfd'; ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(W / 2, H / 2, 300, W / 2, H / 2, 1300);
+  g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(228,228,215,.55)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  // top labels + chip (crisp)
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#8a8a86'; ctx.font = `500 25px ${MONO}`; spaced(S.brand.top, 70, 226, 4);
+  ctx.font = `500 27px ${MONO}`; ctx.textAlign = 'right'; ctx.fillText(S.brand.handle, 1008, 232);
+  const chipStart = sameRun(idx, x => x.chip === b.chip);
+  const chipA = easeOut((t - chipStart) / 0.25);
+  ctx.save(); ctx.globalAlpha = 0.35 + 0.65 * chipA;
+  ctx.font = `700 30px ${MONO}`; const chipW = (() => { let w = 0; for (const ch of b.chip) w += ctx.measureText(ch).width + 2; return w; })() + 86;
+  roundRect(70, 250, chipW, 66, 33); ctx.fillStyle = '#fff'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = INK; ctx.stroke();
+  ctx.beginPath(); ctx.arc(98, 283, 9, 0, 7); ctx.fillStyle = ORANGE; ctx.fill();
+  ctx.fillStyle = INK; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced(b.chip, 124, 285, 2); ctx.restore();
+  ctx.textBaseline = 'alphabetic';
+
+  // faint watermark
+  ctx.save(); ctx.globalAlpha = 0.14; ctx.font = `700 24px ${SANS}`; ctx.fillStyle = '#555'; ctx.textAlign = 'right';
+  ctx.fillText(S.brand.handle.toUpperCase(), 996, 580); roundRect(940, 462, 52, 52, 14); ctx.lineWidth = 5; ctx.strokeStyle = '#555'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(966, 488, 12, 0, 7); ctx.stroke(); ctx.restore();
+
+  // chapter blur transition
+  let blur = 0;
+  const nextB = beats[idx + 1];
+  if (nextB && nextB.chip !== b.chip) blur = Math.max(blur, 16 * clamp((t - (nextB.t0 - 0.2)) / 0.2));
+  if (idx > 0 && beats[idx - 1].chip !== b.chip) blur = Math.max(blur, 16 * (1 - clamp(tl / 0.3)));
+  ctx.save(); if (blur > 0.2) ctx.filter = `blur(${blur.toFixed(1)}px)`;
+
+  // ground line
+  wline(85, GY, 995, GY, 3, 7);
+
+  // headline
+  const h = b.head;
+  if (h) {
+    const hs = sameRun(idx, x => x.head && x.head.t === h.t && JSON.stringify(x.head.counter) === JSON.stringify(h.counter));
+    const ha = easeBack((t - hs) / 0.4), hop = clamp((t - hs) / 0.2);
+    ctx.save(); ctx.globalAlpha = hop;
+    if (h.counter) {
+      const v = h.counter.from + (h.counter.to - h.counter.from) * easeOut((t - hs) / 1.6);
+      ctx.font = `900 170px ${SANS}`; ctx.fillStyle = ORANGE; ctx.textAlign = 'center';
+      ctx.translate(540, 560); ctx.scale(0.8 + 0.2 * ha, 0.8 + 0.2 * ha);
+      ctx.fillText((h.counter.prefix || '') + Math.round(v) + (h.counter.suffix || ''), 0, 0);
+    } else if (h.k && h.k.startsWith('sticker')) {
+      const font = `900 50px ${SANS}`; ctx.font = font;
+      const tw = ctx.measureText(h.t).width, bw = tw + 80, bh = 96;
+      ctx.translate(540, 540); ctx.rotate(-0.045 * ha); ctx.scale(0.7 + 0.3 * ha, 0.7 + 0.3 * ha);
+      ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 6;
+      roundRect(-bw / 2, -bh / 2, bw, bh, 10); ctx.fillStyle = h.k === 'sticker-orange' ? ORANGE : YELLOW; ctx.fill();
+      ctx.shadowColor = 'transparent'; ctx.lineWidth = 5; ctx.strokeStyle = INK; ctx.stroke();
+      ctx.font = font; ctx.fillStyle = h.k === 'sticker-orange' ? '#fff' : INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(h.t, 0, 4);
+    } else {
+      const font = `900 112px ${SANS}`; const lines = wrap(h.t, font, 900);
+      ctx.font = font; ctx.fillStyle = h.c === 'orange' ? ORANGE : INK; ctx.textAlign = 'center';
+      ctx.translate(540, 580 - (lines.length - 1) * 50); ctx.scale(0.85 + 0.15 * ha, 0.85 + 0.15 * ha);
+      lines.forEach((ln, i) => ctx.fillText(ln, 0, i * 120));
+    }
+    ctx.restore();
+  }
+
+  // props
+  (b.props || []).forEach(p => {
+    const key = p.i + p.x + p.y;
+    const ps = sameRun(idx, x => (x.props || []).some(q => q.i + q.x + q.y === key));
+    const k = easeBack((t - ps) / 0.35);
+    drawIcon(p.i, p.x, p.y + (1 - clamp((t - ps) / 0.35)) * 18, p.s * k, clamp((t - ps) / 0.12));
+  });
+
+  // figure
+  drawFigure({ pose: b.pose || 'idle', face: b.face || 'happy', acc: b.acc, t, pop: Math.max(0, 1 - tl / 0.25) });
+
+  // speech bubble
+  if (b.bubble) {
+    const bs = sameRun(idx, x => x.bubble === b.bubble), k = easeBack((t - bs) / 0.35);
+    ctx.save(); ctx.translate(800, 880); ctx.scale(k, k);
+    ctx.font = `800 36px ${SANS}`; const lines = wrap(b.bubble, ctx.font, 290);
+    const bw = 340, bh = 40 + lines.length * 44;
+    roundRect(-bw / 2, -bh, bw, bh, 22); ctx.fillStyle = '#fff'; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = INK; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-40, 0); ctx.lineTo(-62, 36); ctx.lineTo(-10, 0); ctx.fillStyle = '#fff'; ctx.fill(); ctx.stroke();
+    ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `800 36px ${SANS}`;
+    lines.forEach((ln, i) => ctx.fillText(ln, 0, -bh + 40 + i * 44)); ctx.restore();
+  }
+
+  // karaoke caption
+  const words = b.cap.split(' ').map(w => ({ txt: w.replace(/\*/g, ''), hl: /\*/.test(w) }));
+  const fs = 62; ctx.font = `800 ${fs}px ${SANS}`; ctx.textAlign = 'left';
+  const widths = words.map(w => ctx.measureText(w.txt).width), sp = 20;
+  const maxW = 920; const total = widths.reduce((a, c) => a + c, 0) + sp * (words.length - 1);
+  const sc = total > maxW ? maxW / total : 1;
+  let cx = 540 - total * sc / 2;
+  ctx.save(); ctx.translate(0, 1290 + (1 - easeOut(tl / 0.2)) * 14); ctx.globalAlpha = easeOut(tl / 0.15);
+  const speak0 = 0.1, speakSpan = Math.max(0.4, b.d - 0.45);
+  words.forEach((w, i) => {
+    const lit = tl >= speak0 + (i / words.length) * speakSpan;
+    ctx.fillStyle = lit ? (w.hl ? ORANGE : INK) : '#c4c4c0';
+    ctx.font = `800 ${fs * sc}px ${SANS}`; ctx.fillText(w.txt, cx, 0); cx += (widths[i] + sp) * sc;
+  });
+  ctx.restore();
+  ctx.restore(); // blur
+
+  // end card
+  if (endCard) {
+    const te = t - T_END, a = easeOut(te / 0.25);
+    ctx.fillStyle = `rgba(20,20,20,${0.78 * a})`; ctx.fillRect(0, 0, W, H);
+    const cx0 = 540, cy0 = 880, grad = ctx.createLinearGradient(cx0 - 80, cy0 + 80, cx0 + 80, cy0 - 80);
+    grad.addColorStop(0, '#fd5949'); grad.addColorStop(0.5, '#d6249f'); grad.addColorStop(1, '#285aeb');
+    const toWhite = clamp((te - 1.6) / 0.5);
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(cx0, cy0); const k = 0.8 + 0.2 * easeBack(te / 0.4); ctx.scale(k, k);
+    ctx.lineWidth = 14; ctx.strokeStyle = toWhite > 0.5 ? '#f2f2f2' : grad;
+    roundRect(-80, -80, 160, 160, 44); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 36, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.arc(52, -52, 8, 0, 7); ctx.fillStyle = ctx.strokeStyle; ctx.fill(); ctx.restore();
+    ctx.globalAlpha = a; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = `700 52px ${SANS}`;
+    ctx.fillText(S.brand.handle.toUpperCase(), 540, 1090);
+    ctx.font = `500 30px ${SANS}`; ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillText(S.brand.name, 540, 1150);
+    ctx.font = `500 26px ${SANS}`; ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillText(S.disclaimer, 540, 1760);
+    ctx.globalAlpha = 1;
+  }
+}
+window.render = render;
+render(0);
+</script>
+</body>
+</html>
