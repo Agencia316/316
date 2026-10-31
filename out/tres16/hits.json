@@ -1,0 +1,104 @@
+[
+ {
+  "beat": 0,
+  "t": 0.0021,
+  "label": "Seu anúncio",
+  "sfx": "impact"
+ },
+ {
+  "beat": 1,
+  "t": 0.5021,
+  "label": "traz lead.",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "A5"
+  }
+ },
+ {
+  "beat": 2,
+  "t": 1.0021,
+  "label": "Mas o",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "D6"
+  }
+ },
+ {
+  "beat": 3,
+  "t": 1.5021,
+  "label": "contrato?",
+  "sfx": "impact"
+ },
+ {
+  "beat": 4,
+  "t": 2.0021,
+  "label": "corte: tese",
+  "sfx": "thud"
+ },
+ {
+  "beat": 6.5,
+  "t": 3.2521,
+  "label": "campanha cai",
+  "sfx": "whoosh",
+  "opts": {
+   "len": 0.4
+  }
+ },
+ {
+  "beat": 7,
+  "t": 3.5021,
+  "label": "sistema",
+  "sfx": "bell",
+  "opts": {
+   "pitch": "D6"
+  }
+ },
+ {
+  "beat": 8,
+  "t": 4.0021,
+  "label": "corte: funil",
+  "sfx": "thud"
+ },
+ {
+  "beat": 9,
+  "t": 4.5021,
+  "label": "etapa 02",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "A5"
+  }
+ },
+ {
+  "beat": 10,
+  "t": 5.0021,
+  "label": "etapa 03",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "C6"
+  }
+ },
+ {
+  "beat": 11,
+  "t": 5.5021,
+  "label": "etapa 04",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "E6"
+  }
+ },
+ {
+  "beat": 12,
+  "t": 6.0021,
+  "label": "fecho",
+  "sfx": "impact"
+ },
+ {
+  "beat": 13,
+  "t": 6.5021,
+  "label": "marca",
+  "sfx": "bell",
+  "opts": {
+   "pitch": "D6"
+  }
+ }
+]
