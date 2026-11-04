@@ -9,7 +9,7 @@ lang: pt-BR
 > **DOCUMENTO-MESTRE — VERSÃO CONSOLIDADA**  
 > Referência de gestão e implantação. Combina decisões já definidas, hipóteses de orçamento e pendências de homologação. **Não é uma promessa de retorno financeiro ou um contrato final.**
 >
-> **Revisão de 04/11/2026:** vendedor 100% comissionado (sem salário fixo); comissão equivalente a 25% da margem de contribuição do plano contratado, paga mensalmente durante os 3 primeiros meses do contrato, mais bônus de retenção de R$ 400 se o cliente completar 6 pagamentos (tudo condicionado a o cliente estar ativo e pagando). Seções 1, 6, 7, 9, 13 e 16 atualizadas; projeção recalculada.
+> **Revisão de 04/11/2026:** vendedor 100% comissionado (sem salário fixo); comissão equivalente a 25% da margem de contribuição do plano contratado, paga mensalmente durante os 3 primeiros meses do contrato, mais bônus de retenção de R$ 400 se o cliente completar 6 pagamentos (tudo condicionado a o cliente estar ativo e pagando). Inclui também a **partida enxuta** (subseção 7.1): início sem caixa, sem pró-labore e sem operador contratado até 5 clientes ativos, com lista inicial de 240 escritórios de Curitiba. Seções 1, 6, 7, 8, 9, 13, 14 e 16 atualizadas; projeção recalculada.
 
 # 1. Sumário executivo e decisão central
 
@@ -41,7 +41,7 @@ O produto **não é apenas gestão de tráfego**, **não é apenas CRM** e **nã
 
 ## Estado das decisões
 
-- **Definidos:** preços dos três pacotes para teste; Growth como oferta âncora; R$ 900 de mídia no Growth; CRM a R$ 109 por cliente/mês; IA de qualificação a aproximadamente R$ 97 por cliente/mês; vendedor 100% comissionado, sem salário fixo, com comissão de 25% da margem de contribuição do plano (R$ 318,19 Start / R$ 454,13 Growth / R$ 603,69 Scale por mês), paga durante os 3 primeiros meses de cada contrato atribuído a ele, enquanto o cliente pagar, mais bônus de retenção de R$ 400 quando o cliente completa o 6º pagamento; foco inicial em advocacia.
+- **Definidos:** preços dos três pacotes para teste; Growth como oferta âncora; R$ 900 de mídia no Growth; CRM a R$ 109 por cliente/mês; IA de qualificação a aproximadamente R$ 97 por cliente/mês; vendedor 100% comissionado, sem salário fixo, com comissão de 25% da margem de contribuição do plano (R$ 318,19 Start / R$ 454,13 Growth / R$ 603,69 Scale por mês), paga durante os 3 primeiros meses de cada contrato atribuído a ele, enquanto o cliente pagar, mais bônus de retenção de R$ 400 quando o cliente completa o 6º pagamento; foco inicial em advocacia; **partida enxuta** (sem caixa inicial, sem pró-labore, fundador na operação até 5 clientes ativos) com lista qualificada de 240 escritórios trabalhistas e previdenciários de Curitiba.
 - **Propostos, ainda não homologados:** capacidade de usuários/fluxos por pacote; custos e franquias do painel multimodelo; ferramentas LibreChat + OpenRouter; custos de suporte e implantação; metas de prospecção; preços de recarga; prazo padrão de implantação; cenário financeiro.
 - **Condicionados antes da venda:** módulo Processual por OAB; gateway de pagamento e wallet; isolamento multiempresa; permissões e custos de mensagens WhatsApp; tratamento fiscal da mídia; forma jurídica de contratação do vendedor; desenvolvimento do produto.
 
@@ -293,6 +293,8 @@ A verba de R$ 900 é recurso **incluído na mensalidade** e precisa ter comprova
 | Administração e contingências | 700 | Orçamento proposto |
 | **Total de custos fixos** | **9.280** | **Vendedor 100% comissionado (sem fixo)** |
 
+*Orçamento de operação estabilizada. Na fase de partida, ver subseção 7.1 (custos fixos de R$ 1.580).*
+
 **Custos de entrada de cliente:** R$ 350 de implantação (estimado) + comissão do vendedor (25% da margem por 3 meses + bônus de retenção de R$ 400) **somente se** o contrato for originado por ele.
 
 **Regra de comissão:** 25% da margem de contribuição do plano contratado, paga mensalmente nos 3 primeiros meses do contrato, sempre sobre mensalidade efetivamente recebida e a partir da confirmação do primeiro pagamento, no mês seguinte ao recebimento. **Bônus de retenção:** R$ 400 (valor único, igual para todos os planos) pagos quando o cliente completar o 6º pagamento confirmado. O cliente que cancelar ou ficar inadimplente interrompe a comissão e o bônus. Reembolso ou chargeback nos primeiros 60 dias gera estorno/compensação da comissão paga. Os valores são fixos por plano, para não expor ao vendedor os custos internos:
@@ -310,7 +312,7 @@ Custo esperado por contrato do vendedor: cerca de **R$ 1.630** (R$ 1.286 de comi
 
 ## Ponto de equilíbrio
 
-Para uma carteira **100% Growth**: R$ 9.280 / R$ 1.816,50 = aproximadamente **5,11 clientes equivalentes** antes do custo de aquisição e implantação. Na prática, trabalhar com **6 clientes ativos como referência inicial**, condicionada ao mix, novas vendas e custos efetivos.
+Para uma carteira **100% Growth**: R$ 9.280 / R$ 1.816,50 = aproximadamente **5,11 clientes equivalentes** antes do custo de aquisição e implantação. Na prática, trabalhar com **6 clientes ativos como referência inicial**, condicionada ao mix, novas vendas e custos efetivos. Na partida enxuta (subseção 7.1), com custos fixos de R$ 1.580, o equilíbrio cai para cerca de 1 cliente Growth.
 
 **Não confundir** margem de contribuição com lucro líquido. Pró-labore do fundador integra despesa; eventual distribuição de lucro não está calculada nem deve ser confundida com participação societária. Uma participação de 40% já debatida em planejamento anterior deve ser formalmente confirmada antes de qualquer simulação de distribuição.
 
@@ -368,6 +370,38 @@ Os dois cenários alternativos são referências dos modelos anteriores e **deve
 - Aumentos em tokens, custos de mensagens, taxas, tributos e horas de suporte reduzem a contribuição unitária.
 - Se os anúncios precisarem de orçamento adicional para atingir o volume necessário, o cliente deve aprová-lo: não retirar silenciosamente verba de CRM/IA nem prometer performance incompatível com a mídia incluída.
 
+## 7.1 Partida enxuta (sem caixa inicial)
+
+**Decisão do fundador:** iniciar sem reserva de caixa, a partir de uma lista qualificada de leads, vendendo o produto desde o primeiro mês.
+
+| Item | Operação estabilizada | Partida enxuta |
+|:--|--:|--:|
+| Pessoa operacional | R$ 3.500 | R$ 0 (fundador opera; contratar quando passar de 5 clientes ativos) |
+| Pró-labore | R$ 3.000 | R$ 0 até o caixa se formar |
+| Aquisição de clientes Três16 | R$ 1.200 | R$ 0 (lista qualificada de 240 escritórios de Curitiba, trabalhista e previdenciário) |
+| Cloud, automação e administração | R$ 1.580 | R$ 1.580 |
+| **Custo fixo mensal** | **R$ 9.280** | **R$ 1.580** |
+
+**Premissas mantidas:** mix 20/70/10, ticket médio de R$ 3.497, contribuição de R$ 1.767,58 por cliente, churn de 3%, implantação de R$ 350, vendedor 100% comissionado (25% da margem por 3 meses + bônus de R$ 400), 50% das vendas do vendedor. Cobrança antecipada da 1ª mensalidade (Pix/cartão) antes de ativar a mídia.
+
+| Mês | Base (1 venda no M1, depois 2/mês): resultado | Base: acumulado | Lento (1 venda/mês): resultado | Lento: acumulado |
+|:--|--:|--:|--:|--:|
+| 1 | -383 | -383 | -383 | -383 |
+| 3 | 5.269 | 7.199 | 2.572 | 3.306 |
+| 6 | 10.926 | 30.978 | 3.596 | 16.837 |
+| 12 | 27.403 | 155.253 | 11.794 | 67.833 |
+
+Valores em R$, **antes de pró-labore** e já incluindo a contratação do operador (R$ 3.500) no mês em que a carteira ultrapassa 5 clientes ativos (M4 no cenário-base; M6 no lento).
+
+**Limites e riscos da partida enxuta:**
+
+- O resultado depende de o fundador operar sozinho os primeiros 2 a 5 clientes (implantação, campanhas, suporte). Medir horas por cliente desde o primeiro contrato; acima de 5 clientes, a qualidade cai se não houver contratação.
+- Não é lucro distribuível: o acumulado precisa cobrir o operador, a retomada do pró-labore e a reserva.
+- Enquanto não há a primeira venda, o custo fixo de R$ 1.580/mês sai do bolso do fundador.
+- A verba de mídia do cliente é paga no início do mês: só ativar campanhas após o pagamento confirmado.
+- Vender somente o que está pronto e demonstrável (CRM, IA de qualificação, automações por status e operação de Meta Ads). O Três16 AI multimodelo deve ser apresentado como "em breve" até a homologação; o módulo Processual não deve ser oferecido.
+- Gatilho **sugerido** de retomada do pró-labore, a validar com o contador: R$ 1.500/mês quando houver ao menos 3 clientes ativos e caixa acumulado de R$ 10 mil; R$ 3.000/mês com caixa acumulado de R$ 20 mil. Encargos sobre o pró-labore ainda não estão calculados.
+
 # 8. Organização da equipe e governança
 
 | Função | Responsabilidades | Medida de desempenho |
@@ -375,6 +409,8 @@ Os dois cenários alternativos são referências dos modelos anteriores e **deve
 | Fundador/direção | Estratégia, produto, diagnóstico complexo, negociações estratégicas, revisão de indicadores | Conversão estratégica, margem, retenção, decisões de produto |
 | Vendedor | Prospecção, qualificação, demonstração progressivamente autônoma, proposta e fechamento | Reuniões, taxa de avanço, contratos novos, dados no CRM |
 | Operacional | Implantação, funil, IA e automações, campanhas, suporte e auditoria | Prazo de implantação, chamados, adoção, qualidade técnica |
+
+Na partida enxuta, o fundador acumula também a função operacional até 5 clientes ativos (subseção 7.1).
 
 **Divisão comercial inicial:** vendedor prospecta bases segmentadas; fundador reativa relacionamentos e apoia vendas estratégicas. A operação não deve ficar permanentemente dependente do fundador para todas as demonstrações.
 
@@ -585,7 +621,7 @@ Retorno acordado em até 1 dia útil após o envio; novo contato adequado ao con
 
 | Prazo | Entregas | Critério de avanço |
 |:--|:--|:--|
-| Dias 1–15 | Escopos, contratos, arquitetura, demo de CRM e piloto de IA | Preço, custo e funcionamento básico verificáveis |
+| Dias 1–15 | Escopos, contratos, arquitetura, demo de CRM e piloto de IA; lista qualificada de 240 escritórios de Curitiba (trabalhista e previdenciário) | Preço, custo e funcionamento básico verificáveis |
 | Dias 16–30 | Treinamento comercial, demonstração de 25 min, primeiro piloto pago | Primeiro contrato e sistema utilizável |
 | Dias 31–60 | Rotina de 240 contatos/mês, onboarding, medição de IA e suporte | ~3 contratos acumulados e fluxos replicáveis |
 | Dias 61–90 | Ajustes de discurso, loja de recarga piloto e revisão financeira | ~5 contratos novos acumulados, margem monitorada |
@@ -687,9 +723,10 @@ Agende uma demonstração para verificar como o CRM, a IA e as campanhas podem s
 | Recargas | Preços teste R$ 49/99/199 | Equivalência, checkout, taxas, estornos |
 | Processual | +R$ 197 após homologação | API comercial autorizada e cobertura |
 | Vendedor | 100% comissão; 25% da margem do plano por 3 meses + bônus de retenção R$ 400 | Forma de contratação, estorno, atribuição e incentivo real |
-| Operação | 1 operacional + fundador | Medir horas/clientes antes da escala |
+| Operação | Fundador opera até 5 clientes ativos; contratar 1 operacional acima disso | Medir horas/clientes antes da escala |
 | Comercial | 2 novos contratos/mês após rampa | Validar taxas de resposta e fechamento |
 | Finanças | 51,9% contribuição Growth estimada; resultado base 12 meses ~R$ 82,4 mil | Recalcular após custos e tributação reais |
+| Partida | Enxuta: sem pró-labore, sem operador até 5 clientes, lista de 240 leads de Curitiba | Validar tempo do fundador, 1º pagamento antecipado e gatilho do pró-labore |
 
 **Decisão executiva final:** lançar primeiro um **Growth demonstrável e economicamente controlado**, vender por diagnóstico, comprovar utilização e retenção, e ampliar os produtos apenas depois que a tecnologia, a margem e o suporte estiverem validados.
 
