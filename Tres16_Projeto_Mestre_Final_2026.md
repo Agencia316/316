@@ -9,7 +9,7 @@ lang: pt-BR
 > **DOCUMENTO-MESTRE — VERSÃO CONSOLIDADA**  
 > Referência de gestão e implantação. Combina decisões já definidas, hipóteses de orçamento e pendências de homologação. **Não é uma promessa de retorno financeiro ou um contrato final.**
 >
-> **Revisão de 04/11/2026:** vendedor 100% comissionado (sem salário fixo); comissão equivalente a 25% da margem de contribuição do plano contratado, paga mensalmente durante os 6 primeiros meses do contrato (enquanto o cliente estiver ativo e pagando). Seções 1, 6, 7, 9, 13 e 16 atualizadas; projeção recalculada.
+> **Revisão de 04/11/2026:** vendedor 100% comissionado (sem salário fixo); comissão equivalente a 25% da margem de contribuição do plano contratado, paga mensalmente durante os 3 primeiros meses do contrato, mais bônus de retenção de R$ 400 se o cliente completar 6 pagamentos (tudo condicionado a o cliente estar ativo e pagando). Seções 1, 6, 7, 9, 13 e 16 atualizadas; projeção recalculada.
 
 # 1. Sumário executivo e decisão central
 
@@ -41,7 +41,7 @@ O produto **não é apenas gestão de tráfego**, **não é apenas CRM** e **nã
 
 ## Estado das decisões
 
-- **Definidos:** preços dos três pacotes para teste; Growth como oferta âncora; R$ 900 de mídia no Growth; CRM a R$ 109 por cliente/mês; IA de qualificação a aproximadamente R$ 97 por cliente/mês; vendedor 100% comissionado, sem salário fixo, com comissão de 25% da margem de contribuição do plano (R$ 318,19 Start / R$ 454,13 Growth / R$ 603,69 Scale por mês), paga durante os 6 primeiros meses de cada contrato atribuído a ele, enquanto o cliente pagar; foco inicial em advocacia.
+- **Definidos:** preços dos três pacotes para teste; Growth como oferta âncora; R$ 900 de mídia no Growth; CRM a R$ 109 por cliente/mês; IA de qualificação a aproximadamente R$ 97 por cliente/mês; vendedor 100% comissionado, sem salário fixo, com comissão de 25% da margem de contribuição do plano (R$ 318,19 Start / R$ 454,13 Growth / R$ 603,69 Scale por mês), paga durante os 3 primeiros meses de cada contrato atribuído a ele, enquanto o cliente pagar, mais bônus de retenção de R$ 400 quando o cliente completa o 6º pagamento; foco inicial em advocacia.
 - **Propostos, ainda não homologados:** capacidade de usuários/fluxos por pacote; custos e franquias do painel multimodelo; ferramentas LibreChat + OpenRouter; custos de suporte e implantação; metas de prospecção; preços de recarga; prazo padrão de implantação; cenário financeiro.
 - **Condicionados antes da venda:** módulo Processual por OAB; gateway de pagamento e wallet; isolamento multiempresa; permissões e custos de mensagens WhatsApp; tratamento fiscal da mídia; forma jurídica de contratação do vendedor; desenvolvimento do produto.
 
@@ -256,7 +256,7 @@ O acesso ao Claude via API no Três16 AI **não** concede automaticamente o apli
 
 ## Premissas e fontes dos números
 
-**Informados no planejamento:** mensalidade do Growth R$ 3.500; saldo Meta Ads Growth R$ 900; CRM R$ 109/mês por cliente; IA de qualificação aproximadamente R$ 97/mês por cliente; comissão do vendedor de 25% da margem de contribuição do plano, por 6 meses por contrato (sem salário fixo).
+**Informados no planejamento:** mensalidade do Growth R$ 3.500; saldo Meta Ads Growth R$ 900; CRM R$ 109/mês por cliente; IA de qualificação aproximadamente R$ 97/mês por cliente; comissão do vendedor de 25% da margem de contribuição do plano, por 3 meses por contrato, mais bônus de retenção de R$ 400 no 6º pagamento (sem salário fixo).
 
 **Hipóteses a validar:** 10% de tributos; 2,5% de taxas financeiras; outros custos variáveis; reserva multimodelo; custo de onboarding; custo operacional da equipe; volume e conversão de vendas; cancelamento. Em particular, **não há custo de desenvolvimento adicional do painel incluído no resultado-base**. O vendedor não tem salário fixo nem encargos mensais; seu custo é apenas a comissão variável.
 
@@ -293,18 +293,18 @@ A verba de R$ 900 é recurso **incluído na mensalidade** e precisa ter comprova
 | Administração e contingências | 700 | Orçamento proposto |
 | **Total de custos fixos** | **9.280** | **Vendedor 100% comissionado (sem fixo)** |
 
-**Custos de entrada de cliente:** R$ 350 de implantação (estimado) + comissão do vendedor (25% da margem por 6 meses) **somente se** o contrato for originado por ele.
+**Custos de entrada de cliente:** R$ 350 de implantação (estimado) + comissão do vendedor (25% da margem por 3 meses + bônus de retenção de R$ 400) **somente se** o contrato for originado por ele.
 
-**Regra de comissão:** 25% da margem de contribuição do plano contratado, paga mensalmente nos 6 primeiros meses do contrato, sempre sobre mensalidade efetivamente recebida e a partir da confirmação do primeiro pagamento. O cliente que cancelar ou ficar inadimplente interrompe a comissão. Os valores são fixos por plano, para não expor ao vendedor os custos internos:
+**Regra de comissão:** 25% da margem de contribuição do plano contratado, paga mensalmente nos 3 primeiros meses do contrato, sempre sobre mensalidade efetivamente recebida e a partir da confirmação do primeiro pagamento, no mês seguinte ao recebimento. **Bônus de retenção:** R$ 400 (valor único, igual para todos os planos) pagos quando o cliente completar o 6º pagamento confirmado. O cliente que cancelar ou ficar inadimplente interrompe a comissão e o bônus. Reembolso ou chargeback nos primeiros 60 dias gera estorno/compensação da comissão paga. Os valores são fixos por plano, para não expor ao vendedor os custos internos:
 
-| Plano | Margem de contribuição | Comissão mensal (25%), por até 6 meses |
+| Plano | Margem de contribuição | Comissão mensal (25%), por até 3 meses |
 |:--|--:|--:|
 | Start | 1.272,75 | **318,19** |
 | Growth | 1.816,50 | **454,13** |
 | Scale | 2.414,75 | **603,69** |
 | Média ponderada (20/70/10) | 1.767,58 | **441,89** |
 
-Custo esperado por contrato do vendedor: cerca de **R$ 2.461** (6 meses × R$ 441,89 médios, ajustado por 3% de cancelamento mensal), equivalente a cerca de 4% da contribuição média estimada do cliente ao longo da vida. Para cálculo agregado, considerou-se que 50% das vendas são do vendedor; a comissão é calculada mês a mês sobre a carteira de contratos do vendedor ainda dentro da janela de 6 meses. Revisar os valores fixos a cada semestre ou quando a margem estimada mudar.
+Custo esperado por contrato do vendedor: cerca de **R$ 1.630** (R$ 1.286 de comissão em até 3 meses, ajustados por 3% de cancelamento mensal, mais R$ 344 de bônus esperado = R$ 400 × 86% de probabilidade de o cliente completar 6 pagamentos), equivalente a cerca de 3% da contribuição média estimada do cliente ao longo da vida. Para cálculo agregado, considerou-se que 50% das vendas são do vendedor; a comissão é calculada mês a mês sobre a carteira de contratos do vendedor ainda dentro da janela de 3 meses, e o bônus é lançado no mês em que cada contrato completa o 6º pagamento. Revisar os valores fixos a cada semestre ou quando a margem estimada mudar.
 
 **Capacidade operacional:** acima de 15 clientes ativos, o cenário considera **+R$ 3.000/mês** de capacidade operacional. Esse gatilho é hipótese; produtividade e suporte devem ser medidos na prática.
 
@@ -323,7 +323,7 @@ Para uma carteira **100% Growth**: R$ 9.280 / R$ 1.816,50 = aproximadamente **5,
 - Ticket médio ponderado = **R$ 3.497 por cliente/mês**.
 - Contribuição média ponderada = **R$ 1.767,58 por cliente/mês**.
 - Cancelamento esperado = **3% ao mês** sobre a carteira anterior.
-- R$ 350 de implantação por nova venda; comissão do vendedor calculada mês a mês: 50% das vendas são do vendedor, com R$ 441,89 por cliente/mês (média ponderada) nos 6 primeiros meses de cada contrato, já descontado o cancelamento de 3%.
+- R$ 350 de implantação por nova venda; comissão do vendedor calculada mês a mês: 50% das vendas são do vendedor, com R$ 441,89 por cliente/mês (média ponderada) nos 3 primeiros meses de cada contrato e bônus de R$ 400 no 6º pagamento, já descontado o cancelamento de 3%.
 - Fixo R$ 9.280/mês, com acréscimo de R$ 3.000 a partir do mês em que a carteira supera 15 clientes.
 - Painel Processual, recargas e verba extra de anúncios **não entram na receita projetada**.
 - Desenvolvimento do painel, investimentos extraordinários, inadimplência e dívida **não entram no resultado-base**. O vendedor é 100% comissionado, sem salário fixo.
@@ -335,19 +335,19 @@ Para uma carteira **100% Growth**: R$ 9.280 / R$ 1.816,50 = aproximadamente **5,
 | 1 | 1,00 | 3.497 | -8.083 |
 | 2 | 2,97 | 10.386 | -5.387 |
 | 3 | 4,88 | 17.069 | -2.431 |
-| 4 | 6,73 | 23.550 | 436 |
-| 5 | 8,53 | 29.838 | 3.217 |
-| 6 | 10,28 | 35.937 | 5.914 |
-| 7 | 11,97 | 41.853 | 8.714 |
-| 8 | 13,61 | 47.591 | 11.615 |
-| 9 | 15,20 | 53.157 | 11.428 |
-| 10 | 16,74 | 58.557 | 14.157 |
-| 11 | 18,24 | 63.794 | 16.805 |
-| 12 | 19,70 | 68.874 | 19.372 |
+| 4 | 6,73 | 23.550 | 637 |
+| 5 | 8,53 | 29.838 | 3.815 |
+| 6 | 10,28 | 35.937 | 6.726 |
+| 7 | 11,97 | 41.853 | 9.545 |
+| 8 | 13,61 | 47.591 | 12.445 |
+| 9 | 15,20 | 53.157 | 12.259 |
+| 10 | 16,74 | 58.557 | 14.988 |
+| 11 | 18,24 | 63.794 | 17.635 |
+| 12 | 19,70 | 68.874 | 20.203 |
 
-**Totais do cenário-base (números arredondados):** faturamento de **R$ 454,1 mil** no ano; resultado operacional de **R$ 75,8 mil** no ano; **19,7 clientes ativos esperados** ao fim do M12. Resultado operacional mensal torna-se positivo no M4 (margem apertada, cerca de R$ 0,4 mil); resultado acumulado torna-se positivo aproximadamente no M7 (cerca de R$ 2,4 mil ao fim do M7).
+**Totais do cenário-base (números arredondados):** faturamento de **R$ 454,1 mil** no ano; resultado operacional de **R$ 82,4 mil** no ano; **19,7 clientes ativos esperados** ao fim do M12. Resultado operacional mensal torna-se positivo no M4 (margem apertada, cerca de R$ 0,6 mil); resultado acumulado torna-se positivo aproximadamente no M7 (cerca de R$ 4,8 mil ao fim do M7).
 
-O déficit operacional acumulado máximo no cenário-base é aproximadamente **R$ 15,9 mil no M3**, sem desenvolvimento inicial; no cenário prudente chega a cerca de R$ 28,0 mil, o que consome quase toda a reserva sugerida. Por prudência, **meta preliminar de reserva de caixa de R$ 30–35 mil**, sujeita a fluxo de caixa de fato, pagamentos de mídia e tributação.
+O déficit operacional acumulado máximo no cenário-base é aproximadamente **R$ 15,9 mil no M3**, sem desenvolvimento inicial; no cenário prudente chega a cerca de R$ 26,9 mil, o que consome a maior parte da reserva sugerida. Por prudência, **meta preliminar de reserva de caixa de R$ 30–35 mil**, sujeita a fluxo de caixa de fato, pagamentos de mídia e tributação.
 
 ## Três cenários gerenciais
 
@@ -357,14 +357,14 @@ O déficit operacional acumulado máximo no cenário-base é aproximadamente **R
 | Cancelamento | 5% ao mês | 3% ao mês | 3% ao mês |
 | Clientes esperados M12 | ~9,2 | ~19,7 | ~28,4 |
 | Faturamento acumulado | ~R$ 228,5 mil | ~R$ 454,1 mil | ~R$ 630,1 mil |
-| Resultado operacional acumulado | ~-R$ 11,4 mil | ~R$ 75,8 mil | ~R$ 145,9 mil |
+| Resultado operacional acumulado | ~-R$ 8,1 mil | ~R$ 82,4 mil | ~R$ 155,2 mil |
 
 Os dois cenários alternativos são referências dos modelos anteriores e **devem ser recalculados ao preencher custos ausentes**. Não são previsões. O cenário acelerado exigirá prova real de capacidade operacional.
 
 ## Sensibilidades obrigatórias
 
 - A cada **R$ 1.000/mês** de custo fixo adicional durante 12 meses, o resultado anual cai aproximadamente **R$ 12.000**, antes de efeitos secundários.
-- Alterações na remuneração do vendedor devem ser recalculadas: estender a comissão de 25% da margem de 6 para 12 meses reduziria o resultado do ano em aproximadamente R$ 6 mil (e aumenta o passivo no segundo ano); reduzir para 3 meses o aumentaria em cerca de R$ 9 mil; a inclusão de salário fixo reduziria o resultado conforme o custo total. Qualquer mudança deve passar pelo modelo antes de ser prometida ao vendedor.
+- Alterações na remuneração do vendedor devem ser recalculadas: estender a comissão de 25% da margem de 3 para 6 meses (sem bônus) reduziria o resultado do ano em cerca de R$ 7 mil, e para 12 meses em cerca de R$ 13 mil (além de aumentar o passivo no segundo ano); a comissão de apenas 3 meses sem o bônus de retenção resultaria em cerca de R$ 84,6 mil no ano-base; a inclusão de salário fixo reduziria o resultado conforme o custo total. Qualquer mudança deve passar pelo modelo antes de ser prometida ao vendedor.
 - Aumentos em tokens, custos de mensagens, taxas, tributos e horas de suporte reduzem a contribuição unitária.
 - Se os anúncios precisarem de orçamento adicional para atingir o volume necessário, o cliente deve aprová-lo: não retirar silenciosamente verba de CRM/IA nem prometer performance incompatível com a mídia incluída.
 
@@ -405,9 +405,9 @@ Os dois cenários alternativos são referências dos modelos anteriores e **deve
 
 **Rampa de 90 dias:** mês 1 = 1 contrato; mês 2 = 2; mês 3 = 2; total 5 novos contratos, **antes de cancelamentos**.
 
-**Remuneração do vendedor:** 100% variável, sem salário fixo. Comissão de **25% da margem de contribuição do plano** (Start R$ 318,19; Growth R$ 454,13; Scale R$ 603,69 por mês), paga nos **6 primeiros meses** de cada contrato, enquanto o cliente estiver ativo e pagando, a partir da confirmação do primeiro pagamento. Definir por contrato: regras de atribuição do lead, estorno se houver cancelamento ou reembolso nos primeiros 30–90 dias, tratamento de upgrade de plano e forma de contratação (PJ/representante comercial ou CLT comissionista), com parecer trabalhista.
+**Remuneração do vendedor:** 100% variável, sem salário fixo. Comissão de **25% da margem de contribuição do plano** (Start R$ 318,19; Growth R$ 454,13; Scale R$ 603,69 por mês), paga nos **3 primeiros meses** de cada contrato, enquanto o cliente estiver ativo e pagando, a partir da confirmação do primeiro pagamento e no mês seguinte ao recebimento. **Bônus de retenção de R$ 400** (valor único, igual para todos os planos) quando o cliente completa o 6º pagamento confirmado; cancelamento ou inadimplência anterior elimina o bônus e interrompe a comissão. Reembolso ou chargeback nos primeiros 60 dias gera estorno ou compensação da comissão já paga. Definir por contrato: regras de atribuição do lead, estorno se houver cancelamento ou reembolso nos primeiros 30–90 dias, tratamento de upgrade de plano e forma de contratação (PJ/representante comercial ou CLT comissionista), com parecer trabalhista.
 
-**Incentivo esperado:** com 1 contrato/mês, a renda do vendedor chega a cerca de R$ 2,4 mil/mês após 6 meses de operação (cerca de R$ 4,8 mil com 2 contratos/mês); nos primeiros meses é menor, pois a carteira ainda está se formando (cerca de R$ 440 no M1). Monitorar abordagens, reuniões e rotatividade nos primeiros 60 dias; se a conversão real ficar abaixo da hipótese, ajustar a duração da comissão (3 a 12 meses) e recalcular o modelo, em vez de aumentar o percentual. Manter meta mínima de atividade registrada no CRM como condição para receber a comissão.
+**Incentivo esperado:** com 1 contrato/mês, a renda do vendedor chega a cerca de R$ 1,6 mil/mês em regime estável (R$ 1,3 mil de comissão + R$ 0,3 mil de bônus esperado), cerca de R$ 3,3 mil com 2 contratos/mês; nos primeiros meses é menor, pois a carteira ainda está se formando (cerca de R$ 440 no M1). Monitorar abordagens, reuniões e rotatividade nos primeiros 60 dias; se a conversão real ficar abaixo da hipótese, ajustar a duração da comissão (3 a 6 meses) ou o valor do bônus e recalcular o modelo, em vez de aumentar o percentual. Manter meta mínima de atividade registrada no CRM como condição para receber a comissão.
 
 ## Pipeline comercial no CRM
 
@@ -675,10 +675,10 @@ Agende uma demonstração para verificar como o CRM, a IA e as campanhas podem s
 | Franquias | Reserva R$ 20 / R$ 40 / R$ 100 | Converter em créditos comerciais viáveis |
 | Recargas | Preços teste R$ 49/99/199 | Equivalência, checkout, taxas, estornos |
 | Processual | +R$ 197 após homologação | API comercial autorizada e cobertura |
-| Vendedor | 100% comissão; 25% da margem do plano por 6 meses/contrato | Forma de contratação, estorno, atribuição e incentivo real |
+| Vendedor | 100% comissão; 25% da margem do plano por 3 meses + bônus de retenção R$ 400 | Forma de contratação, estorno, atribuição e incentivo real |
 | Operação | 1 operacional + fundador | Medir horas/clientes antes da escala |
 | Comercial | 2 novos contratos/mês após rampa | Validar taxas de resposta e fechamento |
-| Finanças | 51,9% contribuição Growth estimada; resultado base 12 meses ~R$ 75,8 mil | Recalcular após custos e tributação reais |
+| Finanças | 51,9% contribuição Growth estimada; resultado base 12 meses ~R$ 82,4 mil | Recalcular após custos e tributação reais |
 
 **Decisão executiva final:** lançar primeiro um **Growth demonstrável e economicamente controlado**, vender por diagnóstico, comprovar utilização e retenção, e ampliar os produtos apenas depois que a tecnologia, a margem e o suporte estiverem validados.
 
