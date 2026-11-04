@@ -730,6 +730,32 @@ Agende uma demonstração para verificar como o CRM, a IA e as campanhas podem s
 
 **Decisão executiva final:** lançar primeiro um **Growth demonstrável e economicamente controlado**, vender por diagnóstico, comprovar utilização e retenção, e ampliar os produtos apenas depois que a tecnologia, a margem e o suporte estiverem validados.
 
+# 17. Situações em aberto — checklist de decisão
+
+> Consolidação das pendências do documento. **Prioridade A** bloqueia a venda ou a operação; **B** precisa estar resolvida nos primeiros 30–60 dias; **C** pode esperar a escala.
+
+| # | Situação em aberto | Por que importa | Responsável | Prazo sugerido | Prior. |
+|:-:|:--|:--|:--|:--|:-:|
+| 1 | Parecer trabalhista sobre contratação do vendedor 100% comissionado (PJ/representante comercial ou CLT comissionista) | Risco de reconhecimento de vínculo e encargos; define o contrato de comissão | Fundador + advogado trabalhista | Antes de contratar o vendedor | A |
+| 2 | Parecer sobre publicidade e captação por advogados (Provimento 205/2021 da OAB) para campanhas, mensagens e materiais | Maior risco regulatório do público-alvo; pode limitar o discurso comercial e as campanhas | Fundador + advogado | Antes da 1ª campanha para cliente | A |
+| 3 | LGPD: papéis de controlador/operador, suboperadores (IA, mensageria, mídia), contrato de tratamento e retenção | Dados pessoais, potencialmente sensíveis, em qualificação por IA | Fundador + advogado | Antes do piloto com cliente | A |
+| 4 | Tributação: regime, alíquota real (premissa de 10%), tratamento fiscal da mídia incluída e encargos sobre pró-labore | Altera a margem de todos os planos | Contador | Antes da 1ª fatura | A |
+| 5 | Contrato padrão com o cliente: escopo, mídia incluída e saldos, titularidade da conta de anúncios, cancelamento, prazo mínimo de permanência, exportação de dados | Protege receita e comissão; evita conflito sobre mídia | Fundador + advogado | Antes do 1º contrato | A |
+| 6 | Cobrança antecipada da 1ª mensalidade e eventual taxa de implantação (hoje o custo de R$ 350 é absorvido) | Define o caixa do mês 1 na partida sem reserva | Fundador | Antes da 1ª proposta | A |
+| 7 | Regras do vendedor: atribuição de lead, upgrade de plano, estorno, meta mínima de atividade | Evita disputa e protege o caixa | Fundador | Junto com o contrato do vendedor | A |
+| 8 | Confirmação formal da participação societária de 40% e regra de distribuição de lucro | Nenhuma distribuição deve ser simulada antes disso | Fundador + contador/advogado | Antes de qualquer retirada | B |
+| 9 | Gatilho para retomar o pró-labore (sugerido: R$ 1.500 com 3 clientes e R$ 10 mil de caixa; R$ 3.000 com R$ 20 mil) | Disciplina de caixa na partida enxuta | Fundador + contador | Antes do M3 | B |
+| 10 | Capacidade operacional: horas por cliente e gatilho de contratação (hoje 5 clientes ativos) | Qualidade da entrega e churn | Fundador | Medir nos 2 primeiros clientes | B |
+| 11 | Validação real de conversão, churn e funil (240 → 40 → 14 → 11 → 2) | O modelo usa hipóteses não confirmadas | Fundador + vendedor | Dias 30–60 | B |
+| 12 | Custos reais de mensagens/WhatsApp, IA de qualificação e CRM por cliente | Margem unitária | Fundador | Primeiros 30 dias | B |
+| 13 | Preço e escopo do Scale (margem incremental de cerca de 30% sobre o Growth; SLA não definido) | Plano pouco rentável como está | Fundador | Antes de oferecer o Scale | B |
+| 14 | Três16 AI multimodelo: separação multiempresa, carteira de créditos, gateway, franquias e preços de recarga (R$ 49/99/199 candidatos) | Produto ainda não homologado; vender como "em breve" | Fundador + desenvolvimento | Antes de prometer ao cliente | C |
+| 15 | Painel Processual por OAB: fornecedor com licença comercial, cobertura e custo | Fora da oferta e da projeção até homologação | Fundador | Antes de lançar o adicional | C |
+| 16 | SLA de suporte prioritário e reuniões do Scale | Não prometer sem capacidade | Fundador | Antes de vender o Scale | C |
+| 17 | Base legal e fonte da lista de prospecção (240 escritórios de Curitiba) e política de abordagem/opt-out | LGPD e regras do WhatsApp | Fundador | Antes da 1ª abordagem | A |
+
+**Regra de uso:** nenhum item de prioridade A pode ficar em aberto no momento da primeira proposta paga. Itens B e C devem ser comunicados ao cliente como "em avaliação" ou "em breve", nunca como entregas contratadas.
+
 # Apêndice — referências para homologação
 
 Fontes oficiais de consulta técnica e regulatória. Endereços e condições devem ser revisados na data de contratação:
