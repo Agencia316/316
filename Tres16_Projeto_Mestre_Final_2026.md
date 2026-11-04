@@ -21,6 +21,8 @@ O produto **não é apenas gestão de tráfego**, **não é apenas CRM** e **nã
 
 **Frase de posicionamento:** “A Três16 estrutura e opera o processo que recebe, qualifica, organiza e acompanha oportunidades. Os anúncios ajudam a alimentar essa operação.”
 
+**Atualização de posicionamento (04/11/2026):** a Três16 vende uma **plataforma de gestão da operação do escritório**, com o CRM como núcleo. A visão é que a operação do escritório (relacionamento, clientes e casos, tarefas, documentos e equipe) seja conectada e controlada no mesmo sistema. **Não se vende tráfego pago:** a aquisição (Meta Ads) é um módulo da solução, incluído no preço, e não o destaque da apresentação. Módulos comercializáveis no lançamento: CRM e funil, Clientes e casos, Tarefas/prazos internos/equipe, Documentos e contratos, IA de qualificação e mensagens por status, aquisição integrada. Gestão financeira e Três16 AI aparecem como "em breve". Cada módulo só pode ser prometido ao cliente depois de demonstrado.
+
 **Oferta principal:** Três16 Growth — **R$ 3.500/mês**, incluindo **R$ 900/mês destinados à mídia Meta Ads**. A mídia está **incluída no preço**, não é crédito promocional externo nem “gratuidade” independente.
 
 **Portfólio de teste:** Start R$ 2.490/mês; Growth R$ 3.500/mês; Scale R$ 5.490/mês. **Adicional jurídico:** consulta e acompanhamento processual por OAB por **R$ 197/mês**, somente após homologação da integração autorizada. **Outra fonte de receita:** recargas de créditos do painel de IA, com preços e equivalências a validar.
@@ -41,9 +43,9 @@ O produto **não é apenas gestão de tráfego**, **não é apenas CRM** e **nã
 
 ## Estado das decisões
 
-- **Definidos:** preços dos três pacotes para teste; Growth como oferta âncora; R$ 900 de mídia no Growth; CRM a R$ 109 por cliente/mês; IA de qualificação a aproximadamente R$ 97 por cliente/mês; vendedor 100% comissionado, sem salário fixo, com comissão de 25% da margem de contribuição do plano (R$ 318,19 Start / R$ 454,13 Growth / R$ 603,69 Scale por mês), paga durante os 3 primeiros meses de cada contrato atribuído a ele, enquanto o cliente pagar, mais bônus de retenção de R$ 400 quando o cliente completa o 6º pagamento; foco inicial em advocacia; **partida enxuta** (sem caixa inicial, sem pró-labore, fundador na operação até 5 clientes ativos) com lista qualificada de 240 escritórios trabalhistas e previdenciários de Curitiba.
+- **Definidos:** preços dos três pacotes para teste; Growth como oferta âncora; R$ 900 de mídia no Growth; CRM a R$ 109 por cliente/mês; IA de qualificação a aproximadamente R$ 97 por cliente/mês; vendedor 100% comissionado, sem salário fixo, com comissão de 25% da margem de contribuição do plano (R$ 318,19 Start / R$ 454,13 Growth / R$ 603,69 Scale por mês), paga durante os 3 primeiros meses de cada contrato atribuído a ele, enquanto o cliente pagar, mais bônus de retenção de R$ 400 quando o cliente completa o 6º pagamento; foco inicial em advocacia; posicionamento como plataforma de gestão do escritório (mídia como módulo de aquisição dentro do plano, sem alterar preços); **partida enxuta** (sem caixa inicial, sem pró-labore, fundador na operação até 5 clientes ativos) com lista qualificada de 240 escritórios trabalhistas e previdenciários de Curitiba.
 - **Propostos, ainda não homologados:** capacidade de usuários/fluxos por pacote; custos e franquias do painel multimodelo; ferramentas LibreChat + OpenRouter; custos de suporte e implantação; metas de prospecção; preços de recarga; prazo padrão de implantação; cenário financeiro.
-- **Condicionados antes da venda:** módulo Processual por OAB; gateway de pagamento e wallet; isolamento multiempresa; permissões e custos de mensagens WhatsApp; tratamento fiscal da mídia; forma jurídica de contratação do vendedor; desenvolvimento do produto.
+- **Condicionados antes da venda:** módulo Processual por OAB; gateway de pagamento e wallet; isolamento multiempresa; permissões e custos de mensagens WhatsApp; tratamento fiscal da mídia; forma jurídica de contratação do vendedor; demonstração dos módulos Clientes e casos, Tarefas/equipe e Documentos/contratos antes da venda; desenvolvimento do produto.
 
 # 2. Problema, público-alvo e proposta de valor
 
@@ -634,48 +636,59 @@ Retorno acordado em até 1 dia útil após o envio; novo contato adequado ao con
 
 # 15. APRESENTAÇÃO AO CLIENTE — texto pronto, sem custos internos
 
-> **Esta seção é a base comercial. Pode ser utilizada em slides, proposta e landing page. Valores e limites devem coincidir com a oferta efetivamente homologada.**
+> **Esta seção é a base comercial. Pode ser utilizada em slides, proposta e landing page. Valores e limites devem coincidir com a oferta efetivamente homologada.** Posicionamento: plataforma de gestão da operação do escritório; a mídia aparece como um módulo, não como o produto. Prazos citados no módulo de tarefas são prazos internos da equipe, não prazos processuais.
 
 ## Slide 1 — Capa
 
-**TRÊS16 GROWTH**  
-**Seu escritório recebe contatos. E depois?**  
-Tecnologia para conectar aquisição, qualificação e acompanhamento de oportunidades.
+**TRÊS16**  
+**A operação do seu escritório em um só lugar.**  
+Clientes, casos, tarefas, documentos e equipe conectados em um sistema, com inteligência artificial e acompanhamento da Três16.
 
 ## Slide 2 — O desafio
 
-Atrair interessados é só o começo. Cada contato precisa ser registrado, qualificado, encaminhado e acompanhado, sem depender apenas de mensagens dispersas ou da memória da equipe.
+A rotina de um escritório costuma estar espalhada: contatos em mensagens, tarefas na memória da equipe, documentos em pastas, informações em planilhas. Cada ferramenta resolve um pedaço, e ninguém enxerga o todo.
 
 ## Slide 3 — O que é a Três16
 
-**Uma operação comercial inteligente** que integra campanhas, CRM, IA e automações, com implantação e acompanhamento da Três16.
+Uma plataforma de gestão para escritórios de advocacia. Um CRM central conecta o relacionamento com clientes, os casos, as tarefas da equipe e os documentos, com IA e automações. Implantamos, configuramos e acompanhamos junto com o escritório.
 
-## Slide 4 — A jornada de uma oportunidade
+## Slide 4 — Uma operação, um sistema
 
-**Campanha → contato → CRM → qualificação por IA → status → acompanhamento da equipe.**  
-Processo visual, organizado e adaptado ao fluxo de atendimento do escritório.
+Relacionamento e funil · Clientes e casos · Tarefas, prazos e equipe · Documentos e contratos · IA e automações · Indicadores.
 
-## Slide 5 — CRM comercial
+## Slide 5 — Da primeira mensagem ao caso em andamento
 
-Acompanhe contatos e etapas do atendimento em um único sistema. Identifique oportunidades que precisam de retorno e veja o andamento do funil.
+**Contato → qualificação por IA → cliente → caso → tarefas da equipe → documentos → acompanhamento.** Tudo registrado no mesmo lugar, sem retrabalho entre ferramentas.
 
-## Slide 6 — Qualificação e automações
+## Slide 6 — Clientes e casos
 
-A IA auxilia a qualificação inicial e as mensagens previamente configuradas podem ser acionadas conforme os status. A equipe mantém o controle do atendimento profissional.
+Cada cliente e cada caso com histórico, responsável e situação do atendimento.
 
-## Slide 7 — Três16 AI
+## Slide 7 — Tarefas, prazos e equipe
 
-Um painel para utilizar diferentes modelos de inteligência artificial nas atividades do dia a dia, com franquia de uso incluída e possibilidade de créditos adicionais.
+Quem faz o quê, até quando. Responsáveis, prazos internos e rotinas organizados no sistema.
 
-## Slide 8 — Campanhas integradas
+## Slide 8 — Documentos e contratos
 
-A operação de Meta Ads ajuda a atrair oportunidades. **A verba prevista no seu plano já está incluída na mensalidade.** Investimentos maiores podem ser acordados separadamente.
+Documentos e contratos organizados por cliente e por caso, com visão das pendências de documentação.
 
-## Slide 9 — O que muda no dia a dia
+## Slide 9 — IA e automações
 
-Mais visibilidade do funil, padronização de contatos, organização de tarefas repetitivas e acesso concentrado a ferramentas de produtividade. Resultados comerciais variam conforme mercado, atendimento e execução.
+A IA auxilia a qualificação inicial. Mensagens previamente configuradas podem ser acionadas conforme o status. A equipe mantém o controle do atendimento profissional e a responsabilidade pelas decisões jurídicas.
 
-## Slide 10 — Três formatos de contratação
+## Slide 10 — Aquisição integrada ao sistema
+
+Quando o escritório quer ampliar a entrada de contatos, a Três16 opera campanhas conectadas ao CRM. **A verba prevista no plano já está incluída na mensalidade.** Investimentos maiores podem ser acordados separadamente.
+
+## Slide 11 — Evolução da plataforma
+
+Em breve: Três16 AI (painel multimodelo, com franquia de uso e créditos adicionais) e módulo de gestão financeira. Disponibilidade conforme homologação.
+
+## Slide 12 — O que muda no dia a dia
+
+Mais visibilidade da operação, informação centralizada, tarefas e documentos organizados e menos retrabalho. Resultados variam conforme equipe, atendimento e uso do sistema.
+
+## Slide 13 — Três formatos de contratação
 
 | | START | **GROWTH** | SCALE |
 |:--|:--|:--|:--|
@@ -683,31 +696,32 @@ Mais visibilidade do funil, padronização de contatos, organização de tarefas
 | CRM | Até 2 usuários | Até 5 usuários | Até 10 usuários |
 | IA de qualificação | Incluída | Incluída | Ampliada |
 | Fluxos de automação | 1 | Até 2 | Até 4 |
-| Painel Três16 AI | Básico | Ampliado | Superior |
-| Mídia incluída | R$ 600/mês | **R$ 900/mês** | R$ 1.800/mês |
+| Aquisição (mídia incluída no plano) | R$ 600/mês | **R$ 900/mês** | R$ 1.800/mês |
 | Reuniões estratégicas | Sem recorrência fixa | 1/mês | 2/mês |
 
-## Slide 11 — Por que Growth?
+Três16 AI em breve, com franquia de uso.
 
-O Growth reúne uma estrutura de CRM, qualificação por IA, automações, painel multimodelo, campanhas e acompanhamento, com equilíbrio entre recursos e investimento. **Recomendado quando corresponde à necessidade do escritório.**
+## Slide 14 — Por que Growth?
 
-## Slide 12 — Implantação
+O Growth reúne a plataforma de gestão (CRM, clientes e casos, tarefas, documentos), IA, automações, aquisição integrada e acompanhamento estratégico mensal, com equilíbrio entre recursos e investimento. **Recomendado quando corresponde à necessidade do escritório.**
 
-Após a contratação, realizamos levantamento de informações, configuração, testes, treinamento e entrada assistida em operação, com cronograma acordado.
+## Slide 15 — Implantação
 
-## Slide 13 — Adicional jurídico
+Levantamento do fluxo do escritório, configuração, testes, treinamento e entrada assistida em operação, com cronograma acordado.
 
-**Painel Processual — R$ 197/mês**, quando disponível: consulta e acompanhamento de processos vinculados à inscrição OAB do advogado, dentro da cobertura contratada. Não inclui peticionamento ou redação de peças.
+## Slide 16 — Adicional jurídico
 
-## Slide 14 — Convite à demonstração
+**Painel Processual — R$ 197/mês**, quando disponível (não incluir na apresentação até a homologação): consulta e acompanhamento de processos vinculados à inscrição OAB do advogado, dentro da cobertura contratada. Não inclui peticionamento ou redação de peças.
+
+## Slide 17 — Convite à demonstração
 
 **Conheça a Três16 na prática.**  
-Agende uma demonstração para verificar como o CRM, a IA e as campanhas podem se conectar ao processo de atendimento do seu escritório.
+Agende uma demonstração para ver como a plataforma se conecta à rotina do seu escritório.
 
 **Contato comercial / WhatsApp:** (41) 99102-8683  
 **Link:** https://wa.me/5541991028683
 
-*As ferramentas de IA têm franquias; não substituem a responsabilidade profissional do advogado. Campanhas não garantem volume mínimo de contatos, clientes ou receita.*
+*As ferramentas de IA têm franquias e não substituem a responsabilidade profissional do advogado. Campanhas não garantem volume mínimo de contatos, clientes ou receita.*
 
 # 16. Quadro final de decisões e pendências
 
@@ -753,6 +767,9 @@ Agende uma demonstração para verificar como o CRM, a IA e as campanhas podem s
 | 15 | Painel Processual por OAB: fornecedor com licença comercial, cobertura e custo | Fora da oferta e da projeção até homologação | Fundador | Antes de lançar o adicional | C |
 | 16 | SLA de suporte prioritário e reuniões do Scale | Não prometer sem capacidade | Fundador | Antes de vender o Scale | C |
 | 17 | Base legal e fonte da lista de prospecção (240 escritórios de Curitiba) e política de abordagem/opt-out | LGPD e regras do WhatsApp | Fundador | Antes da 1ª abordagem | A |
+| 18 | Demonstração e escopo dos módulos Clientes e casos, Tarefas/prazos internos/equipe e Documentos/contratos (o que existe hoje, limites e o que é personalização) | A venda como plataforma de gestão só pode prometer o que foi demonstrado | Fundador + desenvolvimento | Antes da 1ª demonstração | A |
+| 19 | Gestão financeira/honorários: escopo e data (hoje "em breve") | Não prometer antes de existir | Fundador | Antes de citar prazo ao cliente | C |
+| 20 | Mídia como módulo incluído: reflexo no preço, nos planos e na margem se o escritório não quiser aquisição | Hoje a mídia está embutida no preço; mudar exige recalcular margens | Fundador | Após os primeiros pilotos | B |
 
 **Regra de uso:** nenhum item de prioridade A pode ficar em aberto no momento da primeira proposta paga. Itens B e C devem ser comunicados ao cliente como "em avaliação" ou "em breve", nunca como entregas contratadas.
 
