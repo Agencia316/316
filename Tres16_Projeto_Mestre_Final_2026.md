@@ -407,6 +407,17 @@ Os dois cenários alternativos são referências dos modelos anteriores e **deve
 
 **Remuneração do vendedor:** 100% variável, sem salário fixo. Comissão de **25% da margem de contribuição do plano** (Start R$ 318,19; Growth R$ 454,13; Scale R$ 603,69 por mês), paga nos **3 primeiros meses** de cada contrato, enquanto o cliente estiver ativo e pagando, a partir da confirmação do primeiro pagamento e no mês seguinte ao recebimento. **Bônus de retenção de R$ 400** (valor único, igual para todos os planos) quando o cliente completa o 6º pagamento confirmado; cancelamento ou inadimplência anterior elimina o bônus e interrompe a comissão. Reembolso ou chargeback nos primeiros 60 dias gera estorno ou compensação da comissão já paga. Definir por contrato: regras de atribuição do lead, estorno se houver cancelamento ou reembolso nos primeiros 30–90 dias, tratamento de upgrade de plano e forma de contratação (PJ/representante comercial ou CLT comissionista), com parecer trabalhista.
 
+**Cronograma de pagamento ao vendedor (exemplo: contrato Growth fechado no mês 1):** não há adiantamento nem valor fixo; o primeiro recebimento ocorre depois que o cliente paga.
+
+| Evento | Quando o vendedor recebe | Valor |
+|:--|:--|--:|
+| Cliente assina e paga a 1ª mensalidade (mês 1) | Mês 2, após a confirmação | R$ 454,13 |
+| 2ª mensalidade paga (mês 2) | Mês 3 | R$ 454,13 |
+| 3ª mensalidade paga (mês 3) | Mês 4 | R$ 454,13 |
+| 6ª mensalidade paga (mês 6) | Mês 7 (bônus de retenção) | R$ 400,00 |
+
+Se o cliente cancelar antes, o vendedor recebe apenas o que já foi liberado. O pagamento da comissão ocorre em data fixa do mês seguinte (por exemplo, dia 10).
+
 **Incentivo esperado:** com 1 contrato/mês, a renda do vendedor chega a cerca de R$ 1,6 mil/mês em regime estável (R$ 1,3 mil de comissão + R$ 0,3 mil de bônus esperado), cerca de R$ 3,3 mil com 2 contratos/mês; nos primeiros meses é menor, pois a carteira ainda está se formando (cerca de R$ 440 no M1). Monitorar abordagens, reuniões e rotatividade nos primeiros 60 dias; se a conversão real ficar abaixo da hipótese, ajustar a duração da comissão (3 a 6 meses) ou o valor do bônus e recalcular o modelo, em vez de aumentar o percentual. Manter meta mínima de atividade registrada no CRM como condição para receber a comissão.
 
 ## Pipeline comercial no CRM
