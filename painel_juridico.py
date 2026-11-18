@@ -7,6 +7,7 @@ Parâmetros de URL opcionais: processo, oab_uf, oab_numero, dias — o CRM pode 
 """
 import re
 from collections import Counter
+from datetime import date, timedelta
 
 import pandas as pd
 import plotly.express as px
@@ -28,6 +29,11 @@ def _qp(nome, padrao=""):
 @st.cache_data(ttl=1800, show_spinner=False)
 def _processo(numero, rapido):
     return api.processo(numero, rapido)
+
+
+@st.cache_data(ttl=900, show_spinner=False)
+def _parte(nome, inicio, fim, tribunal, paginas):
+    return api.publicacoes_parte(nome, inicio, fim, tribunal, paginas)
 
 
 @st.cache_data(ttl=900, show_spinner=False)
@@ -53,7 +59,7 @@ def _rodape_cota(corpo):
 
 
 st.title("⚖️ Painel Jurídico")
-aba_proc, aba_oab, aba_conta = st.tabs(["Processo", "Advogado (OAB)", "Conta"])
+aba_proc, aba_oab, aba_cli, aba_conta = st.tabs(["Processo", "Advogado (OAB)", "Cliente (por nome)", "Conta"])
 
 # ── Processo ─────────────────────────────────────────────────────────────────
 with aba_proc:
@@ -146,6 +152,58 @@ with aba_oab:
             _rodape_cota(rb)
         except api.ErroJuridico as e:
             _erro(e)
+
+# ── Cliente por nome ─────────────────────────────────────────────────────────
+with aba_cli:
+    st.info("A busca é pelo **nome** da parte no diário. A API não aceita CPF/CNPJ (o diário não indexa "
+            "documento e a API o remove por LGPD). Nomes comuns podem trazer **homônimos**: confira partes, "
+            "advogados e processo antes de atribuir ao cliente. Só aparecem processos com publicação no período.")
+    c1, c2, c3 = st.columns([3, 1, 1])
+    nome = c1.text_input("Nome completo da parte (cliente)", value=_qp("cliente"),
+                         placeholder="Nome como consta no processo")
+    trib = c2.text_input("Tribunal (opcional)", placeholder="TJMG").strip().upper()
+    paginas = c3.number_input("Páginas (×100)", 1, 20, 1)
+    d1, d2 = st.columns(2)
+    inicio = d1.date_input("De", value=date.today() - timedelta(days=90), format="DD/MM/YYYY")
+    fim = d2.date_input("Até", value=date.today(), format="DD/MM/YYYY")
+    if nome.strip() and (st.button("Buscar por nome", type="primary", key="b_cli") or _qp("cliente")):
+        if len(nome.split()) < 2:
+            st.warning("Informe nome e sobrenome para reduzir homônimos.")
+        elif fim < inicio or (fim - inicio).days > 366:
+            st.warning("Período inválido: máximo de 1 ano.")
+        else:
+            try:
+                with st.spinner("Buscando no diário…"):
+                    r = _parte(nome.strip(), inicio, fim, trib, int(paginas))
+                pubs = pd.DataFrame(r["publicacoes"])
+                if pubs.empty:
+                    st.write("Nenhuma publicação encontrada no período.")
+                else:
+                    k = st.columns(3)
+                    k[0].metric("Publicações", r["total"])
+                    k[1].metric("Processos distintos", pubs["numero_processo"].nunique())
+                    k[2].metric("Tribunais", pubs["tribunal"].nunique())
+                    if r["total"] >= 100 * int(paginas):
+                        st.warning("Pode haver mais resultados: aumente as páginas ou reduza o período.")
+                    resumo = (pubs.groupby("numero_processo")
+                              .agg(Tribunal=("tribunal", "first"), Classe=("classe", "first"),
+                                   Publicações=("id", "count"), Última=("data_formatada", "first"))
+                              .reset_index().rename(columns={"numero_processo": "Processo"}))
+                    st.markdown("**Processos encontrados**")
+                    st.dataframe(resumo, hide_index=True, use_container_width=True)
+                    st.markdown("**Publicações**")
+                    for _, pub in pubs.iterrows():
+                        partes = "; ".join(f"{x['nome']} ({x['polo']})" for x in pub["partes"])
+                        with st.expander(f"{pub['data_formatada']} · {pub['numero_processo']} · {pub['tribunal']}"):
+                            st.caption(f"{pub['tipo_comunicacao']} · {pub['orgao']}")
+                            if partes:
+                                st.write(f"**Partes:** {partes}")
+                            st.write(pub["texto"])
+                            if pub["link"]:
+                                st.link_button("Abrir no diário", pub["link"])
+                _rodape_cota(r)
+            except api.ErroJuridico as e:
+                _erro(e)
 
 # ── Conta ────────────────────────────────────────────────────────────────────
 with aba_conta:

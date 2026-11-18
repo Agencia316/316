@@ -74,6 +74,14 @@ def oab_publicacoes(uf, numero, dias=7):
     return _get(f"/v1/oab/{uf}/{numero}/publicacoes", {"dias": dias})
 
 
+def publicacoes_parte(nome, inicio, fim, tribunal="", paginas=1):
+    # A API busca por NOME da parte (não por CPF/CNPJ: o diário não indexa documento e a API o remove por LGPD)
+    params = {"parte": nome, "inicio": inicio.isoformat(), "fim": fim.isoformat(), "paginas": paginas}
+    if tribunal:
+        params["tribunal"] = tribunal
+    return _get("/v1/publicacoes", params)
+
+
 def conta():
     return _get("/v1/conta", timeout=15)
 
