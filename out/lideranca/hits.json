@@ -1,0 +1,365 @@
+[
+ {
+  "beat": 0,
+  "t": 0.0017,
+  "label": "quem mais",
+  "sfx": "impact"
+ },
+ {
+  "beat": 0.9,
+  "t": 0.5418,
+  "label": "entrega",
+  "sfx": "thud"
+ },
+ {
+  "beat": 2,
+  "t": 1.2018,
+  "label": "carimbo vira gestor",
+  "sfx": "impact"
+ },
+ {
+  "beat": 3.7,
+  "t": 2.2218,
+  "label": "carimbo vira tela",
+  "sfx": "whoosh",
+  "opts": {
+   "len": 0.4
+  }
+ },
+ {
+  "beat": 4.3,
+  "t": 2.5818,
+  "label": "otimo no que faz",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "A5"
+  }
+ },
+ {
+  "beat": 5.3,
+  "t": 3.1818,
+  "label": "risco 1",
+  "sfx": "click"
+ },
+ {
+  "beat": 5.5,
+  "t": 3.3018,
+  "label": "risco 2",
+  "sfx": "click"
+ },
+ {
+  "beat": 6,
+  "t": 3.6018,
+  "label": "liderar e outra profissao",
+  "sfx": "thud"
+ },
+ {
+  "beat": 7.7,
+  "t": 4.6218,
+  "label": "wipe",
+  "sfx": "whoosh",
+  "opts": {
+   "len": 0.4
+  }
+ },
+ {
+  "beat": 8.6,
+  "t": 5.1619,
+  "label": "conta",
+  "sfx": "tick"
+ },
+ {
+  "beat": 9.2,
+  "t": 5.5219,
+  "label": "conta",
+  "sfx": "tick"
+ },
+ {
+  "beat": 9.8,
+  "t": 5.8819,
+  "label": "conta",
+  "sfx": "tick"
+ },
+ {
+  "beat": 10.4,
+  "t": 6.2419,
+  "label": "conta",
+  "sfx": "tick"
+ },
+ {
+  "beat": 11,
+  "t": 6.6019,
+  "label": "conta",
+  "sfx": "tick"
+ },
+ {
+  "beat": 11.6,
+  "t": 6.9619,
+  "label": "78 completo",
+  "sfx": "thud"
+ },
+ {
+  "beat": 15,
+  "t": 9.0019,
+  "label": "sobe pressao",
+  "sfx": "riser",
+  "opts": {
+   "len": 1.5
+  }
+ },
+ {
+  "beat": 16,
+  "t": 9.6019,
+  "label": "88",
+  "sfx": "impact"
+ },
+ {
+  "beat": 17.4,
+  "t": 10.442,
+  "label": "pulso",
+  "sfx": "tick"
+ },
+ {
+  "beat": 18.6,
+  "t": 11.162,
+  "label": "pulso",
+  "sfx": "tick"
+ },
+ {
+  "beat": 21.7,
+  "t": 13.022,
+  "label": "wipe",
+  "sfx": "whoosh",
+  "opts": {
+   "len": 0.4
+  }
+ },
+ {
+  "beat": 22.1,
+  "t": 13.262,
+  "label": "card 1",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "D5"
+  }
+ },
+ {
+  "beat": 25.7,
+  "t": 15.4221,
+  "label": "whip",
+  "sfx": "whoosh",
+  "opts": {
+   "len": 0.35
+  }
+ },
+ {
+  "beat": 26.1,
+  "t": 15.6621,
+  "label": "card 2",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "F5"
+  }
+ },
+ {
+  "beat": 29.7,
+  "t": 17.8221,
+  "label": "whip",
+  "sfx": "whoosh",
+  "opts": {
+   "len": 0.35
+  }
+ },
+ {
+  "beat": 30.1,
+  "t": 18.0621,
+  "label": "card 3",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "A5"
+  }
+ },
+ {
+  "beat": 33.7,
+  "t": 20.2222,
+  "label": "whip",
+  "sfx": "whoosh",
+  "opts": {
+   "len": 0.35
+  }
+ },
+ {
+  "beat": 34.1,
+  "t": 20.4622,
+  "label": "card 4",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "C6"
+  }
+ },
+ {
+  "beat": 37.7,
+  "t": 22.6222,
+  "label": "wipe",
+  "sfx": "whoosh",
+  "opts": {
+   "len": 0.4
+  }
+ },
+ {
+  "beat": 39,
+  "t": 23.4022,
+  "label": "vende",
+  "sfx": "thud"
+ },
+ {
+  "beat": 40.5,
+  "t": 24.3023,
+  "label": "resolve",
+  "sfx": "thud"
+ },
+ {
+  "beat": 42,
+  "t": 25.2023,
+  "label": "lidera",
+  "sfx": "thud"
+ },
+ {
+  "beat": 44.8,
+  "t": 26.8823,
+  "label": "riser",
+  "sfx": "riser",
+  "opts": {
+   "len": 1.2
+  }
+ },
+ {
+  "beat": 46,
+  "t": 27.6023,
+  "label": "liderança se aprende",
+  "sfx": "impact"
+ },
+ {
+  "beat": 47.2,
+  "t": 28.3224,
+  "label": "se aprende",
+  "sfx": "bell",
+  "opts": {
+   "pitch": "D6"
+  }
+ },
+ {
+  "beat": 51.7,
+  "t": 31.0224,
+  "label": "whip",
+  "sfx": "whoosh",
+  "opts": {
+   "len": 0.35
+  }
+ },
+ {
+  "beat": 52.1,
+  "t": 31.2624,
+  "label": "pergunta 1",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "D5"
+  }
+ },
+ {
+  "beat": 57.7,
+  "t": 34.6225,
+  "label": "whip",
+  "sfx": "whoosh",
+  "opts": {
+   "len": 0.35
+  }
+ },
+ {
+  "beat": 58.1,
+  "t": 34.8625,
+  "label": "pergunta 2",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "F5"
+  }
+ },
+ {
+  "beat": 63.7,
+  "t": 38.2226,
+  "label": "whip",
+  "sfx": "whoosh",
+  "opts": {
+   "len": 0.35
+  }
+ },
+ {
+  "beat": 64.1,
+  "t": 38.4626,
+  "label": "pergunta 3",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "A5"
+  }
+ },
+ {
+  "beat": 69.7,
+  "t": 41.8226,
+  "label": "whip",
+  "sfx": "whoosh",
+  "opts": {
+   "len": 0.35
+  }
+ },
+ {
+  "beat": 70.1,
+  "t": 42.0627,
+  "label": "qual dessas",
+  "sfx": "pop",
+  "opts": {
+   "pitch": "D5"
+  }
+ },
+ {
+  "beat": 72.2,
+  "t": 43.3227,
+  "label": "um",
+  "sfx": "blip",
+  "opts": {
+   "pitch": "D5"
+  }
+ },
+ {
+  "beat": 73.4,
+  "t": 44.0427,
+  "label": "dois",
+  "sfx": "blip",
+  "opts": {
+   "pitch": "F5"
+  }
+ },
+ {
+  "beat": 74.6,
+  "t": 44.7627,
+  "label": "tres",
+  "sfx": "blip",
+  "opts": {
+   "pitch": "A5"
+  }
+ },
+ {
+  "beat": 76,
+  "t": 45.6027,
+  "label": "card final",
+  "sfx": "impact"
+ },
+ {
+  "beat": 77.2,
+  "t": 46.3227,
+  "label": "handle",
+  "sfx": "bell",
+  "opts": {
+   "pitch": "D6"
+  }
+ }
+]
